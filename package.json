@@ -1,0 +1,33 @@
+{
+  "name": "bachelor-thesis-code",
+  "version": "1.0.0",
+  "description": "the code part of my bachelor thesis",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "webpack-dev-server",
+    "dev": "webpack serve",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sejmou/ba.git"
+  },
+  "keywords": [
+    "computer",
+    "graphics",
+    "visualization"
+  ],
+  "author": "Samo Kolter",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Sejmou/ba/issues"
+  },
+  "homepage": "https://github.com/Sejmou/ba#readme",
+  "devDependencies": {
+    "awesome-typescript-loader": "^5.2.1",
+    "typescript": "^4.2.3",
+    "webpack": "^5.24.3",
+    "webpack-cli": "^4.5.0",
+    "webpack-dev-server": "^3.11.2"
+  }
+}
