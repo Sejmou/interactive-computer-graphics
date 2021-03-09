@@ -29,5 +29,9 @@
     "webpack": "^5.24.3",
     "webpack-cli": "^4.5.0",
     "webpack-dev-server": "^3.11.2"
+  },
+  "dependencies": {
+    "@types/p5": "^0.9.1",
+    "p5": "^1.2.0"
   }
 }
