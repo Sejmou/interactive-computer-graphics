@@ -1,6 +1,7 @@
 import P5 from "p5";
+import { Drawable } from './app';
 
-export default class MyCircle {
+export default class MyCircle implements Drawable {
 	_p5: P5;
 	_pos: P5.Vector;
 	_size: number;
