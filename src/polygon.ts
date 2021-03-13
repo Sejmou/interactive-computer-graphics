@@ -19,41 +19,52 @@ export class DragPolygon extends Polygon {
     private dragCircleRadius = 5;
     private indexOfDraggedVertex: number | null = null;
 
-    constructor(p5: P5, private canvas: P5.Renderer, vertexPositions: Vec2[]) {
-        super(p5, vertexPositions);
-        //side note: the use of arrow function is preferred to using Function.prototype.bind(), e.g.:
-        //canvas.mousePressed(this.handleMousePressed.bind(this));
-        //https://stackoverflow.com/questions/42117911/lambda-functions-vs-bind-memory-and-performance
-        this.canvas.mousePressed(() => this.handleMousePressed());
-        this.canvas.mouseReleased(() => this.handleMouseReleased());
-    }
-
-    private handleMousePressed() {
-        // console.log('in handleMousePressed');
-        this.checkForHoverOverVertex([this.p5.mouseX, this.p5.mouseY]);
-        // console.log(this.indexOfDraggedVertex);
-    }
-
-    private handleMouseReleased() {
-        this.indexOfDraggedVertex = null;
-    }
-
-    
-
-    private checkForHoverOverVertex(mousePos: Vec2) {
-        const distancesOfVerticesToMouse = this.vertexPositions.map(pos => this.p5.dist(...pos, ...mousePos));
-        // console.log(distancesOfVerticesToMouse);
-        const indexOfVertexWithSmallestDist = distancesOfVerticesToMouse.reduce((smallest, currVal, currIndex, arr) => currVal < arr[smallest]? currIndex: smallest, 0);
-        // console.log(indexOfVertexWithSmallestDist);
-        if (distancesOfVerticesToMouse[indexOfVertexWithSmallestDist] <= this.dragCircleRadius) {
-            this.indexOfDraggedVertex = indexOfVertexWithSmallestDist;
-        }
-        else this.indexOfDraggedVertex = null;
-    }
-
     draw() {
         if (this.indexOfDraggedVertex != null) this.vertexPositions[this.indexOfDraggedVertex] = [this.p5.mouseX, this.p5.mouseY];
         super.draw();
         this.vertexPositions.forEach(pos => this.p5.circle(...pos, 2 * this.dragCircleRadius));
+    }
+
+    constructor(p5: P5, private canvas: P5.Renderer, vertexPositions: Vec2[]) {
+        super(p5, vertexPositions);
+        this.canvas.mousePressed(() => this.handleCanvasMousePressed());
+        this.canvas.mouseReleased(() => this.handleCanvasMouseReleased());
+        this.canvas.mouseMoved(() => this.handleCanvasMouseMoved());
+    }
+
+    private handleCanvasMousePressed() {
+        const selectedVertex = this.getVertexUserIsHoveringOver();
+        if (selectedVertex != null) {
+            this.indexOfDraggedVertex = selectedVertex;
+            // this.p5.cursor(this.p5.MOVE);
+            //unfortunately, this doesn't work, cursor doesn't update despite property being set on canvas... :/
+            this.p5.cursor('default');
+        }
+    }
+
+    private handleCanvasMouseReleased() {
+        this.indexOfDraggedVertex = null;
+        //changing different cursor while dragging somehow doesn't work
+        //We therefore just set cursor to p5.MOVE if user hovers over a draggable vertex and show default cursor if not
+        // this.p5.cursor('grab');
+    }
+
+    private handleCanvasMouseMoved() {
+        if (this.indexOfDraggedVertex != null) return;
+        const hoveredVertex = this.getVertexUserIsHoveringOver();
+        if (hoveredVertex != null) {
+            this.p5.cursor(this.p5.MOVE);
+        }
+        else this.p5.cursor('default');
+    }
+
+    private getVertexUserIsHoveringOver(): number | null {
+        const mousePos: Vec2 = [this.p5.mouseX, this.p5.mouseY];
+        const distancesOfVerticesToMouse = this.vertexPositions.map(pos => this.p5.dist(...pos, ...mousePos));
+        const indexOfVertexWithSmallestDist = distancesOfVerticesToMouse.reduce((smallest, currVal, currIndex, arr) => currVal < arr[smallest]? currIndex: smallest, 0);
+        if (distancesOfVerticesToMouse[indexOfVertexWithSmallestDist] <= this.dragCircleRadius) {
+            return indexOfVertexWithSmallestDist;
+        }
+        return null;
     }
 }
