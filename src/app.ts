@@ -1,5 +1,6 @@
 import P5 from 'p5';
 import { Polygon, DragPolygon } from './polygon';
+import { BarycentricTriangle } from './barycentric-triangle';
 
 export interface Drawable {
     draw(): void
@@ -25,7 +26,8 @@ const sketch = (p5: P5) => {
         // Configuring the canvas
         p5.background(bgColor);
 
-        stuffToDraw.push(new DragPolygon(p5, canvas, [[80, 100], [400, 140], [130, 310]]));
+        // stuffToDraw.push(new DragPolygon(p5, canvas, [[80, 100], [400, 140], [130, 310]]));
+        stuffToDraw.push(new BarycentricTriangle(p5, canvas, [[80, 100], [400, 140], [130, 310]]));
 
     };
 
