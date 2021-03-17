@@ -1,26 +1,57 @@
 import p5 from 'p5';
-import { Drawable, Vec2 } from './app';
-import { DragPolygon } from './polygon';
+import { Drawable } from './app';
+import { DragPolygon, DragVertex } from './polygon';
 
 export class BarycentricTriangle implements Drawable {
-    private pointInsideTriangle: Vec2;
+    private pointInsideTriangle: PointOnTriangleSurface;
     private triangle: DragPolygon;
 
     constructor(
         private p5: p5,
         canvas: p5.Renderer,
-        private vertices: [Vec2, Vec2, Vec2]
+        vertexPositions: [p5.Vector, p5.Vector, p5.Vector]
     ) {
-        this.triangle = new DragPolygon(p5, canvas, vertices);
-        const centerX = (vertices.map(v => v[0]).reduce((prev, curr) => prev + curr, 0) / 3);
-        const centerY = (vertices.map(v => v[1]).reduce((prev, curr) => prev + curr, 0) / 3);
-        this.pointInsideTriangle = [centerX, centerY];
+        this.triangle = new DragPolygon(p5, canvas, vertexPositions);
+        this.pointInsideTriangle = new PointOnTriangleSurface(p5, [this.triangle.vertices[0], this.triangle.vertices[1], this.triangle.vertices[2]]);
     }
 
     draw(): void {
         this.triangle.draw();
-        const centerX = (this.vertices.map(v => v[0]).reduce((prev, curr) => prev + curr, 0) / 3);
-        const centerY = (this.vertices.map(v => v[1]).reduce((prev, curr) => prev + curr, 0) / 3);
-        this.p5.point(centerX, centerY);
+        this.pointInsideTriangle.draw();
+    }
+}
+
+class PointOnTriangleSurface {
+    private coefficients: [number, number, number];
+    private pos: p5.Vector;
+
+    constructor(private p5: p5, private triangleVertices: [DragVertex, DragVertex, DragVertex]) {
+        const centerX = this.triangleVertices.map(v => v.x).reduce((prev, curr) => prev + curr, 0) / 3;
+        const centerY = triangleVertices.map(v => v.y).reduce((prev, curr) => prev + curr, 0) / 3
+        this.pos = p5.createVector(centerX, centerY);
+        this.coefficients = [0, 0, 0];
+    }
+
+    public draw(): void {
+        this.updatePos();
+
+        this.p5.push()
+        this.p5.strokeWeight(10);
+        this.p5.point(this.pos.x, this.pos.y);
+        this.p5.pop();
+    }
+
+    public updateCoefficients() {
+        //TODO: calculate properly
+        this.coefficients = [0, 0, 0];
+    }
+
+    updatePos() {
+        //I have no idea how barycentric coordinates worked lol
+        // console.log(this.triangleVertices);
+        // const weightedSumOfVertices = this.triangleVertices.map((v, i) => v.mult(this.coefficients[i]))
+        //     .reduce((prev, curr) => prev.add(curr), this.p5.createVector(0, 0));
+        // console.log('weighted sum', weightedSumOfVertices);
+        // this.pos = [ weightedSumOfVertices.x, weightedSumOfVertices.y ];
     }
 }

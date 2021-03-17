@@ -1,5 +1,4 @@
 import P5 from 'p5';
-import { Polygon, DragPolygon } from './polygon';
 import { BarycentricTriangle } from './barycentric-triangle';
 
 export interface Drawable {
@@ -9,8 +8,6 @@ export interface Drawable {
 export interface Clickable {
     checkClicked(x: number, y: number): void
 }
-
-export type Vec2 = [number, number];
 
 // Creating the sketch itself
 const sketch = (p5: P5) => {
@@ -27,7 +24,7 @@ const sketch = (p5: P5) => {
         p5.background(bgColor);
 
         // stuffToDraw.push(new DragPolygon(p5, canvas, [[80, 100], [400, 140], [130, 310]]));
-        stuffToDraw.push(new BarycentricTriangle(p5, canvas, [[80, 100], [400, 140], [130, 310]]));
+        stuffToDraw.push(new BarycentricTriangle(p5, canvas, [p5.createVector(80, 100), p5.createVector(400, 140), p5.createVector(130, 310)]));
 
     };
 
