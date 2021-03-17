@@ -1,6 +1,6 @@
 import p5 from "p5";
 import P5 from "p5";
-import { Drawable } from './app';
+import { CanvasEventHandlers, Drawable } from './app';
 
 export class Polygon implements Drawable {
     constructor(protected p5: p5, private vertexPositions: p5.Vector[]) {}
@@ -24,12 +24,12 @@ export class DragPolygon extends Polygon {
         this.vertices.forEach(v => v.draw());
     }
 
-    constructor(p5: p5, private canvas: p5.Renderer, vertexPositions: p5.Vector[]) {
+    constructor(p5: p5, private canvasEventHandlers: CanvasEventHandlers, vertexPositions: p5.Vector[]) {
         super(p5, vertexPositions);
         this.vertices = vertexPositions.map(pos => new DragVertex(p5, pos));
-        this.canvas.mousePressed(() => this.handleCanvasMousePressed());
-        this.canvas.mouseReleased(() => this.handleCanvasMouseReleased());
-        this.canvas.mouseMoved(() => this.handleCanvasMouseMoved());
+        canvasEventHandlers.mousePressed.push(() => this.handleCanvasMousePressed());
+        canvasEventHandlers.mouseReleased.push(() => this.handleCanvasMouseReleased());
+        canvasEventHandlers.mouseMoved.push(() => this.handleCanvasMouseMoved());
     }
 
     private handleCanvasMousePressed() {
