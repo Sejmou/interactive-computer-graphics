@@ -1,6 +1,7 @@
 import p5 from "p5";
 import P5 from "p5";
 import { CanvasEventHandlers, Drawable } from './app';
+import { indexToLowercaseLetter } from "./util";
 
 export class Polygon implements Drawable {
     constructor(protected p5: p5, private vertexPositions: p5.Vector[]) {}
@@ -21,12 +22,15 @@ export class DragPolygon extends Polygon {
 
     draw() {
         super.draw();
+    }
+
+    drawVertices() {
         this.vertices.forEach(v => v.draw());
     }
 
     constructor(p5: p5, private canvasEventHandlers: CanvasEventHandlers, vertexPositions: p5.Vector[]) {
         super(p5, vertexPositions);
-        this.vertices = vertexPositions.map(pos => new DragVertex(p5, pos));
+        this.vertices = vertexPositions.map((pos, i) => new DragVertex(p5, pos, indexToLowercaseLetter(i)));
         canvasEventHandlers.mousePressed.push(() => this.handleCanvasMousePressed());
         canvasEventHandlers.mouseReleased.push(() => this.handleCanvasMouseReleased());
         canvasEventHandlers.mouseMoved.push(() => this.handleCanvasMouseMoved());
@@ -64,13 +68,21 @@ export class DragVertex implements Drawable {
         return this.pos.y;
     }
 
+    public get position() {
+        return this.pos;
+    }
+
     public dragging: boolean = false;
 
-    constructor(protected p5: P5, protected pos: p5.Vector) {}
+    constructor(protected p5: P5, protected pos: p5.Vector, protected label: string = '', public color: p5.Color = p5.color(255)) {}
 
     draw(): void {
         if (this.dragging) this.updatePos();
+        this.p5.push();
+        this.p5.text(`${this.label? this.label + ' ': ''}(${this.pos.x.toFixed(0)}, ${this.pos.y.toFixed(0)})`, this.pos.x + 5, this.pos.y - 5);
+        this.p5.fill(this.color);
         this.p5.circle(this.pos.x, this.pos.y, 2 * this.dragCircleRadius);
+        this.p5.pop();
     }
 
     updatePos() {
