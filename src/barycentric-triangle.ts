@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { CanvasEventHandlers, Drawable } from './app';
 import { DragPolygon, DragVertex } from './polygon';
-import { drawLine, linearInterpolation } from './util';
+import { drawLine, linearInterpolation, renderTextWithDifferentColors } from './util';
 
 export class BarycentricTriangle implements Drawable {
     private pointInsideTriangle: PointOnTriangleSurface;
@@ -16,7 +16,7 @@ export class BarycentricTriangle implements Drawable {
         this.triangle.vertices[0].color = p5.color('red');
         this.triangle.vertices[1].color = p5.color('green');
         this.triangle.vertices[2].color = p5.color('blue');
-        this.pointInsideTriangle = new PointOnTriangleSurface(p5, [this.triangle.vertices[0], this.triangle.vertices[1], this.triangle.vertices[2]]);
+        this.pointInsideTriangle = new PointOnTriangleSurface(p5, [this.triangle.vertices[0], this.triangle.vertices[1], this.triangle.vertices[2]], 'P');
         canvasEventHandlers.mousePressed.push(() => this.handleMousePressed());
         canvasEventHandlers.mouseReleased.push(() => this.handleMouseReleased());
         canvasEventHandlers.mouseMoved.push(() => this.handleMouseMoved());
@@ -43,7 +43,6 @@ export class BarycentricTriangle implements Drawable {
 
 class PointOnTriangleSurface extends DragVertex {
     private coefficients: [number, number, number];
-    private framesDrawn = 0;
 
     constructor(p5: p5, private triangleVertices: [DragVertex, DragVertex, DragVertex], label: string = '') {
         super(p5, p5.createVector(
@@ -70,7 +69,21 @@ class PointOnTriangleSurface extends DragVertex {
         drawLine(this.p5, b, midAC, this.triangleVertices[1].color);
         drawLine(this.p5, c, midAB, this.triangleVertices[2].color);
 
+        this.renderCoefficientsText();
+
         super.draw();
+    }
+
+    private renderCoefficientsText() {
+        const [a, b, c] = this.triangleVertices;
+        const [aCoeff, bCoeff, cCoeff] = this.coefficients;
+        renderTextWithDifferentColors(this.p5, 20, 20, 
+            [`P = `, this.p5.color(0)],
+            [`${aCoeff.toFixed(2)} a`, a.color],
+            [' + ', this.p5.color(0)],
+            [`${bCoeff.toFixed(2)} b`, b.color],
+            [' + ', this.p5.color(0)],
+            [`${cCoeff.toFixed(2)} c`, c.color]);
     }
 
     public updateCoefficients() {

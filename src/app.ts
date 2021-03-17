@@ -41,7 +41,7 @@ const sketch = (p5: P5) => {
         // Configuring the canvas
         p5.background(bgColor);
 
-        stuffToDraw.push(new BarycentricTriangle(p5, canvasEventHandlers, [p5.createVector(80, 100), p5.createVector(400, 140), p5.createVector(130, 310)]));
+        stuffToDraw.push(new BarycentricTriangle(p5, canvasEventHandlers, [p5.createVector(80, 100), p5.createVector(130, 310), p5.createVector(400, 140)]));
 
     };
 
