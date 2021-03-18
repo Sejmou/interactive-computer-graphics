@@ -52,6 +52,7 @@ class PointOnTriangleSurface extends DragVertex {
         const [u, v] = [0.3333, 0.3333];
         const w = 1 - u - v;
         this.coefficients = [u, v, w];
+        this.updateColor();
     }
 
     public draw(): void {
