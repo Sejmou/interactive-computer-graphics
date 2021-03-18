@@ -49,8 +49,9 @@ class PointOnTriangleSurface extends DragVertex {
             triangleVertices.map(v => v.x).reduce((prev, curr) => prev + curr, 0) / 3,//centerX
             triangleVertices.map(v => v.y).reduce((prev, curr) => prev + curr, 0) / 3//centerY
         ), label);
-        this.coefficients = [0, 0, 0];
-        
+        const [u, v] = [0.333, 0.333];
+        const w = 1 - u - v;
+        this.coefficients = [u, v, w];
     }
 
     public draw(): void {
@@ -61,13 +62,10 @@ class PointOnTriangleSurface extends DragVertex {
         }
 
         const [a, b, c] = this.triangleVertices.map(v => v.position);
-        const midAB = linearInterpolation(a,b);
-        const midAC = linearInterpolation(a, c);
-        const midBC = linearInterpolation(b, c);
-        
-        drawLine(this.p5, a, midBC, this.triangleVertices[0].color);
-        drawLine(this.p5, b, midAC, this.triangleVertices[1].color);
-        drawLine(this.p5, c, midAB, this.triangleVertices[2].color);
+        const [colorA, colorB, colorC] = this.triangleVertices.map(v => v.color);
+        drawLine(this.p5, a, this.position, colorA);
+        drawLine(this.p5, b, this.position, colorB);
+        drawLine(this.p5, c, this.position, colorC);
 
         this.renderCoefficientsText();
 
@@ -76,30 +74,38 @@ class PointOnTriangleSurface extends DragVertex {
 
     private renderCoefficientsText() {
         const [a, b, c] = this.triangleVertices;
-        const [aCoeff, bCoeff, cCoeff] = this.coefficients;
-        renderTextWithDifferentColors(this.p5, 20, 20, 
+        const [u, v, w] = this.coefficients;
+        renderTextWithDifferentColors(this.p5, 20, 20,
             [`P = `, this.p5.color(0)],
-            [`${aCoeff.toFixed(2)} a`, a.color],
+            [`${u.toFixed(3)} a`, a.color],
             [' + ', this.p5.color(0)],
-            [`${bCoeff.toFixed(2)} b`, b.color],
+            [`${v.toFixed(3)} b`, b.color],
             [' + ', this.p5.color(0)],
-            [`${cCoeff.toFixed(2)} c`, c.color]);
+            [`${w.toFixed(3)} c`, c.color]);
     }
 
     public updateCoefficients() {
-        //TODO: calculate properly
+        //link: https://www.scratchapixel.com/lessons/3d-basic-rendering/ray-tracing-rendering-a-triangle/barycentric-coordinates
+        //don't understand why they use different coefficients with a, b, c
+        const [a, b, c] = this.triangleVertices.map(v => v.position);
+        const wholeTriangleArea = this.computeTriangleArea(a, b, c);
+        const areaCBP = this.computeTriangleArea(c, b, this.position);
+        const areaACP = this.computeTriangleArea(a, c, this.position);
+        const u = areaCBP / wholeTriangleArea;
+        const v = areaACP / wholeTriangleArea;
+        const w = 1 - u - v;
+        this.coefficients = [u, v, w];
+    }
+
+    private computeTriangleArea(...[a, b, c]: [p5.Vector, p5.Vector, p5.Vector]): number {
+        return (p5.Vector.cross(p5.Vector.sub(b, a), p5.Vector.sub(c, a)) as unknown as p5.Vector).mag() / 2;//bug in @types???
     }
 
     updatePosRelativeToTriangle() {
-        const centerX = this.triangleVertices.map(v => v.x).reduce((prev, curr) => prev + curr, 0) / 3;
-        const centerY = this.triangleVertices.map(v => v.y).reduce((prev, curr) => prev + curr, 0) / 3;
-        this.pos.x = centerX;
-        this.pos.y = centerY;
-        //I have no idea how barycentric coordinates worked lol
-        // console.log(this.triangleVertices);
-        // const weightedSumOfVertices = this.triangleVertices.map((v, i) => v.mult(this.coefficients[i]))
-        //     .reduce((prev, curr) => prev.add(curr), this.p5.createVector(0, 0));
-        // console.log('weighted sum', weightedSumOfVertices);
-        // this.pos = [ weightedSumOfVertices.x, weightedSumOfVertices.y ];
+        const [u, v, w] = this.coefficients;
+        const [a, b, c] = this.triangleVertices.map(v => v.position);
+        const newPos = p5.Vector.mult(a, u).add(p5.Vector.mult(b, v)).add(p5.Vector.mult(c,w));
+        this.position.x = newPos.x;
+        this.position.y = newPos.y;
     }
 }

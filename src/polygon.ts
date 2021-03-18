@@ -56,38 +56,34 @@ export class DragVertex implements Drawable {
     private dragCircleRadius = 5;
 
     public get hovering(): boolean {
-        const distVertexMouse = this.p5.dist(this.pos.x, this.pos.y, this.p5.mouseX, this.p5.mouseY);
+        const distVertexMouse = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
         return distVertexMouse <= this.dragCircleRadius;
     }
 
     public get x() {
-        return this.pos.x;
+        return this.position.x;
     }
 
     public get y() {
-        return this.pos.y;
-    }
-
-    public get position() {
-        return this.pos;
+        return this.position.y;
     }
 
     public dragging: boolean = false;
 
-    constructor(protected p5: P5, protected pos: p5.Vector, protected label: string = '', public color: p5.Color = p5.color(255)) {}
+    constructor(protected p5: P5, public position: p5.Vector, protected label: string = '', public color: p5.Color = p5.color(255)) {}
 
     draw(): void {
         if (this.dragging) this.updatePos();
         this.p5.push();
-        this.p5.text(`${this.label? this.label + ' ': ''}(${this.pos.x.toFixed(0)}, ${this.pos.y.toFixed(0)})`, this.pos.x + 5, this.pos.y - 5);
+        this.p5.text(`${this.label? this.label + ' ': ''}(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`, this.position.x + 5, this.position.y - 5);
         this.p5.fill(this.color);
-        this.p5.circle(this.pos.x, this.pos.y, 2 * this.dragCircleRadius);
+        this.p5.circle(this.position.x, this.position.y, 2 * this.dragCircleRadius);
         this.p5.pop();
     }
 
     updatePos() {
-        this.pos.x = this.p5.mouseX;
-        this.pos.y = this.p5.mouseY;
+        this.position.x = this.p5.mouseX;
+        this.position.y = this.p5.mouseY;
     }
 
 }
