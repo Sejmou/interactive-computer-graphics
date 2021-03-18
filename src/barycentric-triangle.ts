@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { CanvasEventHandlers, Drawable } from './app';
 import { DragPolygon, DragVertex } from './polygon';
-import { twoByTwoDeterminant, directionVector, drawLine, renderTextWithDifferentColors } from './util';
+import { twoByTwoDeterminant, directionVector, drawLine, renderTextWithDifferentColors, parseColorString } from './util';
 
 export class BarycentricTriangle implements Drawable {
     private pointInsideTriangle: PointOnTriangleSurface;
@@ -13,9 +13,9 @@ export class BarycentricTriangle implements Drawable {
         vertexPositions: [p5.Vector, p5.Vector, p5.Vector]
     ) {
         this.triangle = new DragPolygon(p5, canvasEventHandlers, vertexPositions);
-        this.triangle.vertices[0].color = p5.color('red');
-        this.triangle.vertices[1].color = p5.color('green');
-        this.triangle.vertices[2].color = p5.color('blue');
+        this.triangle.vertices[0].color = p5.color('rgb(255,0,0)');
+        this.triangle.vertices[1].color = p5.color('rgb(0,255,0)');
+        this.triangle.vertices[2].color = p5.color('rgb(0,0,255)');
         this.pointInsideTriangle = new PointOnTriangleSurface(p5, [this.triangle.vertices[0], this.triangle.vertices[1], this.triangle.vertices[2]], 'P');
         canvasEventHandlers.mousePressed.push(() => this.handleMousePressed());
         canvasEventHandlers.mouseReleased.push(() => this.handleMouseReleased());
@@ -68,7 +68,6 @@ class PointOnTriangleSurface extends DragVertex {
         drawLine(this.p5, c, this.position, colorC);
 
         this.renderCoefficientsText();
-
         super.draw();
     }
 
@@ -119,14 +118,25 @@ class PointOnTriangleSurface extends DragVertex {
         const detCPCA = twoByTwoDeterminant(directionVector(c, this.position), directionVector(c, a));
         const u = detBPBC / detACAB;
         const v = detCPCA / detACAB;
-        const w = 1- u - v;
+        const w = 1 - u - v;
         this.coefficients = [u, v, w];
+
+        this.updateColor();
+    }
+
+    private updateColor() {
+        const weightedVertexColors = this.triangleVertices.map(v => (parseColorString(v.color.toString())))
+            .map((color, i) => color.map(num => num * this.coefficients[i]));
+        const mixOfAllColors = weightedVertexColors.reduce((curr, prev) => curr.map((num, i) => num + prev[i]), [0, 0, 0, 0]);
+        const [r, g, b, a] = mixOfAllColors;
+        this.color = this.p5.color(r, g, b);//alpha doesn't work correctly, it's 1 (if all alphas are maxed out), however the function expects a number in range [0, 255]
+        this.color.setAlpha(a * 255);
     }
 
     updatePosRelativeToTriangle() {
         const [u, v, w] = this.coefficients;
         const [a, b, c] = this.triangleVertices.map(v => v.position);
-        const newPos = p5.Vector.mult(a, u).add(p5.Vector.mult(b, v)).add(p5.Vector.mult(c,w));
+        const newPos = p5.Vector.mult(a, u).add(p5.Vector.mult(b, v)).add(p5.Vector.mult(c, w));
         this.position.x = newPos.x;
         this.position.y = newPos.y;
     }

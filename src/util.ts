@@ -29,6 +29,11 @@ export function indexToLowercaseLetter(i: number): string {
     return String.fromCharCode(i + 97);
 }
 
+export function parseColorString(rgb: string): [number, number, number, number] {
+    const [r, g, b, a] = rgb.replace(/[^\d,]/g, '').split(',').map(str => +str);
+    return [ r, g, b, a ];
+}
+
 export function renderTextWithDifferentColors(p5: p5, x: number, y: number, ...textAndColor: [string, p5.Color][]) {
     let posX = x;
     textAndColor.forEach(([text, color]) => {
