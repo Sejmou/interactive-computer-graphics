@@ -15,6 +15,22 @@ export function directionVector(pointA: p5.Vector, pointB: p5.Vector) {
     return p5.Vector.sub(pointB, pointA);
 }
 
+export function drawLineAndDotBetween(p5Instance: p5, start: p5.Vector, stop: p5.Vector, percent: number, lineWidth: number, lineColor: string, dotDiameter: number, dotColor: string) {
+    const pointBetween = p5.Vector.lerp(start, stop, percent) as unknown as p5.Vector;
+
+    // draw line
+    p5Instance.stroke('#FFDAA2');
+    p5Instance.strokeWeight(lineWidth);
+    p5Instance.line(start.x, start.y, stop.x, stop.y);
+
+    // draw dot
+    p5Instance.noStroke();
+    p5Instance.fill(dotColor);
+    p5Instance.circle(pointBetween.x, pointBetween.y, dotDiameter);
+
+    return pointBetween;
+}
+
 //determinant can be interpreted as the oriented area of a parallelogram spanned by the two column vectors of a 2x2 matrix
 //https://math.stackexchange.com/a/115545
 export function twoByTwoDeterminant(colVec1: p5.Vector, colVec2: p5.Vector): number {
