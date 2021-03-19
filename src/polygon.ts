@@ -1,65 +1,53 @@
 import p5 from "p5";
 import P5 from "p5";
-import { CanvasEventHandlers, Drawable } from './app';
+import { Clickable, Drawable, Draggable } from './app';
 import { indexToLowercaseLetter } from "./util";
 
 export class Polygon implements Drawable {
-    constructor(protected p5: p5, private vertexPositions: p5.Vector[]) {}
+    constructor(protected p5: p5, private vertexPositions: p5.Vector[]) { }
 
     draw(): void {
-        const p5 = this.p5;
-        p5.push();
-
-		p5.beginShape();
-        this.vertexPositions.forEach(pos => p5.vertex(pos.x, pos.y));
-        // p5.fill(0);
-        p5.endShape(p5.CLOSE);
+        this.p5.push();
+        this.p5.beginShape();
+        this.vertexPositions.forEach(pos => this.p5.vertex(pos.x, pos.y));
+        this.p5.endShape(this.p5.CLOSE);
     }
 }
 
-export class DragPolygon extends Polygon {
+export class DragPolygon extends Polygon implements Draggable, Clickable {
     public vertices: DragVertex[];
 
-    draw() {
-        super.draw();
+    public get hovering(): boolean {
+        return this.vertices.some(v => v.hovering);
+    };
+
+    public get dragging(): boolean {
+        return this.vertices.some(v => v.dragging);
+    };
+
+    constructor(p5: p5, vertexPositions: p5.Vector[]) {
+        super(p5, vertexPositions);
+        this.vertices = vertexPositions.map((pos, i) => new DragVertex(p5, pos, indexToLowercaseLetter(i)));
     }
 
-    drawVertices() {
+    public drawVertices() {
         this.vertices.forEach(v => v.draw());
     }
 
-    constructor(p5: p5, private canvasEventHandlers: CanvasEventHandlers, vertexPositions: p5.Vector[]) {
-        super(p5, vertexPositions);
-        this.vertices = vertexPositions.map((pos, i) => new DragVertex(p5, pos, indexToLowercaseLetter(i)));
-        canvasEventHandlers.mousePressed.push(() => this.handleCanvasMousePressed());
-        canvasEventHandlers.mouseReleased.push(() => this.handleCanvasMouseReleased());
-        canvasEventHandlers.mouseMoved.push(() => this.handleCanvasMouseMoved());
+    handleMouseMoved(): void {
+        this.vertices.forEach(v => v.handleMouseMoved());
     }
 
-    private handleCanvasMousePressed() {
-        this.vertices.forEach(v => {
-            if (v.hovering) v.dragging = true;
-        });
+    handleMousePressed(): void {
+        this.vertices.forEach(v => v.handleMousePressed());
     }
 
-    private handleCanvasMouseReleased() {
-        this.vertices.forEach(v => v.dragging = false);
-    }
-
-    private handleCanvasMouseMoved() {
-        if (this.vertices.some(v => v.hovering)) this.p5.cursor(this.p5.MOVE);
-        else this.p5.cursor('default');
+    handleMouseReleased(): void {
+        this.vertices.forEach(v => v.handleMouseReleased());
     }
 }
 
-export class DragVertex implements Drawable {
-    private dragCircleRadius = 5;
-
-    public get hovering(): boolean {
-        const distVertexMouse = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
-        return distVertexMouse <= this.dragCircleRadius;
-    }
-
+export class Vertex implements Drawable {
     public get x() {
         return this.position.x;
     }
@@ -68,17 +56,38 @@ export class DragVertex implements Drawable {
         return this.position.y;
     }
 
+    constructor(protected p5: P5, public position: p5.Vector, protected label: string = '',
+        public color: p5.Color = p5.color(255), protected radius: number = 5, private showLabel: boolean = true) { }
+
+    draw(): void {
+        this.p5.push();
+        if (this.showLabel) {
+            this.p5.text(
+                `${this.label ? this.label + ' ' : ''}(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`,
+                this.position.x + 5, this.position.y - 5
+            );
+        }
+        this.p5.fill(this.color);
+        this.p5.circle(this.position.x, this.position.y, 2 * this.radius);
+        this.p5.pop();
+    }
+}
+
+export class DragVertex extends Vertex implements Draggable, Clickable {
+    public get hovering(): boolean {
+        const distVertexMouse = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
+        return distVertexMouse <= this.radius;
+    }
+
     public dragging: boolean = false;
 
-    constructor(protected p5: P5, public position: p5.Vector, protected label: string = '', public color: p5.Color = p5.color(255)) {}
+    constructor(p5: P5, position: p5.Vector, label: string = '', color: p5.Color = p5.color(255)) {
+        super(p5, position, label, color);
+    }
 
     draw(): void {
         if (this.dragging) this.updatePos();
-        this.p5.push();
-        this.p5.text(`${this.label? this.label + ' ': ''}(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`, this.position.x + 5, this.position.y - 5);
-        this.p5.fill(this.color);
-        this.p5.circle(this.position.x, this.position.y, 2 * this.dragCircleRadius);
-        this.p5.pop();
+        super.draw();
     }
 
     updatePos() {
@@ -86,4 +95,15 @@ export class DragVertex implements Drawable {
         this.position.y = this.p5.mouseY;
     }
 
+    public handleMousePressed() {
+        if (this.hovering) this.dragging = true;
+    }
+
+    public handleMouseReleased() {
+        this.dragging = false;
+    }
+
+    public handleMouseMoved() {
+        if (this.hovering) this.p5.cursor(this.p5.MOVE);
+    }
 }

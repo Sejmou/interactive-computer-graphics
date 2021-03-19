@@ -1,25 +1,29 @@
 import p5 from 'p5';
-import { CanvasEventHandlers, Drawable } from './app';
+import { Clickable, Drawable, Draggable } from './app';
 import { DragPolygon, DragVertex } from './polygon';
 import { twoByTwoDeterminant, directionVector, drawLine, renderTextWithDifferentColors, parseColorString } from './util';
 
-export class BarycentricTriangle implements Drawable {
+export class BarycentricTriangle implements Drawable, Clickable, Draggable {
     private pointInsideTriangle: PointOnTriangleSurface;
     private triangle: DragPolygon;
 
+    public get hovering(): boolean {
+        return this.triangle.hovering || this.pointInsideTriangle.hovering;
+    };
+
+    public get dragging(): boolean {
+        return this.triangle.dragging || this.pointInsideTriangle.dragging;
+    };
+
     constructor(
-        private p5: p5,
-        canvasEventHandlers: CanvasEventHandlers,
+        p5: p5,
         vertexPositions: [p5.Vector, p5.Vector, p5.Vector]
     ) {
-        this.triangle = new DragPolygon(p5, canvasEventHandlers, vertexPositions);
+        this.triangle = new DragPolygon(p5, vertexPositions);
         this.triangle.vertices[0].color = p5.color('rgb(255,0,0)');
         this.triangle.vertices[1].color = p5.color('rgb(0,255,0)');
         this.triangle.vertices[2].color = p5.color('rgb(0,0,255)');
         this.pointInsideTriangle = new PointOnTriangleSurface(p5, [this.triangle.vertices[0], this.triangle.vertices[1], this.triangle.vertices[2]], 'P');
-        canvasEventHandlers.mousePressed.push(() => this.handleMousePressed());
-        canvasEventHandlers.mouseReleased.push(() => this.handleMouseReleased());
-        canvasEventHandlers.mouseMoved.push(() => this.handleMouseMoved());
     }
 
     draw(): void {
@@ -28,16 +32,19 @@ export class BarycentricTriangle implements Drawable {
         this.triangle.drawVertices();//draw triangle vertices so that lines for pointInsideTriangle don't get rendered over them 
     }
 
-    private handleMouseMoved() {
-        if (this.pointInsideTriangle.dragging || this.pointInsideTriangle.hovering) this.p5.cursor(this.p5.MOVE);
+    handleMousePressed(): void {
+        this.triangle.handleMousePressed();
+        this.pointInsideTriangle.handleMousePressed();
     }
 
-    private handleMousePressed() {
-        if (this.pointInsideTriangle.hovering) this.pointInsideTriangle.dragging = true;
+    handleMouseReleased(): void {
+        this.triangle.handleMouseReleased();
+        this.pointInsideTriangle.handleMouseReleased();
     }
 
-    private handleMouseReleased() {
-        if (this.pointInsideTriangle.dragging) this.pointInsideTriangle.dragging = false;
+    handleMouseMoved(): void {
+        this.triangle.handleMouseMoved();
+        this.pointInsideTriangle.handleMouseMoved();
     }
 }
 
