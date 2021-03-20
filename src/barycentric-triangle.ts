@@ -33,8 +33,11 @@ export class BarycentricTriangle implements Drawable, Clickable, Draggable {
     }
 
     handleMousePressed(): void {
-        this.triangle.handleMousePressed();
-        this.pointInsideTriangle.handleMousePressed();
+        this.pointInsideTriangle.handleMousePressed();//after this call pointInsideTriangle.dragging might be true
+
+        //we don't want the user to be allowed to drag a triangle vertex and the pointInsideTriangle at the same time
+        //if this were allowed, the pointInsideTriangle would be stuck at the same pos as the triangle vertex
+        if (!this.pointInsideTriangle.dragging) this.triangle.handleMousePressed();
     }
 
     handleMouseReleased(): void {
