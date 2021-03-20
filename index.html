@@ -1,23 +1,37 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>Interactive Computer Graphics</title>
-    <style>
-      .app {
-        display: flex;
-        justify-content: space-around;
-        flex-wrap: wrap;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="app">
-      <div id="sketch1"></div>
-      <div id="sketch2"></div>
-      <div id="sketch3"></div>
-    </div>
-    <!-- "webpack keeps dist/ etc. out of our source-code and the text-editor previews" -> we don't need dist/ prefix in src, how does that work lol -->
-    <script src="app.js"></script>
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <title>Interactive Computer Graphics</title>
+  <style>
+    #app {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+
+    #app>div,
+    .flex-column {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .flex-row {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app" class="flex-row">
+    <div id="sketch1"></div>
+    <div id="sketch2"></div>
+    <div id="sketch3"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+
 </html>

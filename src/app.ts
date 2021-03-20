@@ -37,7 +37,7 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
     p5Instance.setup = () => {
         // Creating and positioning the canvas
         const canvas = p5Instance.createCanvas(800, 600);
-        canvas.parent("sketch1");
+        canvas.parent('sketch1');
 
         // Configuring the canvas
         p5Instance.background(bgColor);
@@ -89,7 +89,7 @@ const sketch2 = (p5Instance: p5) => {
     // The sketch setup method 
     p5Instance.setup = () => {
         const canvas = p5Instance.createCanvas(600, 450);
-        canvas.parent("sketch2");
+        canvas.parent('sketch2');
 
         const w = p5Instance.width * 0.65;
         const h = p5Instance.height * 0.60;
@@ -170,8 +170,9 @@ const bezierSketch = (p5Instance: p5) => {
     let bezierCurve: BezierCurve;
 
     p5Instance.setup = () => {
+        const parentContainer = 'sketch3';
         const canvas = p5Instance.createCanvas(600, 450);
-        canvas.parent("sketch3");
+        canvas.parent(parentContainer);
 
         const w = p5Instance.width * 0.65;
         const h = p5Instance.height * 0.60;
@@ -179,7 +180,7 @@ const bezierSketch = (p5Instance: p5) => {
         const x = (p5Instance.width / 2) - (w / 2) + (shift / 2);
         const y = (p5Instance.height / 2) - (h / 2);
 
-        bezierCurve = new BezierCurve(p5Instance, w, h, shift, x, y);
+        bezierCurve = new BezierCurve(p5Instance, parentContainer, w, h, shift, x, y);
 
         canvas.mousePressed(() => bezierCurve.handleMousePressed());
         canvas.mouseReleased(() => bezierCurve.handleMouseReleased());

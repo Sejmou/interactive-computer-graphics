@@ -36,7 +36,10 @@ export class Vertex implements Drawable {
 export class DragVertex extends Vertex implements Draggable, Clickable {
     public get hovering(): boolean {
         const distVertexMouse = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
-        return distVertexMouse <= this.radius;
+        const _hovering = distVertexMouse <= this.radius;
+        if (_hovering) this.radius = this.baseRadius * this.activeRadiusMultiplier;
+        else this.radius = this.baseRadius;
+        return _hovering;
     }
 
     public get dragging(): boolean {
@@ -46,8 +49,8 @@ export class DragVertex extends Vertex implements Draggable, Clickable {
     private _dragging = false;
 
     constructor(p5: p5, position: p5.Vector, label: string = '', color: p5.Color = p5.color(255), private activeColor?: p5.Color,
-        radius: number = 5, stroke: boolean = true, showLabel: boolean = true) {
-        super(p5, position, label, color, radius, stroke, showLabel);
+        private baseRadius: number = 5, stroke: boolean = true, showLabel: boolean = true, private activeRadiusMultiplier = 1.5) {
+        super(p5, position, label, color, baseRadius, stroke, showLabel);
     }
 
     draw(): void {

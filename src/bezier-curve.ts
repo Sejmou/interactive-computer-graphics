@@ -12,10 +12,39 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
     private dotDiameter: number;
     private dotColor: p5.Color;
     private colorOfPointOnBezier: p5.Color;
+    
+    private set t(newVal: number) {
+        this.sliderLabel.html(`t: ${newVal.toFixed(2)}`);
+        this.slider.value(newVal);
+        this._t = newVal;
+    };
+    
+    private get t(): number {
+        return this._t;
+    }
+    
+    private _t: number = 0;
 
-    private t: number = 0;
+    private tIncrement = 0.01;
+    
+    private sliderLabel: p5.Element;
+    private slider: p5.Element;
+    private playPauseButton: p5.Element;
+    private fasterButton: p5.Element;
+    private slowerButton: p5.Element;
 
-    constructor(private p5: p5, w: number, h: number, shift: number, x: number, y: number) {
+    private set animationRunning(newVal: boolean) {
+        this._animationRunning = newVal;
+        if (this._animationRunning) this.playPauseButton.html('Pause');
+        else this.playPauseButton.html('Resume');
+    }
+
+    private get animationRunning(): boolean {
+        return this._animationRunning;
+    }
+    private _animationRunning: boolean;
+
+    constructor(private p5: p5, parentContainerId: string, w: number, h: number, shift: number, x: number, y: number) {
         this.lineWidth = p5.width * 0.0025;
         this.lineColor = p5.color('#E1B000');
         this.dotDiameter = p5.width * 0.015;
@@ -23,11 +52,37 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         this.colorOfPointOnBezier = p5.color('#c64821');
 
         this.controlVertices = [
-            new DragVertex(p5, p5.createVector(x, y + h), 'anchor', p5.color(255, 0, 0), p5.color(150, 0, 0), this.dotDiameter / 2, false),
-            new DragVertex(p5, p5.createVector(x - shift, y), 'bezier control point 1', p5.color(0, 255, 0), p5.color(0, 150, 0), this.dotDiameter / 2, false),
-            new DragVertex(p5, p5.createVector(x + w - shift, y), 'bezier control point 2', p5.color(0, 255, 0), p5.color(0, 150, 0), this.dotDiameter / 2, false),
-            new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color(0, 0, 255), p5.color(0, 0, 150), this.dotDiameter / 2, false)
+            new DragVertex(p5, p5.createVector(x, y + h), 'anchor', p5.color(255, 0, 0), p5.color(150, 0, 0), this.dotDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x - shift, y), 'bezier control point 1', p5.color(0, 255, 0), p5.color(0, 150, 0), this.dotDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x + w - shift, y), 'bezier control point 2', p5.color(0, 255, 0), p5.color(0, 150, 0), this.dotDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color(0, 0, 255), p5.color(0, 0, 150), this.dotDiameter / 2, false, false)
         ];
+
+        const div = p5.createDiv();
+        div.parent(parentContainerId);
+        div.class('flex-row');
+
+        this.sliderLabel = p5.createSpan(`t: ${this.t.toFixed(2)}`);
+        this.sliderLabel.parent(div);
+
+        this.slider = p5.createSlider(0, 1, 0, 0.0025);
+        this.slider.parent(div);
+        this.slider.style('flex-grow', '2');
+        this.slider.mousePressed(() => this.animationRunning = false);
+
+        this.playPauseButton = p5.createButton('Start');
+        this.playPauseButton.parent(div);
+        this.playPauseButton.mouseClicked( () => this.animationRunning = !this.animationRunning);
+
+        this.slowerButton = p5.createButton('-');
+        this.slowerButton.parent(div);
+        this.slowerButton.mouseClicked( () => this.tIncrement -= 0.0025);
+
+        this.fasterButton = p5.createButton('+');
+        this.fasterButton.parent(div);
+        this.fasterButton.mouseClicked( () => this.tIncrement += 0.0025);
+
+        this._animationRunning = false;
     }
 
     handleMousePressed(): void {
@@ -62,8 +117,14 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         const p5 = this.p5;
         p5.background(240);
 
-        this.t = p5.frameCount % 100 / 100;
-
+        if (this.animationRunning) {
+            this.t = (this.t + this.tIncrement);
+            if (this.t > 1) this.t = 0;
+        }
+        else {
+            this.t = +this.slider.value();
+        }
+        
         this.drawBezierLine();
 
         this.drawDeCasteljauVisualization();
