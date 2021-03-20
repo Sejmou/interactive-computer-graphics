@@ -15,11 +15,20 @@ export function directionVector(pointA: p5.Vector, pointB: p5.Vector) {
     return p5.Vector.sub(pointB, pointA);
 }
 
-export function drawLineAndDotBetween(p5Instance: p5, start: p5.Vector, stop: p5.Vector, percent: number, lineWidth: number, lineColor: string, dotDiameter: number, dotColor: string) {
+interface LineConfig {
+    width: number,
+    color: p5.Color
+}
+
+export function drawLineAndDotBetween(
+    p5Instance: p5, start: p5.Vector, stop: p5.Vector, percent: number,
+    lineWidth: number = 4, lineColor: p5.Color = p5Instance.color(0), dotDiameter: number = 10, dotColor: p5.Color = p5Instance.color(60)
+) {
     const pointBetween = p5.Vector.lerp(start, stop, percent) as unknown as p5.Vector;
 
+    p5Instance.push();
     // draw line
-    p5Instance.stroke('#FFDAA2');
+    p5Instance.stroke(lineColor);
     p5Instance.strokeWeight(lineWidth);
     p5Instance.line(start.x, start.y, stop.x, stop.y);
 
@@ -27,6 +36,7 @@ export function drawLineAndDotBetween(p5Instance: p5, start: p5.Vector, stop: p5
     p5Instance.noStroke();
     p5Instance.fill(dotColor);
     p5Instance.circle(pointBetween.x, pointBetween.y, dotDiameter);
+    p5Instance.pop();
 
     return pointBetween;
 }
@@ -47,7 +57,7 @@ export function indexToLowercaseLetter(i: number): string {
 
 export function parseColorString(rgb: string): [number, number, number, number] {
     const [r, g, b, a] = rgb.replace(/[^\d,]/g, '').split(',').map(str => +str);
-    return [ r, g, b, a ];
+    return [r, g, b, a];
 }
 
 export function renderTextWithDifferentColors(p5: p5, x: number, y: number, ...textAndColor: [string, p5.Color][]) {

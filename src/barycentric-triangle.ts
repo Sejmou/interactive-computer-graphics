@@ -1,6 +1,7 @@
 import p5 from 'p5';
 import { Clickable, Drawable, Draggable } from './app';
-import { DragPolygon, DragVertex } from './polygon';
+import { DragPolygon } from './polygon';
+import { DragVertex } from './vertex';
 import { twoByTwoDeterminant, directionVector, drawLine, renderTextWithDifferentColors, parseColorString } from './util';
 
 export class BarycentricTriangle implements Drawable, Clickable, Draggable {

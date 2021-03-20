@@ -27,22 +27,22 @@ function isHoverable(object: any): object is Draggable {
 }
 
 // Creating sketch for barycentric coordinate demo
-const sketch1 = (p5: p5) => {
+const barycentricCoordinatesSketch = (p5Instance: p5) => {
     const bgColor = 230;
     const stuffToDraw: Drawable[] = [];
     const clickableStuff: Clickable[] = [];
     const hoverableStuff: Draggable[] = [];
 
     // The sketch setup method 
-    p5.setup = () => {
+    p5Instance.setup = () => {
         // Creating and positioning the canvas
-        const canvas = p5.createCanvas(800, 600);
+        const canvas = p5Instance.createCanvas(800, 600);
         canvas.parent("sketch1");
 
         // Configuring the canvas
-        p5.background(bgColor);
+        p5Instance.background(bgColor);
 
-        stuffToDraw.push(new BarycentricTriangle(p5, [p5.createVector(80, 100), p5.createVector(130, 310), p5.createVector(400, 140)]));
+        stuffToDraw.push(new BarycentricTriangle(p5Instance, [p5Instance.createVector(80, 100), p5Instance.createVector(130, 310), p5Instance.createVector(400, 140)]));
 
         stuffToDraw.forEach(thing => {
             if (isClickable(thing)) clickableStuff.push(thing);
@@ -62,18 +62,18 @@ const sketch1 = (p5: p5) => {
                 if (thing.hovering) hoveringOverSomething = true;
                 if (thing.dragging) draggingSomething = true;
             });
-            p5.cursor(draggingSomething? 'grabbing' : hoveringOverSomething? 'grab' : 'default');
+            p5Instance.cursor(draggingSomething? 'grabbing' : hoveringOverSomething? 'grab' : 'default');
         });
     };
 
     // The sketch draw method
-    p5.draw = () => {
-        p5.background(bgColor);
+    p5Instance.draw = () => {
+        p5Instance.background(bgColor);
         stuffToDraw.forEach(i => i.draw());
     };
 };
 
-new p5(sketch1);
+new p5(barycentricCoordinatesSketch);
 
 
 //Creating sketch for bezier curve demo
@@ -166,8 +166,8 @@ new p5(sketch2);
 
 
 //Creating sketch for bezier curve demo (using BezierCurve instance)
-const sketch3 = (p5Instance: p5) => {
-    const stuffToDraw: Drawable[] = [];
+const bezierSketch = (p5Instance: p5) => {
+    let bezierCurve: BezierCurve;
 
     p5Instance.setup = () => {
         const canvas = p5Instance.createCanvas(600, 450);
@@ -179,12 +179,19 @@ const sketch3 = (p5Instance: p5) => {
         const x = (p5Instance.width / 2) - (w / 2) + (shift / 2);
         const y = (p5Instance.height / 2) - (h / 2);
 
-        stuffToDraw.push(new BezierCurve(p5Instance, w, h, shift, x, y));
+        bezierCurve = new BezierCurve(p5Instance, w, h, shift, x, y);
+
+        canvas.mousePressed(() => bezierCurve.handleMousePressed());
+        canvas.mouseReleased(() => bezierCurve.handleMouseReleased());
+        canvas.mouseMoved(() => {
+            bezierCurve.handleMouseMoved();
+            p5Instance.cursor(bezierCurve.dragging? 'grabbing' : bezierCurve.hovering? 'grab' : 'default');
+        });
     };
 
     p5Instance.draw = () => {
-        stuffToDraw.forEach(thing => thing.draw());
+        bezierCurve.draw();
     };
 };
 
-new p5(sketch3);
+new p5(bezierSketch);
