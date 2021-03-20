@@ -7,6 +7,10 @@ export function drawLine(p5: p5, a: p5.Vector, b: p5.Vector, color: p5.Color = p
     p5.pop();
 }
 
+export function isCloseToZero(val: number) {
+    return Math.abs(val) < 1e-10; 
+}
+
 export function linearInterpolation(a: p5.Vector, b: p5.Vector, u: number = 0.5) {
     return p5.Vector.add(a, p5.Vector.mult(p5.Vector.sub(b, a), u));
 }

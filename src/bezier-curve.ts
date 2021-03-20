@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { Clickable, Draggable, Drawable } from './app';
 import { DragVertex } from './vertex';
-import { drawLineAndDotBetween } from './util'
+import { drawLineAndDotBetween, isCloseToZero } from './util'
 
 export class BezierCurve implements Drawable, Clickable, Draggable {
     private controlVertices: DragVertex[];
@@ -14,9 +14,11 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
     private colorOfPointOnBezier: p5.Color;
     
     private set t(newVal: number) {
-        this.sliderLabel.html(`t: ${newVal.toFixed(2)}`);
-        this.slider.value(newVal);
         this._t = newVal;
+        if (this._t > 1) this._t = 0;
+        if (this.t < 0) this._t = 1;
+        this.sliderLabel.html(`t: ${this._t.toFixed(2)}`);
+        this.slider.value(this._t);
     };
     
     private get t(): number {
@@ -25,7 +27,7 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
     
     private _t: number = 0;
 
-    private tIncrement = 0.01;
+    private tIncrement = 0.0125;
     
     private sliderLabel: p5.Element;
     private slider: p5.Element;
@@ -76,11 +78,19 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
 
         this.slowerButton = p5.createButton('-');
         this.slowerButton.parent(div);
-        this.slowerButton.mouseClicked( () => this.tIncrement -= 0.0025);
+        this.slowerButton.mouseClicked( () => {
+            this.animationRunning = true;
+            this.tIncrement -= 0.0025;
+            if (isCloseToZero(this.tIncrement)) this.tIncrement = -0.0025;
+        });
 
         this.fasterButton = p5.createButton('+');
         this.fasterButton.parent(div);
-        this.fasterButton.mouseClicked( () => this.tIncrement += 0.0025);
+        this.fasterButton.mouseClicked( () => {
+            this.animationRunning = true;
+            this.tIncrement += 0.0025;
+            if (isCloseToZero(this.tIncrement)) this.tIncrement = 0.0025;
+        });
 
         this._animationRunning = false;
     }
@@ -114,13 +124,9 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
     };
 
     draw(): void {
-        const p5 = this.p5;
-        p5.background(240);
+        this.p5.background(240);
 
-        if (this.animationRunning) {
-            this.t = (this.t + this.tIncrement);
-            if (this.t > 1) this.t = 0;
-        }
+        if (this.animationRunning) this.t = (this.t + this.tIncrement);
         else {
             this.t = +this.slider.value();
         }
