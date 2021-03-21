@@ -7,6 +7,7 @@
     "start": "webpack-dev-server",
     "dev": "webpack serve",
     "build": "webpack",
+    "deploy": "npm run build && gh-pages -d dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
