@@ -17,7 +17,6 @@ module.exports = {
         ]
     },
     devServer: {
-        port: 5500,
-        publicPath: '/dist/'//adding this so that webpack-dev-server serves file from (in-memory) /dist path too https://stackoverflow.com/a/36308143/13727176
+        port: 5500
     }
 };

@@ -37,7 +37,7 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
     p5Instance.setup = () => {
         // Creating and positioning the canvas
         const canvas = p5Instance.createCanvas(800, 600);
-        canvas.parent('sketch1');
+        canvas.parent('barycentric-sketch');
 
         // Configuring the canvas
         p5Instance.background(bgColor);
@@ -170,7 +170,7 @@ const bezierSketch = (p5Instance: p5) => {
     let bezierCurve: BezierCurve;
 
     p5Instance.setup = () => {
-        const parentContainer = 'sketch3';
+        const parentContainer = 'bezier-sketch';
         const canvas = p5Instance.createCanvas(600, 450);
         canvas.parent(parentContainer);
 

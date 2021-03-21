@@ -12,7 +12,7 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
     private dotDiameter: number;
     private dotColor: p5.Color;
     private colorOfPointOnBezier: p5.Color;
-    
+
     private set t(newVal: number) {
         this._t = newVal;
         if (this._t > 1) this._t = 0;
@@ -20,15 +20,15 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         this.sliderLabel.html(`t: ${this._t.toFixed(2)}`);
         this.slider.value(this._t);
     };
-    
+
     private get t(): number {
         return this._t;
     }
-    
+
     private _t: number = 0;
 
     private tIncrement = 0.0125;
-    
+
     private sliderLabel: p5.Element;
     private slider: p5.Element;
     private playPauseButton: p5.Element;
@@ -37,8 +37,8 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
 
     private set animationRunning(newVal: boolean) {
         this._animationRunning = newVal;
-        if (this._animationRunning) this.playPauseButton.html('Pause');
-        else this.playPauseButton.html('Resume');
+        if (this.animationRunning) this.playPauseButton.html('<span class="material-icons">pause</span>');
+        else this.playPauseButton.html('<span class="material-icons">play_arrow</span>');
     }
 
     private get animationRunning(): boolean {
@@ -62,7 +62,7 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
 
         const div = p5.createDiv();
         div.parent(parentContainerId);
-        div.class('flex-row');
+        div.class('flex-row center-cross-axis');
 
         this.sliderLabel = p5.createSpan(`t: ${this.t.toFixed(2)}`);
         this.sliderLabel.parent(div);
@@ -72,21 +72,25 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         this.slider.style('flex-grow', '2');
         this.slider.mousePressed(() => this.animationRunning = false);
 
-        this.playPauseButton = p5.createButton('Start');
-        this.playPauseButton.parent(div);
-        this.playPauseButton.mouseClicked( () => this.animationRunning = !this.animationRunning);
-
         this.slowerButton = p5.createButton('-');
         this.slowerButton.parent(div);
-        this.slowerButton.mouseClicked( () => {
+        this.slowerButton.html('<span class="material-icons">fast_rewind</span>');
+        this.slowerButton.mouseClicked(() => {
             this.animationRunning = true;
             this.tIncrement -= 0.0025;
             if (isCloseToZero(this.tIncrement)) this.tIncrement = -0.0025;
         });
 
+        this.playPauseButton = p5.createButton('<span class="material-icons">play_arrow</span>');
+        this.playPauseButton.parent(div);
+        this.playPauseButton.mouseClicked(() => {
+            this.animationRunning = !this.animationRunning;
+        });
+
         this.fasterButton = p5.createButton('+');
         this.fasterButton.parent(div);
-        this.fasterButton.mouseClicked( () => {
+        this.fasterButton.html('<span class="material-icons">fast_forward</span>');
+        this.fasterButton.mouseClicked(() => {
             this.animationRunning = true;
             this.tIncrement += 0.0025;
             if (isCloseToZero(this.tIncrement)) this.tIncrement = 0.0025;
@@ -130,7 +134,7 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         else {
             this.t = +this.slider.value();
         }
-        
+
         this.drawBezierLine();
 
         this.drawDeCasteljauVisualization();
