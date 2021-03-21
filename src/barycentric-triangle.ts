@@ -32,8 +32,10 @@ export class BarycentricTriangle implements Drawable, Clickable, Draggable {
 
     draw(): void {
         this.triangle.draw();
+        this.pointInsideTriangle.drawLinesToTriangleVertices();
+        this.triangle.drawVertices();
         this.pointInsideTriangle.draw();
-        this.triangle.drawVertices();//draw triangle vertices so that lines for pointInsideTriangle don't get rendered over them 
+        this.pointInsideTriangle.renderCoefficientsText();
     }
 
     handleMousePressed(): void {
@@ -77,23 +79,16 @@ class PointOnTriangleSurface extends DragVertex {
             this.updateCoefficients();
         }
 
-        const [a, b, c] = this.triangleVertices.map(v => v.position);
-        const [colorA, colorB, colorC] = this.triangleVertices.map(v => v.color);
-        drawLine(this.p5, a, this.position, colorA);
-        drawLine(this.p5, b, this.position, colorB);
-        drawLine(this.p5, c, this.position, colorC);
-
-        this.renderCoefficientsText();
         super.draw();
     }
 
-    private renderCoefficientsText() {
+    public renderCoefficientsText() {
         const [a, b, c] = this.triangleVertices;
         const [u, v, w] = this.coefficients;
         this.p5.push();
         this.p5.fill(this.p5.color(100));
         this.p5.noStroke();
-        this.p5.rect(15, 5, 180, 20);
+        this.p5.rect(15, 7, 180, 20);
         renderTextWithDifferentColors(this.p5, 20, 20,
             [`P = `, this.p5.color(240)],
             [`${u.toFixed(3)} a`, a.color],
@@ -102,6 +97,14 @@ class PointOnTriangleSurface extends DragVertex {
             [' + ', this.p5.color(240)],
             [`${w.toFixed(3)} c`, c.color]);
         this.p5.pop();
+    }
+
+    public drawLinesToTriangleVertices() {
+        const [a, b, c] = this.triangleVertices.map(v => v.position);
+        const [colorA, colorB, colorC] = this.triangleVertices.map(v => v.color);
+        drawLine(this.p5, a, this.position, colorA);
+        drawLine(this.p5, b, this.position, colorB);
+        drawLine(this.p5, c, this.position, colorC);
     }
 
     public updateCoefficients() {
