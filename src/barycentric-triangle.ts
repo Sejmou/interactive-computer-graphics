@@ -20,12 +20,14 @@ export class BarycentricTriangle implements Drawable, Clickable, Draggable {
         p5: p5,
         vertexPositions: [p5.Vector, p5.Vector, p5.Vector]
     ) {
-        this.triangle = new DragPolygon(p5, vertexPositions);
+        this.triangle = new DragPolygon(p5, vertexPositions, p5.color(125));
+        this.triangle.vertices.forEach(v => v.stroke = false);
         this.triangle.vertices[0].color = p5.color('#C64821');
         this.triangle.vertices[1].color = p5.color('#E1B000');
         this.triangle.vertices[2].color = p5.color('#2AB7A9');
 
         this.pointInsideTriangle = new PointOnTriangleSurface(p5, [this.triangle.vertices[0], this.triangle.vertices[1], this.triangle.vertices[2]], 'P');
+        this.pointInsideTriangle.stroke = false;
     }
 
     draw(): void {
@@ -53,6 +55,7 @@ export class BarycentricTriangle implements Drawable, Clickable, Draggable {
     }
 }
 
+//TODO: if motivated, cleanup code structure, update constructor, or maybe accept DragVertex as constructor parameter instead?
 class PointOnTriangleSurface extends DragVertex {
     private coefficients: [number, number, number];
 
@@ -87,13 +90,18 @@ class PointOnTriangleSurface extends DragVertex {
     private renderCoefficientsText() {
         const [a, b, c] = this.triangleVertices;
         const [u, v, w] = this.coefficients;
+        this.p5.push();
+        this.p5.fill(this.p5.color(100));
+        this.p5.noStroke();
+        this.p5.rect(15, 5, 180, 20);
         renderTextWithDifferentColors(this.p5, 20, 20,
-            [`P = `, this.p5.color(0)],
+            [`P = `, this.p5.color(240)],
             [`${u.toFixed(3)} a`, a.color],
-            [' + ', this.p5.color(0)],
+            [' + ', this.p5.color(240)],
             [`${v.toFixed(3)} b`, b.color],
-            [' + ', this.p5.color(0)],
+            [' + ', this.p5.color(240)],
             [`${w.toFixed(3)} c`, c.color]);
+        this.p5.pop();
     }
 
     public updateCoefficients() {
