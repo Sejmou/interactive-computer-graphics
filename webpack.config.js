@@ -1,3 +1,5 @@
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+
 module.exports = {
     entry: './src/app.ts',
     output: {
@@ -7,6 +9,12 @@ module.exports = {
         path: __dirname + '/dist',//dirname: global var supplied by node, when running webpack
         clean: true //only newly created files should remain in output folder
     },
+    plugins: [
+        new HtmlWebpackPlugin({//creates an index.html with script tag for app.js (bundled transpiled code for application) automatically
+            template: 'index.html',// Loads a custom template (using lodash by default)
+            title: 'Interactive Computer Graphics',//will be inserted at placeholder spot in generated html
+          })
+    ],
     resolve: {
         //enables users to leave off the extension when importing: If multiple files share the same name but have different extensions, webpack will resolve the one with the extension listed first in the array and skip the rest
         extensions: ['.ts', '.js']

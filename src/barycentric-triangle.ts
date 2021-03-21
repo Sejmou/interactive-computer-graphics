@@ -88,7 +88,7 @@ class PointOnTriangleSurface extends DragVertex {
         this.p5.push();
         this.p5.fill(this.p5.color(100));
         this.p5.noStroke();
-        this.p5.rect(15, 7, 180, 20);
+        this.p5.rect(15, 6, 180, 20);
         renderTextWithDifferentColors(this.p5, 20, 20,
             [`P = `, this.p5.color(240)],
             [`${u.toFixed(3)} a`, a.color],

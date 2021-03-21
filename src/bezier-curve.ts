@@ -128,8 +128,6 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
     };
 
     draw(): void {
-        this.p5.background(240);
-
         if (this.animationRunning) this.t = (this.t + this.tIncrement);
         else {
             this.t = +this.slider.value();
