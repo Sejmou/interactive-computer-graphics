@@ -11,7 +11,7 @@ export class Vertex implements Drawable {
     }
 
     constructor(protected p5: p5, public position: p5.Vector, protected label: string = '',
-        public color: p5.Color = p5.color(255), protected radius: number = 5, private stroke: boolean = true, private showLabel: boolean = true) { }
+        public color: p5.Color = p5.color(255), protected radius: number = 5, public stroke: boolean = true, public showLabel: boolean = true) { }
 
     draw(): void {
         this.p5.push();
@@ -48,8 +48,8 @@ export class DragVertex extends Vertex implements Draggable, Clickable {
 
     private _dragging = false;
 
-    constructor(p5: p5, position: p5.Vector, label: string = '', color: p5.Color = p5.color(255), private activeColor?: p5.Color,
-        private baseRadius: number = 5, stroke: boolean = true, showLabel: boolean = true, private activeRadiusMultiplier = 1.5) {
+    constructor(p5: p5, position: p5.Vector, label: string = '', color: p5.Color = p5.color(255), public activeColor?: p5.Color,
+        public baseRadius: number = 5, stroke: boolean = true, showLabel: boolean = true, public activeRadiusMultiplier = 1.5) {
         super(p5, position, label, color, baseRadius, stroke, showLabel);
     }
 

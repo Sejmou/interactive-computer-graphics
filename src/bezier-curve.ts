@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { Clickable, Draggable, Drawable } from './app';
 import { DragVertex } from './vertex';
-import { drawLineAndDotBetween, isCloseToZero } from './util'
+import { drawLineAndDotBetween, isCloseToZero, lightenDarkenColor } from './util'
 
 export class BezierCurve implements Drawable, Clickable, Draggable {
     private controlVertices: DragVertex[];
@@ -51,13 +51,13 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         this.lineColor = p5.color('#E1B000');
         this.dotDiameter = p5.width * 0.015;
         this.dotColor = p5.color('#E1B000');
-        this.colorOfPointOnBezier = p5.color('#c64821');
+        this.colorOfPointOnBezier = p5.color('#C64821');
 
         this.controlVertices = [
-            new DragVertex(p5, p5.createVector(x, y + h), 'anchor', p5.color(255, 0, 0), p5.color(150, 0, 0), this.dotDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x - shift, y), 'bezier control point 1', p5.color(0, 255, 0), p5.color(0, 150, 0), this.dotDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x + w - shift, y), 'bezier control point 2', p5.color(0, 255, 0), p5.color(0, 150, 0), this.dotDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color(0, 0, 255), p5.color(0, 0, 150), this.dotDiameter / 2, false, false)
+            new DragVertex(p5, p5.createVector(x, y + h), 'anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x - shift, y), 'bezier control point 1', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)),  this.dotDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x + w - shift, y), 'bezier control point 2', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)),  this.dotDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)),  this.dotDiameter / 2, false, false)
         ];
 
         const div = p5.createDiv();
