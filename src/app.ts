@@ -2,37 +2,11 @@ import p5 from 'p5';
 import { BarycentricTriangle } from './barycentric-triangle';
 import { BezierCurve } from './bezier-curve';
 
-export interface Drawable {
-    draw(): void
-}
-
-export interface Clickable {
-    handleMousePressed(): void,
-    handleMouseReleased(): void
-}
-
-export interface Draggable {
-    handleMouseMoved(): void,
-    hovering: boolean,
-    dragging: boolean
-}
-
-function isClickable(object: any): object is Clickable {
-    return ('handleMousePressed' in object) && (typeof object.handleMousePressed === 'function') &&
-    ('handleMouseReleased' in object) && (typeof object.handleMouseReleased === 'function') ;
-}
-
-function isHoverable(object: any): object is Draggable {
-    return ('handleMouseMoved' in object) && (typeof object.handleMouseMoved === 'function');
-}
-
 const bgColor = 230;
 
 // Creating sketch for barycentric coordinate demo
 const barycentricCoordinatesSketch = (p5Instance: p5) => {
-    const stuffToDraw: Drawable[] = [];
-    const clickableStuff: Clickable[] = [];
-    const hoverableStuff: Draggable[] = [];
+    let triangle: BarycentricTriangle;
 
     // The sketch setup method 
     p5Instance.setup = () => {
@@ -43,34 +17,25 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
         // Configuring the canvas
         p5Instance.background(bgColor);
 
-        stuffToDraw.push(new BarycentricTriangle(p5Instance, [p5Instance.createVector(80, 100), p5Instance.createVector(130, 310), p5Instance.createVector(400, 140)]));
+        triangle = new BarycentricTriangle(p5Instance, [p5Instance.createVector(80, 100), p5Instance.createVector(130, 310), p5Instance.createVector(400, 140)]);
 
-        stuffToDraw.forEach(thing => {
-            if (isClickable(thing)) clickableStuff.push(thing);
-        });
+        const handleMoved = () => {
+            triangle.handleMoved();
+            p5Instance.cursor(triangle.dragging ? 'grabbing' : triangle.hovering ? 'grab' : 'default');
+        };
 
-        stuffToDraw.forEach(thing => {
-            if (isHoverable(thing)) hoverableStuff.push(thing);
-        });
-        
-        canvas.mousePressed(() => clickableStuff.forEach(thing => thing.handleMousePressed()));
-        canvas.mouseReleased(() => clickableStuff.forEach(thing => thing.handleMouseReleased()));
-        canvas.mouseMoved(() => {
-            let hoveringOverSomething = false;
-            let draggingSomething = false;
-            hoverableStuff.forEach(thing => {
-                thing.handleMouseMoved();
-                if (thing.hovering) hoveringOverSomething = true;
-                if (thing.dragging) draggingSomething = true;
-            });
-            p5Instance.cursor(draggingSomething? 'grabbing' : hoveringOverSomething? 'grab' : 'default');
-        });
+        canvas.mousePressed(() => triangle.handlePressed());
+        canvas.touchStarted(() => triangle.handlePressed());
+        canvas.mouseReleased(() => triangle.handleReleased());
+        canvas.touchEnded(() => triangle.handleReleased());
+        canvas.mouseMoved(() => handleMoved());
+        canvas.touchMoved(() => handleMoved());
     };
 
     // The sketch draw method
     p5Instance.draw = () => {
         p5Instance.background(bgColor);
-        stuffToDraw.forEach(i => i.draw());
+        triangle.draw();
     };
 };
 
@@ -95,12 +60,17 @@ const bezierSketch = (p5Instance: p5) => {
 
         bezierCurve = new BezierCurve(p5Instance, parentContainer, w, h, shift, x, y);
 
-        canvas.mousePressed(() => bezierCurve.handleMousePressed());
-        canvas.mouseReleased(() => bezierCurve.handleMouseReleased());
-        canvas.mouseMoved(() => {
-            bezierCurve.handleMouseMoved();
-            p5Instance.cursor(bezierCurve.dragging? 'grabbing' : bezierCurve.hovering? 'grab' : 'default');
-        });
+        const handleMoved = () => {
+            bezierCurve.handleMoved();
+            p5Instance.cursor(bezierCurve.dragging ? 'grabbing' : bezierCurve.hovering ? 'grab' : 'default');
+        };
+
+        canvas.mousePressed(() => bezierCurve.handlePressed());
+        canvas.touchStarted(() => bezierCurve.handlePressed());
+        canvas.mouseReleased(() => bezierCurve.handleReleased());
+        canvas.touchEnded(() => bezierCurve.handleReleased());
+        canvas.mouseMoved(() => handleMoved());
+        canvas.touchMoved(() => handleMoved());
     };
 
     p5Instance.draw = () => {

@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Clickable, Drawable, Draggable } from './app';
+import { Clickable, Drawable, Draggable } from './ui-interfaces';
 import { indexToLowercaseLetter } from "./util";
 import { DragVertex } from "./vertex";
 
@@ -38,14 +38,14 @@ export class DragPolygon extends Polygon implements Draggable, Clickable {
         this.vertices.forEach(v => v.draw());
     }
 
-    handleMouseMoved(): void {
-        this.vertices.forEach(v => v.handleMouseMoved());
+    handleMoved(): void {
+        this.vertices.forEach(v => v.handleMoved());
     }
 
-    handleMousePressed(): void {
+    handlePressed(): void {
         for (let i = 0; i < this.vertices.length; i++) {
             let v = this.vertices[i];
-            v.handleMousePressed();//after this call v.dragging might be true!
+            v.handlePressed();//after this call v.dragging might be true!
 
             //we don't want several vertices to be dragged at the same time
             //this causes buggy behavior (we can't separate vertices anymore if they are stacked on top of each other)
@@ -54,7 +54,7 @@ export class DragPolygon extends Polygon implements Draggable, Clickable {
         }
     }
 
-    handleMouseReleased(): void {
-        this.vertices.forEach(v => v.handleMouseReleased());
+    handleReleased(): void {
+        this.vertices.forEach(v => v.handleReleased());
     }
 }

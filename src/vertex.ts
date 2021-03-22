@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Clickable, Draggable, Drawable } from "./app";
+import { Clickable, Draggable, Drawable } from "./ui-interfaces";
 
 export class Vertex implements Drawable {
     public get x() {
@@ -68,13 +68,14 @@ export class DragVertex extends Vertex implements Draggable, Clickable {
         this.position.y = this.p5.mouseY;
     }
 
-    public handleMousePressed() {
+    public handlePressed() {
         if (this.hovering) this._dragging = true;
     }
 
-    public handleMouseReleased() {
+    public handleReleased() {
         this._dragging = false;
     }
 
-    public handleMouseMoved() { }
+    //we don't really need to do anything here - position gets updated in draw() if necessary 
+    public handleMoved() { }
 }

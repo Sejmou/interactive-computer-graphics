@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { Clickable, Draggable, Drawable } from './app';
+import { Clickable, Draggable, Drawable } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { drawLineAndDotBetween, isCloseToZero, lightenDarkenColor } from './util'
 
@@ -27,7 +27,7 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
 
     private _t: number = 0;
 
-    private tIncrement = 0.0125;
+    private tIncrement = 0.0075;
 
     private sliderLabel: p5.Element;
     private slider: p5.Element;
@@ -99,10 +99,10 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         this._animationRunning = false;
     }
 
-    handleMousePressed(): void {
+    handlePressed(): void {
         for (let i = 0; i < this.controlVertices.length; i++) {
             let v = this.controlVertices[i];
-            v.handleMousePressed();//after this call v.dragging might be true!
+            v.handlePressed();//after this call v.dragging might be true!
 
             //we don't want several vertices to be dragged at the same time
             //this causes buggy behavior (we can't separate vertices anymore if they are stacked on top of each other)
@@ -111,12 +111,12 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         }
     }
 
-    handleMouseReleased(): void {
-        this.controlVertices.forEach(v => v.handleMouseReleased());
+    handleReleased(): void {
+        this.controlVertices.forEach(v => v.handleReleased());
     }
 
-    handleMouseMoved(): void {
-        this.controlVertices.forEach(v => v.handleMouseMoved());
+    handleMoved(): void {
+        this.controlVertices.forEach(v => v.handleMoved());
     }
 
     public get hovering(): boolean {
