@@ -25,11 +25,20 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
         };
 
         canvas.mousePressed(() => triangle.handlePressed());
-        canvas.touchStarted(() => triangle.handlePressed());
+        canvas.touchStarted(() => {
+            triangle.handlePressed();
+            return false; // prevent any browser defaults
+        });
         canvas.mouseReleased(() => triangle.handleReleased());
-        canvas.touchEnded(() => triangle.handleReleased());
+        canvas.touchEnded(() => {
+            triangle.handleReleased();
+            return false; // prevent any browser defaults
+        });
         canvas.mouseMoved(() => handleMoved());
-        canvas.touchMoved(() => handleMoved());
+        canvas.touchMoved(() => {
+            handleMoved();
+            return false; // prevent any browser defaults
+        });
     };
 
     // The sketch draw method
@@ -66,11 +75,20 @@ const bezierSketch = (p5Instance: p5) => {
         };
 
         canvas.mousePressed(() => bezierCurve.handlePressed());
-        canvas.touchStarted(() => bezierCurve.handlePressed());
+        canvas.touchStarted(() => {
+            bezierCurve.handlePressed();
+            return false; // prevent any browser defaults
+        });
         canvas.mouseReleased(() => bezierCurve.handleReleased());
-        canvas.touchEnded(() => bezierCurve.handleReleased());
+        canvas.touchEnded(() => {
+            bezierCurve.handleReleased();
+            return false; // prevent any browser defaults
+        });
         canvas.mouseMoved(() => handleMoved());
-        canvas.touchMoved(() => handleMoved());
+        canvas.touchMoved(() => {
+            handleMoved();
+            return false; // prevent any browser defaults
+        });
     };
 
     p5Instance.draw = () => {

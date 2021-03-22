@@ -25,6 +25,7 @@ module.exports = {
         ]
     },
     devServer: {
-        port: 5500
+        port: 5500,
+        open: true// automatically opens new browser window when running dev server for first time
     }
 };
