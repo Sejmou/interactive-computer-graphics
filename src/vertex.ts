@@ -27,7 +27,7 @@ export class Vertex implements Drawable {
         this.p5.pop();
     }
 
-    //can be overridden in inheriting classes (e.g. to change color depending on state)
+    // can be overridden in inheriting classes (e.g. to change color depending on state)
     protected setFillColor(): void {
         this.p5.fill(this.color);
     }
@@ -35,8 +35,16 @@ export class Vertex implements Drawable {
 
 export class DragVertex extends Vertex implements Draggable, Clickable {
     public get hovering(): boolean {
-        const distVertexMouse = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
-        const _hovering = distVertexMouse <= this.radius;
+        let distVertexToPointOfInteraction: number;
+        if (this.p5.touches.length > 0) { // user touched screen
+            distVertexToPointOfInteraction = this.p5.dist(
+                this.position.x, this.position.y,
+                (this.p5.touches[0] as any).x, (this.p5.touches[0] as any).y // @types not returning proper type, again, urgh... 
+            );
+        }
+        else distVertexToPointOfInteraction = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
+
+        const _hovering = distVertexToPointOfInteraction <= this.radius;
         if (_hovering) this.radius = this.baseRadius * this.activeRadiusMultiplier;
         else this.radius = this.baseRadius;
         return _hovering;
@@ -61,11 +69,17 @@ export class DragVertex extends Vertex implements Draggable, Clickable {
     protected setFillColor() {
         if (this.activeColor && (this.dragging || this.hovering)) this.p5.fill(this.activeColor);
         else this.p5.fill(this.color);
-    } 
+    }
 
     updatePos() {
-        this.position.x = this.p5.mouseX;
-        this.position.y = this.p5.mouseY;
+        if (this.p5.touches.length > 0) { // user touched screen
+            this.position.x = (this.p5.touches[0] as any).x; // @types not returning proper type, again, urgh...
+            this.position.y = (this.p5.touches[0] as any).y;
+        }
+        else {
+            this.position.x = this.p5.mouseX;
+            this.position.y = this.p5.mouseY;
+        }
     }
 
     public handlePressed() {
