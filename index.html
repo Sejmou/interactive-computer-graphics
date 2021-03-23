@@ -62,10 +62,27 @@
       border: none;
       padding: 5px 10px;
     }
+
+    /* hides page content (shown until p5.js is set up) */
+    #cover {
+      position: fixed;
+      height: 100%;
+      width: 100%;
+      top: 0;
+      left: 0;
+      background: #fff;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 
 <body>
+  <div id="cover">
+    <p>Loading...</p>
+  </div>
   <nav>
     <div class="nav-wrapper">
       <a href="#" class="brand-logo center">Interactive Computer Graphics</a>

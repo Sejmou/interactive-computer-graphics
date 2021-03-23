@@ -1,9 +1,11 @@
 import p5 from 'p5';
 import { Clickable, Draggable, Drawable } from './ui-interfaces';
 import { DragVertex } from './vertex';
-import { drawLineAndDotBetween, isCloseToZero, lightenDarkenColor } from './util'
+import { drawLineAndDotBetween, lightenDarkenColor } from './util'
 
 export class BezierCurve implements Drawable, Clickable, Draggable {
+    private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
+
     private controlVertices: DragVertex[];
 
     //config for lines between control points and dots rendered onto them for visualization
@@ -27,7 +29,7 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
 
     private _t: number = 0;
 
-    private tIncrement = 0.005;
+    private currAnimationSpeedMultiplierIndex = BezierCurve.animationSpeedMultipliers.findIndex(_ => _ === 1);
 
     private sliderLabel: p5.Element;
     private slider: p5.Element;
@@ -44,7 +46,7 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
     private get animationRunning(): boolean {
         return this._animationRunning;
     }
-    private _animationRunning: boolean;
+    private _animationRunning: boolean = false;
 
     constructor(private p5: p5, parentContainerId: string, w: number, h: number, shift: number, x: number, y: number) {
         this.lineWidth = p5.width * 0.0025;
@@ -55,9 +57,9 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
 
         this.controlVertices = [
             new DragVertex(p5, p5.createVector(x, y + h), 'anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x - shift, y), 'bezier control point 1', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)),  this.dotDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x + w - shift, y), 'bezier control point 2', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)),  this.dotDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)),  this.dotDiameter / 2, false, false)
+            new DragVertex(p5, p5.createVector(x - shift, y), 'bezier control point 1', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x + w - shift, y), 'bezier control point 2', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false)
         ];
 
         const div = p5.createDiv();
@@ -67,36 +69,34 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         this.sliderLabel = p5.createSpan(`t: ${this.t.toFixed(2)}`);
         this.sliderLabel.parent(div);
 
-        this.slider = p5.createSlider(0, 1, 0, 0.0025);
+        this.slider = p5.createSlider(0, 1, 0, 0.00125);
         this.slider.parent(div);
         this.slider.style('flex-grow', '2');
         this.slider.mousePressed(() => this.animationRunning = false);
 
-        this.slowerButton = p5.createButton('-');
+        this.slowerButton = p5.createButton('<span class="material-icons">fast_rewind</span>');
         this.slowerButton.parent(div);
-        this.slowerButton.html('<span class="material-icons">fast_rewind</span>');
-        this.slowerButton.mouseClicked(() => {
-            this.animationRunning = true;
-            this.tIncrement -= 0.0025;
-            if (isCloseToZero(this.tIncrement)) this.tIncrement = -0.0025;
-        });
+        this.slowerButton.mouseClicked(() => this.rewindClicked());
 
         this.playPauseButton = p5.createButton('<span class="material-icons">play_arrow</span>');
         this.playPauseButton.parent(div);
-        this.playPauseButton.mouseClicked(() => {
-            this.animationRunning = !this.animationRunning;
-        });
+        this.playPauseButton.mouseClicked(() => this.animationRunning = !this.animationRunning);
 
-        this.fasterButton = p5.createButton('+');
+
+        this.fasterButton = p5.createButton('<span class="material-icons">fast_forward</span>');
         this.fasterButton.parent(div);
-        this.fasterButton.html('<span class="material-icons">fast_forward</span>');
-        this.fasterButton.mouseClicked(() => {
-            this.animationRunning = true;
-            this.tIncrement += 0.0025;
-            if (isCloseToZero(this.tIncrement)) this.tIncrement = 0.0025;
-        });
+        this.fasterButton.mouseClicked(() => this.fastForwardClicked());
+    }
 
-        this._animationRunning = false;
+
+    fastForwardClicked() {
+        this.animationRunning = true;
+        if (this.currAnimationSpeedMultiplierIndex < BezierCurve.animationSpeedMultipliers.length - 1) this.currAnimationSpeedMultiplierIndex++;
+    }
+
+    rewindClicked() {
+        this.animationRunning = true;
+        if (this.currAnimationSpeedMultiplierIndex > 0) this.currAnimationSpeedMultiplierIndex--;
     }
 
     handlePressed(): void {
@@ -128,11 +128,9 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
     };
 
     draw(): void {
-        if (this.animationRunning) this.t = (this.t + this.tIncrement);
-        else {
-            this.t = +this.slider.value();
-        }
-
+        if (this.animationRunning) this.t += (0.005 * BezierCurve.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
+        else this.t = +this.slider.value();
+        
         this.drawBezierLine();
 
         this.drawDeCasteljauVisualization();

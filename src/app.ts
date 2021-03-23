@@ -39,6 +39,8 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
             handleMoved();
             return false; // prevent any browser defaults
         });
+
+        document.querySelector('#cover')?.remove();
     };
 
     // The sketch draw method
@@ -89,6 +91,8 @@ const bezierSketch = (p5Instance: p5) => {
             handleMoved();
             return false; // prevent any browser defaults
         });
+
+        document.querySelector('#cover')?.remove();
     };
 
     p5Instance.draw = () => {
