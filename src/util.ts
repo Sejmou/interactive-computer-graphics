@@ -8,7 +8,7 @@ export function drawLine(p5: p5, a: p5.Vector, b: p5.Vector, color: p5.Color = p
 }
 
 export function isCloseToZero(val: number) {
-    return Math.abs(val) < 1e-10; 
+    return Math.abs(val) < 1e-10;
 }
 
 export function linearInterpolation(a: p5.Vector, b: p5.Vector, u: number = 0.5) {
@@ -19,9 +19,8 @@ export function directionVector(pointA: p5.Vector, pointB: p5.Vector) {
     return p5.Vector.sub(pointB, pointA);
 }
 
-interface LineConfig {
-    width: number,
-    color: p5.Color
+export function clamp(val: number, min: number, max: number) {
+    return Math.max(Math.min(val, Math.max(min, max)), Math.min(min, max));
 }
 
 export function drawLineAndDotBetween(
@@ -77,31 +76,31 @@ export function renderTextWithDifferentColors(p5: p5, x: number, y: number, ...t
 }
 
 export function lightenDarkenColor(color: string, amount: number): string {
-  
+
     let usePound = false;
-  
+
     if (color[0] == "#") {
         color = color.slice(1);
         usePound = true;
     }
- 
-    const num = parseInt(color,16);
- 
+
+    const num = parseInt(color, 16);
+
     let r = (num >> 16) + amount;
- 
+
     if (r > 255) r = 255;
-    else if  (r < 0) r = 0;
- 
+    else if (r < 0) r = 0;
+
     let b = ((num >> 8) & 0x00FF) + amount;
- 
+
     if (b > 255) b = 255;
-    else if  (b < 0) b = 0;
- 
+    else if (b < 0) b = 0;
+
     let g = (num & 0x0000FF) + amount;
- 
+
     if (g > 255) g = 255;
     else if (g < 0) g = 0;
- 
-    return (usePound?"#":"") + (g | (b << 8) | (r << 16)).toString(16);
-  
+
+    return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
+
 }

@@ -1,5 +1,6 @@
 import p5 from "p5";
 import { Clickable, Draggable, Drawable, Touchable } from "./ui-interfaces";
+import { clamp } from "./util";
 
 //For some reason this is not defined in @types/p5...
 //A touch point on the screen, relative to (0, 0) of the canvas
@@ -63,7 +64,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     }
 
     public handleMousePressed() {
-        if (this._hovering) this._dragging = true;
+        if (this.hovering) this._dragging = true;
     }
 
     private mouseHoveringOver(): boolean {
@@ -77,9 +78,13 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
 
     private checkForTap() {
         const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
+        if (touches.length === 0) {
+            console.warn('touches was unexpectedly empty');
+            return;
+        }
         const touchesAndDistancesToVertex = touches.map(t => ({ ...t, distance: this.p5.dist(this.x, this.y, t.x, t.y) }));
         const nearestTouch = touchesAndDistancesToVertex.reduce((prev, curr) => curr.distance < prev.distance ? curr : prev);
-        if (nearestTouch.distance <= (this.radius * 1.5)) {//more tolerance on touch devices
+        if (nearestTouch.distance <= 20) {//"touch tolerance" should generally be bigger on touch devices (compared to mouse cursor)
             this._dragging = true;
             this.touchPointID = nearestTouch.id;
         };
@@ -91,7 +96,8 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     }
 
     draw(): void {
-        if (this.p5.touches.length > 0) { // mouseX and mouseY values don't make sense on touch devices, therefore better don't update anything
+        if (this.touchPointID) console.log(this.hovering, this.dragging);
+        if (this.p5.touches.length === 0) { // for non-touchscreen devices we have to check mouse hover status
             this._hovering = this.mouseHoveringOver();
         }
         if (this._hovering || this.dragging) this.radius = this.baseRadius * this.activeRadiusMultiplier;
@@ -120,5 +126,9 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
             this.position.x = this.p5.mouseX;
             this.position.y = this.p5.mouseY;
         }
+
+        //make sure we never leave the canvas
+        this.position.x = clamp(this.x, 0, this.p5.width);
+        this.position.y = clamp(this.y, 0, this.p5.height);
     }
 }
