@@ -27,7 +27,7 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
 
     private _t: number = 0;
 
-    private tIncrement = 0.0075;
+    private tIncrement = 0.005;
 
     private sliderLabel: p5.Element;
     private slider: p5.Element;
