@@ -3,13 +3,6 @@ const { merge } = require('webpack-merge');
 
 module.exports = merge(common, {
     mode: "production",
-    plugins: [
-        new HtmlWebpackPlugin({//creates an index.html with script tag for app.js (bundled transpiled code for application) automatically
-            favicon: "favicon.ico",
-            template: 'index.html',// Loads a custom template (using lodash by default)
-            title: 'Interactive Computer Graphics',//will be inserted at placeholder spot in generated html
-          })
-    ],
     output: {
         filename: 'app.[contenthash].js',
         //note: we don't need dist folder anymore, webpack will create some kind of virtual dist folder?
