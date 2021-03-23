@@ -64,7 +64,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable {
 
         const div = p5.createDiv();
         div.parent(parentContainerId);
-        div.class('flex-row center-cross-axis');
+        div.class('flex-row center-cross-axis disable-dbl-tap-zoom');
 
         this.sliderLabel = p5.createSpan(`t: ${this.t.toFixed(2)}`);
         this.sliderLabel.parent(div);
