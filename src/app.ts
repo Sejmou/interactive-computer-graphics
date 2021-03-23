@@ -4,17 +4,15 @@ import { BezierCurve } from './bezier-curve';
 
 const bgColor = 230;
 
-// Creating sketch for barycentric coordinate demo
 const barycentricCoordinatesSketch = (p5Instance: p5) => {
     let triangle: BarycentricTriangle;
 
-    // The sketch setup method 
     p5Instance.setup = () => {
-        // Creating and positioning the canvas
-        const canvas = p5Instance.createCanvas(600, 450);
-        canvas.parent('barycentric-sketch');
+        const parentContainer = 'barycentric-sketch';
 
-        // Configuring the canvas
+        const canvas = p5Instance.createCanvas(600, 450);
+        canvas.parent(parentContainer);
+
         p5Instance.background(bgColor);
 
         triangle = new BarycentricTriangle(p5Instance, [p5Instance.createVector(80, 100), p5Instance.createVector(130, 310), p5Instance.createVector(400, 140)]);
@@ -27,7 +25,10 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
             return false; // prevent any browser defaults
         });
         canvas.touchStarted(() => {
-            triangle.handleTouchStarted();
+            //calling this in setTimeout as p5Inst.touches is apparently not updated until after handleTouchStarted is done executing
+            setTimeout(() => {
+                triangle.handleTouchStarted();
+            });
             return false; // prevent any browser defaults
         });
         canvas.mouseReleased(() => {
@@ -43,10 +44,18 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
             return false; // prevent any browser defaults
         });
 
+        const preventScrollIfDragging = (e: TouchEvent) => {
+            if (triangle.dragging) e.preventDefault();
+        };
+        document.addEventListener('touchstart', preventScrollIfDragging, { passive: false });// https://stackoverflow.com/a/49582193/13727176
+        document.addEventListener('touchmove', preventScrollIfDragging, { passive: false });
+        document.addEventListener('touchend', preventScrollIfDragging, { passive: false });
+        document.addEventListener('touchcancel', preventScrollIfDragging, { passive: false });
+
+        //remove cover (full page loading screen)
         document.querySelector('#cover')?.remove();
     };
 
-    // The sketch draw method
     p5Instance.draw = () => {
         p5Instance.background(bgColor);
         triangle.draw();
@@ -57,12 +66,12 @@ new p5(barycentricCoordinatesSketch);
 
 
 
-//Creating sketch for bezier curve demo (using BezierCurve instance)
 const bezierSketch = (p5Instance: p5) => {
     let bezierCurve: BezierCurve;
 
     p5Instance.setup = () => {
         const parentContainer = 'bezier-sketch';
+
         const canvas = p5Instance.createCanvas(600, 450);
         canvas.parent(parentContainer);
 
@@ -82,7 +91,12 @@ const bezierSketch = (p5Instance: p5) => {
             return false; // prevent any browser defaults
         });
         canvas.touchStarted(() => {
-            bezierCurve.handleTouchStarted();
+            //calling this in setTimeout as p5Inst.touches is apparently not updated until after handleTouchStarted is done executing
+            setTimeout(() => {
+                bezierCurve.handleTouchStarted();
+                if (!bezierCurve.dragging) canvas.style('touch-action', 'auto');
+                else canvas.style('touch-action', 'none');
+            });
             return false; // prevent any browser defaults
         });
         canvas.mouseReleased(() => {
@@ -91,12 +105,22 @@ const bezierSketch = (p5Instance: p5) => {
         });
         canvas.touchEnded(() => {
             bezierCurve.handleReleased();
+            if (!bezierCurve.dragging) canvas.style('touch-action', 'auto');
+            else canvas.style('touch-action', 'none');
             return false; // prevent any browser defaults
         });
         canvas.mouseMoved(() => {
             updateCursor();
             return false;
         });
+
+        const preventScrollIfDragging = (e: TouchEvent) => {
+            if (bezierCurve.dragging) e.preventDefault();
+        };
+        document.addEventListener('touchstart', preventScrollIfDragging, { passive: false });// https://stackoverflow.com/a/49582193/13727176
+        document.addEventListener('touchmove', preventScrollIfDragging, { passive: false });
+        document.addEventListener('touchend', preventScrollIfDragging, { passive: false });
+        document.addEventListener('touchcancel', preventScrollIfDragging, { passive: false });
 
         document.querySelector('#cover')?.remove();
     };

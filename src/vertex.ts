@@ -1,6 +1,14 @@
 import p5 from "p5";
 import { Clickable, Draggable, Drawable, Touchable } from "./ui-interfaces";
 
+//For some reason this is not defined in @types/p5...
+//A touch point on the screen, relative to (0, 0) of the canvas
+interface p5TouchPoint {
+    x: number,
+    y: number,
+    id: number
+}
+
 export class Vertex implements Drawable {
     public get x() {
         return this.position.x;
@@ -38,13 +46,16 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
         return this._hovering;
     }
 
-    
+
     public get dragging(): boolean {
         return this._dragging;
     }
-    
+
     private _hovering = false;
     private _dragging = false;
+
+    //!= null/undefined if user drags vertex on touch device
+    private touchPointID?: number | null;
 
     constructor(p5: p5, position: p5.Vector, label: string = '', color: p5.Color = p5.color(255), public activeColor?: p5.Color,
         public baseRadius: number = 5, stroke: boolean = true, showLabel: boolean = true, public activeRadiusMultiplier = 1.5) {
@@ -61,27 +72,28 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     }
 
     handleTouchStarted(): void {
-        this._dragging = this.tapped();
+        this.checkForTap();
     }
 
-    private tapped() {
-        setTimeout(() => console.log((this.p5.touches as any[]).map(t => t.id)));
-        const touches = this.p5.touches as any[]; // is this a mistake in @types/p5, again?
-        // const distancesOfTouchesToVertex = touches.map(t => t.fasd)
-        // const vertexToPointTouched = this.p5.dist(
-        //     this.position.x, this.position.y,
-        //     (this.p5.touches[0] as any).x, (this.p5.touches[0] as any).y // @types not returning proper type, again, urgh... 
-        // );
-        // return vertexToPointTouched <= (this.radius * 1.5);//more tolerance on touch devices
-        return false;
+    private checkForTap() {
+        const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
+        const touchesAndDistancesToVertex = touches.map(t => ({ ...t, distance: this.p5.dist(this.x, this.y, t.x, t.y) }));
+        const nearestTouch = touchesAndDistancesToVertex.reduce((prev, curr) => curr.distance < prev.distance ? curr : prev);
+        if (nearestTouch.distance <= (this.radius * 1.5)) {//more tolerance on touch devices
+            this._dragging = true;
+            this.touchPointID = nearestTouch.id;
+        };
     }
 
     public handleReleased() {
         this._dragging = false;
+        this.touchPointID = null;
     }
 
     draw(): void {
-        this._hovering = this.mouseHoveringOver();
+        if (this.p5.touches.length > 0) { // mouseX and mouseY values don't make sense on touch devices, therefore better don't update anything
+            this._hovering = this.mouseHoveringOver();
+        }
         if (this._hovering || this.dragging) this.radius = this.baseRadius * this.activeRadiusMultiplier;
         else this.radius = this.baseRadius;
         if (this.dragging) this.updatePos();
@@ -94,9 +106,15 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     }
 
     updatePos() {
-        if (this.p5.touches.length > 0 && this.hovering) { // user touched screen
-            this.position.x = (this.p5.touches[0] as any).x; // @types not returning proper type, again, urgh...
-            this.position.y = (this.p5.touches[0] as any).y;
+        if (this.touchPointID) {
+            const touchPoint = (this.p5.touches as p5TouchPoint[]).find(t => t.id === this.touchPointID);
+            if (touchPoint) {
+                console.log(touchPoint.x, touchPoint.y);
+                this.position.x = touchPoint.x;
+                this.position.y = touchPoint.y;
+            }
+            else console.warn(`touchPoint with ID ${this.touchPointID} not found!`);
+            return;
         }
         else {
             this.position.x = this.p5.mouseX;
