@@ -1,9 +1,9 @@
 import p5 from 'p5';
-import { Clickable, Draggable, Drawable } from './ui-interfaces';
+import { Touchable, Draggable, Drawable } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { drawLineAndDotBetween, lightenDarkenColor } from './util'
 
-export class BezierCurve implements Drawable, Clickable, Draggable {
+export class BezierCurve implements Drawable, Touchable, Draggable {
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
 
     private controlVertices: DragVertex[];
@@ -99,10 +99,10 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         if (this.currAnimationSpeedMultiplierIndex > 0) this.currAnimationSpeedMultiplierIndex--;
     }
 
-    handlePressed(): void {
+    handleMousePressed(): void {
         for (let i = 0; i < this.controlVertices.length; i++) {
             let v = this.controlVertices[i];
-            v.handlePressed();//after this call v.dragging might be true!
+            v.handleMousePressed();//after this call v.dragging might be true!
 
             //we don't want several vertices to be dragged at the same time
             //this causes buggy behavior (we can't separate vertices anymore if they are stacked on top of each other)
@@ -111,12 +111,12 @@ export class BezierCurve implements Drawable, Clickable, Draggable {
         }
     }
 
-    handleReleased(): void {
-        this.controlVertices.forEach(v => v.handleReleased());
+    handleTouchStarted(): void {
+        this.controlVertices.forEach(v => v.handleTouchStarted());
     }
 
-    handleMoved(): void {
-        this.controlVertices.forEach(v => v.handleMoved());
+    handleReleased(): void {
+        this.controlVertices.forEach(v => v.handleReleased());
     }
 
     public get hovering(): boolean {

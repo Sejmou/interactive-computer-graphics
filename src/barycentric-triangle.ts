@@ -1,10 +1,10 @@
 import p5 from 'p5';
-import { Clickable, Drawable, Draggable } from './ui-interfaces';
+import { Clickable, Drawable, Draggable, Touchable } from './ui-interfaces';
 import { DragPolygon } from './polygon';
 import { DragVertex } from './vertex';
 import { twoByTwoDeterminant, directionVector, drawLine, renderTextWithDifferentColors, parseColorString } from './util';
 
-export class BarycentricTriangle implements Drawable, Clickable, Draggable {
+export class BarycentricTriangle implements Drawable, Clickable, Touchable, Draggable {
     private pointInsideTriangle: PointOnTriangleSurface;
     private triangle: DragPolygon;
 
@@ -38,22 +38,22 @@ export class BarycentricTriangle implements Drawable, Clickable, Draggable {
         this.pointInsideTriangle.renderCoefficientsText();
     }
 
-    handlePressed(): void {
-        this.pointInsideTriangle.handlePressed();//after this call pointInsideTriangle.dragging might be true
+    handleTouchStarted() {
+        this.pointInsideTriangle.handleTouchStarted();
+        this.triangle.handleTouchStarted();
+    };
+
+    handleMousePressed(): void {
+        this.pointInsideTriangle.handleMousePressed();//after this call pointInsideTriangle.dragging might be true
 
         //we don't want the user to be allowed to drag a triangle vertex and the pointInsideTriangle at the same time
         //if this were allowed, the pointInsideTriangle would be stuck at the same pos as the triangle vertex
-        if (!this.pointInsideTriangle.dragging) this.triangle.handlePressed();
+        if (!this.pointInsideTriangle.dragging) this.triangle.handleMousePressed();
     }
 
     handleReleased(): void {
         this.triangle.handleReleased();
         this.pointInsideTriangle.handleReleased();
-    }
-
-    handleMoved(): void {
-        this.triangle.handleMoved();
-        this.pointInsideTriangle.handleMoved();
     }
 }
 

@@ -3,14 +3,18 @@ export interface Drawable {
 }
 
 export interface Clickable {
-    handlePressed(): void,
+    handleMousePressed(): void,
+    handleReleased(): void
+}
+
+export interface Touchable {
+    handleTouchStarted(): void,
     handleReleased(): void
 }
 
 export interface Draggable {
-    hovering: boolean,
-    dragging: boolean,
-    handleMoved(): void
+    readonly hovering: boolean,
+    readonly dragging: boolean
 }
 
 export function isClickable(object: any): object is Clickable {

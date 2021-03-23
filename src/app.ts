@@ -19,24 +19,27 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
 
         triangle = new BarycentricTriangle(p5Instance, [p5Instance.createVector(80, 100), p5Instance.createVector(130, 310), p5Instance.createVector(400, 140)]);
 
-        const handleMoved = () => {
-            triangle.handleMoved();
-            p5Instance.cursor(triangle.dragging ? 'grabbing' : triangle.hovering ? 'grab' : 'default');
-        };
+        const updateCursor = () => p5Instance.cursor(triangle.dragging ? 'grabbing' : triangle.hovering ? 'grab' : 'default');
 
-        canvas.mousePressed(() => triangle.handlePressed());
-        canvas.touchStarted(() => {
-            triangle.handlePressed();
+        canvas.mousePressed(() => {
+            triangle.handleMousePressed();
+            updateCursor();
             return false; // prevent any browser defaults
         });
-        canvas.mouseReleased(() => triangle.handleReleased());
+        canvas.touchStarted(() => {
+            triangle.handleTouchStarted();
+            return false; // prevent any browser defaults
+        });
+        canvas.mouseReleased(() => {
+            triangle.handleReleased();
+            updateCursor();
+        });
         canvas.touchEnded(() => {
             triangle.handleReleased();
             return false; // prevent any browser defaults
         });
-        canvas.mouseMoved(() => handleMoved());
-        canvas.touchMoved(() => {
-            handleMoved();
+        canvas.mouseMoved(() => {
+            updateCursor();
             return false; // prevent any browser defaults
         });
 
@@ -71,25 +74,28 @@ const bezierSketch = (p5Instance: p5) => {
 
         bezierCurve = new BezierCurve(p5Instance, parentContainer, w, h, shift, x, y);
 
-        const handleMoved = () => {
-            bezierCurve.handleMoved();
-            p5Instance.cursor(bezierCurve.dragging ? 'grabbing' : bezierCurve.hovering ? 'grab' : 'default');
-        };
+        const updateCursor = () => p5Instance.cursor(bezierCurve.dragging ? 'grabbing' : bezierCurve.hovering ? 'grab' : 'default');
 
-        canvas.mousePressed(() => bezierCurve.handlePressed());
-        canvas.touchStarted(() => {
-            bezierCurve.handlePressed();
+        canvas.mousePressed(() => {
+            bezierCurve.handleMousePressed();
+            updateCursor();
             return false; // prevent any browser defaults
         });
-        canvas.mouseReleased(() => bezierCurve.handleReleased());
+        canvas.touchStarted(() => {
+            bezierCurve.handleTouchStarted();
+            return false; // prevent any browser defaults
+        });
+        canvas.mouseReleased(() => {
+            bezierCurve.handleReleased();
+            updateCursor();
+        });
         canvas.touchEnded(() => {
             bezierCurve.handleReleased();
             return false; // prevent any browser defaults
         });
-        canvas.mouseMoved(() => handleMoved());
-        canvas.touchMoved(() => {
-            handleMoved();
-            return false; // prevent any browser defaults
+        canvas.mouseMoved(() => {
+            updateCursor();
+            return false;
         });
 
         document.querySelector('#cover')?.remove();

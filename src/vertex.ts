@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Clickable, Draggable, Drawable } from "./ui-interfaces";
+import { Clickable, Draggable, Drawable, Touchable } from "./ui-interfaces";
 
 export class Vertex implements Drawable {
     public get x() {
@@ -33,27 +33,17 @@ export class Vertex implements Drawable {
     }
 }
 
-export class DragVertex extends Vertex implements Draggable, Clickable {
+export class DragVertex extends Vertex implements Draggable, Clickable, Touchable {
     public get hovering(): boolean {
-        let distVertexToPointOfInteraction: number;
-        if (this.p5.touches.length > 0) { // user touched screen
-            distVertexToPointOfInteraction = this.p5.dist(
-                this.position.x, this.position.y,
-                (this.p5.touches[0] as any).x, (this.p5.touches[0] as any).y // @types not returning proper type, again, urgh... 
-            );
-        }
-        else distVertexToPointOfInteraction = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
-
-        const _hovering = distVertexToPointOfInteraction <= this.radius;
-        if (_hovering) this.radius = this.baseRadius * this.activeRadiusMultiplier;
-        else this.radius = this.baseRadius;
-        return _hovering;
+        return this._hovering;
     }
 
+    
     public get dragging(): boolean {
         return this._dragging;
     }
-
+    
+    private _hovering = false;
     private _dragging = false;
 
     constructor(p5: p5, position: p5.Vector, label: string = '', color: p5.Color = p5.color(255), public activeColor?: p5.Color,
@@ -61,7 +51,39 @@ export class DragVertex extends Vertex implements Draggable, Clickable {
         super(p5, position, label, color, baseRadius, stroke, showLabel);
     }
 
+    public handleMousePressed() {
+        if (this._hovering) this._dragging = true;
+    }
+
+    private mouseHoveringOver(): boolean {
+        const vertexToMouse = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
+        return vertexToMouse <= this.radius;
+    }
+
+    handleTouchStarted(): void {
+        this._dragging = this.tapped();
+    }
+
+    private tapped() {
+        setTimeout(() => console.log((this.p5.touches as any[]).map(t => t.id)));
+        const touches = this.p5.touches as any[]; // is this a mistake in @types/p5, again?
+        // const distancesOfTouchesToVertex = touches.map(t => t.fasd)
+        // const vertexToPointTouched = this.p5.dist(
+        //     this.position.x, this.position.y,
+        //     (this.p5.touches[0] as any).x, (this.p5.touches[0] as any).y // @types not returning proper type, again, urgh... 
+        // );
+        // return vertexToPointTouched <= (this.radius * 1.5);//more tolerance on touch devices
+        return false;
+    }
+
+    public handleReleased() {
+        this._dragging = false;
+    }
+
     draw(): void {
+        this._hovering = this.mouseHoveringOver();
+        if (this._hovering || this.dragging) this.radius = this.baseRadius * this.activeRadiusMultiplier;
+        else this.radius = this.baseRadius;
         if (this.dragging) this.updatePos();
         super.draw();
     }
@@ -72,7 +94,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable {
     }
 
     updatePos() {
-        if (this.p5.touches.length > 0) { // user touched screen
+        if (this.p5.touches.length > 0 && this.hovering) { // user touched screen
             this.position.x = (this.p5.touches[0] as any).x; // @types not returning proper type, again, urgh...
             this.position.y = (this.p5.touches[0] as any).y;
         }
@@ -81,15 +103,4 @@ export class DragVertex extends Vertex implements Draggable, Clickable {
             this.position.y = this.p5.mouseY;
         }
     }
-
-    public handlePressed() {
-        if (this.hovering) this._dragging = true;
-    }
-
-    public handleReleased() {
-        this._dragging = false;
-    }
-
-    //we don't really need to do anything here - position gets updated in draw() if necessary 
-    public handleMoved() { }
 }

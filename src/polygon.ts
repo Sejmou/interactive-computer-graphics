@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Clickable, Drawable, Draggable } from './ui-interfaces';
+import { Touchable, Drawable, Draggable, Clickable } from './ui-interfaces';
 import { indexToLowercaseLetter } from "./util";
 import { DragVertex } from "./vertex";
 
@@ -18,7 +18,7 @@ export class Polygon implements Drawable {
     }
 }
 
-export class DragPolygon extends Polygon implements Draggable, Clickable {
+export class DragPolygon extends Polygon implements Draggable, Clickable, Touchable {
     public vertices: DragVertex[];
 
     public get hovering(): boolean {
@@ -38,20 +38,20 @@ export class DragPolygon extends Polygon implements Draggable, Clickable {
         this.vertices.forEach(v => v.draw());
     }
 
-    handleMoved(): void {
-        this.vertices.forEach(v => v.handleMoved());
-    }
-
-    handlePressed(): void {
+    handleMousePressed(): void {
         for (let i = 0; i < this.vertices.length; i++) {
             let v = this.vertices[i];
-            v.handlePressed();//after this call v.dragging might be true!
+            v.handleMousePressed();//after this call v.dragging might be true!
 
             //we don't want several vertices to be dragged at the same time
             //this causes buggy behavior (we can't separate vertices anymore if they are stacked on top of each other)
             //therefore we break out of this loop as soon as one vertex is being dragged
             if (v.dragging) break;
         }
+    }
+
+    handleTouchStarted(): void {
+        this.vertices.forEach(v => v.handleTouchStarted());
     }
 
     handleReleased(): void {
