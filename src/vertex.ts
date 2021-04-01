@@ -70,7 +70,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
 
     private mouseHoveringOver(): boolean {
         const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
-        if (this.touchPointID === null) return false;
+        if (this.touchPointID != null) return false;
         const vertexToMouse = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
         return vertexToMouse <= this.radius;
     }
