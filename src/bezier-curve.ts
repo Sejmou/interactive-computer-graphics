@@ -69,24 +69,29 @@ export class BezierCurve implements Drawable, Touchable, Draggable {
 
         this.sliderLabel = p5.createSpan(`t: ${this.t.toFixed(2)}`);
         this.sliderLabel.parent(div);
+        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
 
         this.slider = p5.createSlider(0, 1, 0, 0.00125);
         this.slider.parent(div);
         this.slider.style('flex-grow', '2');
         this.slider.mousePressed(() => this.animationRunning = false);
+        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
 
         this.slowerButton = p5.createButton('<span class="material-icons">fast_rewind</span>');
         this.slowerButton.parent(div);
         this.slowerButton.mouseClicked(() => this.rewindClicked());
+        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
 
         this.playPauseButton = p5.createButton('<span class="material-icons">play_arrow</span>');
         this.playPauseButton.parent(div);
         this.playPauseButton.mouseClicked(() => this.animationRunning = !this.animationRunning);
+        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
 
 
         this.fasterButton = p5.createButton('<span class="material-icons">fast_forward</span>');
         this.fasterButton.parent(div);
         this.fasterButton.mouseClicked(() => this.fastForwardClicked());
+        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
     }
 
 
