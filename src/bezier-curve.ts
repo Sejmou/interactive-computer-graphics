@@ -65,33 +65,40 @@ export class BezierCurve implements Drawable, Touchable, Draggable {
         const div = p5.createDiv();
         div.parent(parentContainerId);
         div.class('flex-row center-cross-axis disable-dbl-tap-zoom');
-        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
+
+        //trying to prevent selection of text in controls, especially on touch devices
+        div.style('user-select', 'none');
+        div.style('-webkit-user-select', 'none');
+        div.style('-webkit-touch-callout', 'none');
+        div.style('-webkit-user-select', 'none');
+        div.style('-moz-user-select', 'none');
+        div.style('-moz-touch-callout', 'none');
+        div.style('-moz-user-select', 'none');
+        div.style('-webkit-tap-highlight-color', 'rgba(255, 255, 255, 0)'); /* mobile webkit */
+
 
         this.sliderLabel = p5.createSpan(`t: ${this.t.toFixed(2)}`);
         this.sliderLabel.parent(div);
-        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
+        div.style('user-select', 'none');
 
         this.slider = p5.createSlider(0, 1, 0, 0.00125);
         this.slider.parent(div);
         this.slider.style('flex-grow', '2');
         this.slider.mousePressed(() => this.animationRunning = false);
-        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
+        div.style('user-select', 'none');
 
         this.slowerButton = p5.createButton('<span class="material-icons">fast_rewind</span>');
         this.slowerButton.parent(div);
         this.slowerButton.mouseClicked(() => this.rewindClicked());
-        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
 
         this.playPauseButton = p5.createButton('<span class="material-icons">play_arrow</span>');
         this.playPauseButton.parent(div);
         this.playPauseButton.mouseClicked(() => this.animationRunning = !this.animationRunning);
-        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
 
 
         this.fasterButton = p5.createButton('<span class="material-icons">fast_forward</span>');
         this.fasterButton.parent(div);
         this.fasterButton.mouseClicked(() => this.fastForwardClicked());
-        div.style('user-select', 'none');//prevents annoying accidental marking of text in controls on touch devices
     }
 
 
