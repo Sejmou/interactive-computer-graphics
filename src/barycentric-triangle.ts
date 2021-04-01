@@ -43,6 +43,11 @@ export class BarycentricTriangle implements Drawable, Clickable, Touchable, Drag
         this.triangle.handleTouchStarted();
     };
 
+    handleTouchReleased() {
+        this.pointInsideTriangle.handleTouchReleased();
+        this.triangle.handleTouchReleased();
+    };
+
     handleMousePressed(): void {
         this.pointInsideTriangle.handleMousePressed();//after this call pointInsideTriangle.dragging might be true
 
@@ -51,9 +56,9 @@ export class BarycentricTriangle implements Drawable, Clickable, Touchable, Drag
         if (!this.pointInsideTriangle.dragging) this.triangle.handleMousePressed();
     }
 
-    handleReleased(): void {
-        this.triangle.handleReleased();
-        this.pointInsideTriangle.handleReleased();
+    handleMouseReleased(): void {
+        this.triangle.handleMouseReleased();
+        this.pointInsideTriangle.handleMouseReleased();
     }
 }
 

@@ -56,6 +56,10 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     private _hovering = false;
     private _dragging = false;
 
+    //needed to fix problem where this.hovering was true despite the user having interacted via touch screen and not mouse cursor
+    //p5 apparently automatically sets p5's mouseX and mouseY to touch position (if only one touch point is used)
+    private lastInteraction: 'touch' | 'cursor' | undefined;
+
     //!= null/undefined if user drags vertex on touch device
     private touchPointID?: number | null;
 
@@ -65,18 +69,29 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     }
 
     public handleMousePressed() {
+        this.lastInteraction = 'cursor';
         if (this.hovering) this._dragging = true;
     }
 
+    public handleMouseReleased() {
+        this._dragging = false;
+        this.touchPointID = null;
+    }
+
     private mouseHoveringOver(): boolean {
-        const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
-        if (this.touchPointID != null) return false;
+        if (this.lastInteraction === 'touch') return false;
         const vertexToMouse = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
         return vertexToMouse <= this.radius;
     }
 
     handleTouchStarted(): void {
         this.checkForTap();
+        this.lastInteraction = 'touch';
+    }
+
+    handleTouchReleased(): void {
+        this.touchPointID = null;
+        this._dragging = false;
     }
 
     private checkForTap() {
@@ -91,11 +106,6 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
             this._dragging = true;
             this.touchPointID = nearestTouch.id;
         };
-    }
-
-    public handleReleased() {
-        this._dragging = false;
-        this.touchPointID = null;
     }
 
     draw(): void {

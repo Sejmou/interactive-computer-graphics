@@ -32,11 +32,11 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
             return false; // prevent any browser defaults
         });
         canvas.mouseReleased(() => {
-            triangle.handleReleased();
+            triangle.handleMouseReleased();
             updateCursor();
         });
         canvas.touchEnded(() => {
-            triangle.handleReleased();
+            triangle.handleTouchReleased();
             return false; // prevent any browser defaults
         });
         canvas.mouseMoved(() => {
@@ -100,11 +100,11 @@ const bezierSketch = (p5Instance: p5) => {
             return false; // prevent any browser defaults
         });
         canvas.mouseReleased(() => {
-            bezierCurve.handleReleased();
+            bezierCurve.handleMouseReleased();
             updateCursor();
         });
         canvas.touchEnded(() => {
-            bezierCurve.handleReleased();
+            bezierCurve.handleTouchReleased();
             if (!bezierCurve.dragging) canvas.style('touch-action', 'auto');
             else canvas.style('touch-action', 'none');
             return false; // prevent any browser defaults

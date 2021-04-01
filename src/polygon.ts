@@ -9,7 +9,7 @@ export class Polygon implements Drawable {
 
     draw(): void {
         this.p5.push();
-        if (!this.stroke) this.p5.noStroke(); 
+        if (!this.stroke) this.p5.noStroke();
         this.p5.fill(this.color);
         this.p5.beginShape();
         this.vertexPositions.forEach(pos => this.p5.vertex(pos.x, pos.y));
@@ -50,11 +50,15 @@ export class DragPolygon extends Polygon implements Draggable, Clickable, Toucha
         }
     }
 
+    handleMouseReleased(): void {
+        this.vertices.forEach(v => v.handleMouseReleased());
+    }
+
     handleTouchStarted(): void {
         this.vertices.forEach(v => v.handleTouchStarted());
     }
 
-    handleReleased(): void {
-        this.vertices.forEach(v => v.handleReleased());
+    handleTouchReleased(): void {
+        this.vertices.forEach(v => v.handleTouchReleased());
     }
 }

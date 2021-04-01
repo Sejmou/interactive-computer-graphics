@@ -111,12 +111,16 @@ export class BezierCurve implements Drawable, Touchable, Draggable {
         }
     }
 
+    handleMouseReleased(): void {
+        this.controlVertices.forEach(v => v.handleMouseReleased());
+    }
+
     handleTouchStarted(): void {
         this.controlVertices.forEach(v => v.handleTouchStarted());
     }
 
-    handleReleased(): void {
-        this.controlVertices.forEach(v => v.handleReleased());
+    handleTouchReleased(): void {
+        this.controlVertices.forEach(v => v.handleTouchReleased());
     }
 
     public get hovering(): boolean {
@@ -130,7 +134,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable {
     draw(): void {
         if (this.animationRunning) this.t += (0.005 * BezierCurve.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
         else this.t = +this.slider.value();
-        
+
         this.drawBezierLine();
 
         this.drawDeCasteljauVisualization();

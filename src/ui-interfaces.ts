@@ -4,12 +4,12 @@ export interface Drawable {
 
 export interface Clickable {
     handleMousePressed(): void,
-    handleReleased(): void
+    handleMouseReleased(): void
 }
 
 export interface Touchable {
     handleTouchStarted(): void,
-    handleReleased(): void
+    handleTouchReleased(): void
 }
 
 export interface Draggable {
