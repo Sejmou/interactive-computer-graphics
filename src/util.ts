@@ -75,7 +75,18 @@ export function renderTextWithDifferentColors(p5: p5, x: number, y: number, ...t
     });
 }
 
+// inspired by: https://css-tricks.com/snippets/javascript/lighten-darken-color/
+//returns color as string in hex format (only accepts inputs in rgba or hex notation atm)
+// TODO: generalize and improve this mess if motivated
 export function lightenDarkenColor(color: string, amount: number): string {
+    let alpha: number | undefined;
+
+    if (color.startsWith('rgba(') && color.endsWith(')')) {
+        color = rgbaStringToHexA(color);
+        alpha = parseInt(color.substr(6), 16);
+        color = color.substr(0, 7);//7 digits: '#' + rgba values (in range 00 to FF each)
+    }
+
 
     let usePound = false;
 
@@ -101,6 +112,50 @@ export function lightenDarkenColor(color: string, amount: number): string {
     if (g > 255) g = 255;
     else if (g < 0) g = 0;
 
-    return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
+    return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);// + (alpha? alpha.toString(16) : '');
 
+}
+
+//this assumes p5 colorMode() is set to rgb
+export function lightenDarkenP5Color(p5: p5, color: p5.Color, amount: number) {
+    const colStr = color.toString();
+    const hexCol = lightenDarkenColor(colStr, amount);
+    return p5.color(hexCol);
+}
+
+// https://css-tricks.com/converting-color-spaces-in-javascript/#rgba-to-hex-rrggbbaa
+export function rgbaToHexA(red: number, green: number, blue: number, alpha: number) {
+    let r = red.toString(16);
+    let g = green.toString(16);
+    let b = blue.toString(16);
+    let a = Math.round(alpha * 255).toString(16);
+
+    if (r.length == 1)
+        r = "0" + r;
+    if (g.length == 1)
+        g = "0" + g;
+    if (b.length == 1)
+        b = "0" + b;
+    if (a.length == 1)
+        a = "0" + a;
+
+    return "#" + r + g + b + a;
+}
+
+export function rgbaStringToHexA(color: string) {
+    const rgbaSeparatedByCommas = color.substring('rgba('.length, color.indexOf(')'));
+    const rgba = rgbaSeparatedByCommas.split(',');
+    if (rgba.length === 4 && rgba.every(val => isNumeric(val))) {
+        const [r, g, b, a] = rgba.map(val => +val);
+        return rgbaToHexA(r, g, b, a);
+    } else {
+        console.error(`Could not extract r, g, b and a from provided string '${color}'`);
+        return '#ffffff';
+    }
+}
+
+// https://stackoverflow.com/a/175787/13727176
+export function isNumeric(str: string) {
+    return !isNaN(+str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)... wat does he mean lol?!
+        !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
 }

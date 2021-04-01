@@ -25,14 +25,15 @@ export class Vertex implements Drawable {
     draw(): void {
         this.p5.push();
         if (!this.stroke) this.p5.noStroke();
+        this.setFillColor();
+        this.p5.circle(this.position.x, this.position.y, 2 * this.radius);
+        this.p5.fill(0);
         if (this.showLabel) {
             this.p5.text(
                 `${this.label ? this.label + ' ' : ''}(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`,
                 this.position.x + 5, this.position.y - 5
             );
         }
-        this.setFillColor();
-        this.p5.circle(this.position.x, this.position.y, 2 * this.radius);
         this.p5.pop();
     }
 
@@ -59,7 +60,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     private touchPointID?: number | null;
 
     constructor(p5: p5, position: p5.Vector, label: string = '', color: p5.Color = p5.color(255), public activeColor?: p5.Color,
-        public baseRadius: number = 5, stroke: boolean = true, showLabel: boolean = true, public activeRadiusMultiplier = 1.5) {
+        public baseRadius: number = 5, stroke: boolean = true, showLabel: boolean = true, public activeRadiusMultiplier = 1.5, public radiusForTouchDrag = 15) {
         super(p5, position, label, color, baseRadius, stroke, showLabel);
     }
 
@@ -68,6 +69,8 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     }
 
     private mouseHoveringOver(): boolean {
+        const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
+        if (this.touchPointID === null) return false;
         const vertexToMouse = this.p5.dist(this.position.x, this.position.y, this.p5.mouseX, this.p5.mouseY);
         return vertexToMouse <= this.radius;
     }
@@ -96,12 +99,12 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     }
 
     draw(): void {
-        if (this.touchPointID) console.log(this.hovering, this.dragging);
-        if (this.p5.touches.length === 0) { // for non-touchscreen devices we have to check mouse hover status
-            this._hovering = this.mouseHoveringOver();
-        }
-        if (this._hovering || this.dragging) this.radius = this.baseRadius * this.activeRadiusMultiplier;
+        this._hovering = this.mouseHoveringOver();
+
+        if (this.touchPointID != null) this.radius = this.radiusForTouchDrag;
+        else if (this._hovering || this.dragging) this.radius = this.baseRadius * this.activeRadiusMultiplier;
         else this.radius = this.baseRadius;
+
         if (this.dragging) this.updatePos();
         super.draw();
     }
@@ -115,7 +118,6 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
         if (this.touchPointID) {
             const touchPoint = (this.p5.touches as p5TouchPoint[]).find(t => t.id === this.touchPointID);
             if (touchPoint) {
-                console.log(touchPoint.x, touchPoint.y);
                 this.position.x = touchPoint.x;
                 this.position.y = touchPoint.y;
             }

@@ -2,7 +2,7 @@ import p5 from 'p5';
 import { Clickable, Drawable, Draggable, Touchable } from './ui-interfaces';
 import { DragPolygon } from './polygon';
 import { DragVertex } from './vertex';
-import { twoByTwoDeterminant, directionVector, drawLine, renderTextWithDifferentColors, parseColorString } from './util';
+import { twoByTwoDeterminant, directionVector, drawLine, renderTextWithDifferentColors, parseColorString, lightenDarkenP5Color } from './util';
 
 export class BarycentricTriangle implements Drawable, Clickable, Touchable, Draggable {
     private pointInsideTriangle: PointOnTriangleSurface;
@@ -91,11 +91,14 @@ class PointOnTriangleSurface extends DragVertex {
         this.p5.rect(15, 6, 180, 20);
         renderTextWithDifferentColors(this.p5, 20, 20,
             [`P = `, this.p5.color(240)],
-            [`${u.toFixed(3)} a`, a.color],
+            [`${u.toFixed(3)} `, lightenDarkenP5Color(this.p5, a.color, 120)],
+            ['a', lightenDarkenP5Color(this.p5, a.color, 120)],
             [' + ', this.p5.color(240)],
-            [`${v.toFixed(3)} b`, b.color],
+            [`${v.toFixed(3)} `, lightenDarkenP5Color(this.p5, b.color, 120)],
+            ['b', lightenDarkenP5Color(this.p5, b.color, 120)],
             [' + ', this.p5.color(240)],
-            [`${w.toFixed(3)} c`, c.color]);
+            [`${w.toFixed(3)} `, lightenDarkenP5Color(this.p5, c.color, 120)],
+            ['c', lightenDarkenP5Color(this.p5, c.color, 120)]);
         this.p5.pop();
     }
 
