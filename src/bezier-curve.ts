@@ -1,9 +1,9 @@
 import p5 from 'p5';
-import { Touchable, Draggable, Drawable } from './ui-interfaces';
+import { Touchable, Draggable, Drawable, Editable } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { drawLineAndDotBetween, lightenDarkenColor } from './util'
 
-export class BezierCurve implements Drawable, Touchable, Draggable {
+export class BezierCurve implements Drawable, Touchable, Draggable, Editable {
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
 
     private controlVertices: DragVertex[];
@@ -37,6 +37,21 @@ export class BezierCurve implements Drawable, Touchable, Draggable {
     private fasterButton: p5.Element;
     private slowerButton: p5.Element;
 
+    private curveDegreeTextContainer: p5.Element;
+    private editButton: p5.Element;
+
+    public get editMode(): boolean {
+        return this._editMode;
+    };
+
+    public set editMode(newVal: boolean) {
+        this._editMode = newVal;
+        this.editButton.html(this._editMode? 'Done' : 'Edit vertices');
+        this.controlVertices.forEach(v => v.editMode = this._editMode);
+    }
+
+    private _editMode = false;
+
     private set animationRunning(newVal: boolean) {
         this._animationRunning = newVal;
         if (this.animationRunning) this.playPauseButton.html('<span class="material-icons">pause</span>');
@@ -48,7 +63,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable {
     }
     private _animationRunning: boolean = false;
 
-    constructor(private p5: p5, parentContainerId: string, w: number, h: number, shift: number, x: number, y: number) {
+    constructor(private p5: p5, parentContainerId: string, divAboveCanvas: p5.Element, w: number, h: number, shift: number, x: number, y: number) {
         this.lineWidth = p5.width * 0.0025;
         this.lineColor = p5.color('#E1B000');
         this.dotDiameter = p5.width * 0.015;
@@ -62,9 +77,17 @@ export class BezierCurve implements Drawable, Touchable, Draggable {
             new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false)
         ];
 
+        this.editButton = p5.createButton('Edit vertices');
+        this.editButton.parent(divAboveCanvas);
+        this.editButton.mouseClicked(() => this.editMode = !this.editMode);
+
+        this.curveDegreeTextContainer = p5.createDiv(`Curve degree: ${this.controlVertices.length}`);
+        this.curveDegreeTextContainer.parent(divAboveCanvas);
+
+
         const div = p5.createDiv();
         div.parent(parentContainerId);
-        div.class('flex-row center-cross-axis disable-dbl-tap-zoom');
+        div.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
 
         //trying to prevent selection of text in controls, especially on touch devices
         div.style('user-select', 'none');

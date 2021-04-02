@@ -17,6 +17,14 @@ export interface Draggable {
     readonly dragging: boolean
 }
 
+export interface Hoverable {
+    readonly hovering: boolean
+}
+
+export interface Editable {
+    editMode: boolean
+}
+
 export function isClickable(object: any): object is Clickable {
     return ('handleMousePressed' in object) && (typeof object.handleMousePressed === 'function') &&
         ('handleMouseReleased' in object) && (typeof object.handleMouseReleased === 'function');

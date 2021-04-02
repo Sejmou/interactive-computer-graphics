@@ -72,6 +72,9 @@ const bezierSketch = (p5Instance: p5) => {
     p5Instance.setup = () => {
         const parentContainer = 'bezier-sketch';
 
+        const divAboveCanvas = p5Instance.createDiv();
+        divAboveCanvas.parent(parentContainer);
+
         const canvas = p5Instance.createCanvas(600, 450);
         canvas.parent(parentContainer);
 
@@ -81,7 +84,7 @@ const bezierSketch = (p5Instance: p5) => {
         const x = (p5Instance.width / 2) - (w / 2) + (shift / 2);
         const y = (p5Instance.height / 2) - (h / 2);
 
-        bezierCurve = new BezierCurve(p5Instance, parentContainer, w, h, shift, x, y);
+        bezierCurve = new BezierCurve(p5Instance, parentContainer, divAboveCanvas, w, h, shift, x, y);
 
         const updateCursor = () => p5Instance.cursor(bezierCurve.dragging ? 'grabbing' : bezierCurve.hovering ? 'grab' : 'default');
 
