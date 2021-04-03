@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Clickable, Draggable, Drawable, Editable, Hoverable, Touchable } from "./ui-interfaces";
+import { Clickable, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, MyObserverForType, MyTypedObservable, Touchable } from "./ui-interfaces";
 import { clamp } from "./util";
 
 //For some reason this is not defined in @types/p5...
@@ -43,7 +43,7 @@ export class Vertex implements Drawable {
     }
 }
 
-export class DragVertex extends Vertex implements Draggable, Clickable, Touchable, Editable {
+export class DragVertex extends Vertex implements Draggable, Clickable, Touchable, Editable, MyTypedObservable<DragVertex>, MyObserver {
     public get hovering(): boolean {
         return this._hovering;
     }
@@ -59,6 +59,8 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     public editMode = false;
     private deleteButton: DeleteCircle;
 
+    private observers: MyObserverForType<DragVertex>[] = [];
+
     //needed to fix problem where this.hovering was true despite the user having interacted via touch screen and not mouse cursor
     //p5 apparently automatically sets p5's mouseX and mouseY to touch position (if only one touch point is used)
     private lastInteraction: 'touch' | 'cursor' | undefined;
@@ -70,11 +72,8 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
         public baseRadius: number = 5, stroke: boolean = true, showLabel: boolean = true, public activeRadiusMultiplier = 1.5, public radiusForTouchDrag = 15) {
         super(p5, position, label, color, baseRadius, stroke, showLabel);
 
-        this.deleteButton = new DeleteCircle(p5, p5.createVector(this.position.x + 10, this.position.y - 10), this.baseRadius, () => this.destroy(), () => this.destroy());
-    }
-
-    private destroy() {
-        alert('DESTROYED!');
+        this.deleteButton = new DeleteCircle(p5, p5.createVector(this.position.x + 10, this.position.y - 10), this.baseRadius);
+        this.deleteButton.subscribe(this);
     }
 
     public handleMousePressed() {
@@ -117,6 +116,23 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
             this._dragging = true;
             this.touchPointID = nearestTouch.id;
         };
+    }
+
+    //called only when delete button is clicked
+    update(): void {
+        this.notify();
+    }
+
+    subscribe(observer: MyObserverForType<DragVertex>): void {
+        this.observers.push(observer);
+    }
+
+    unsubscribe(observer: MyObserverForType<DragVertex>): void {
+        this.observers = this.observers.filter(o => o !== observer);
+    }
+
+    notify(): void {
+        this.observers.forEach(o => o.update(this));
     }
 
     draw(): void {
@@ -163,7 +179,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
 }
 
 
-class DeleteCircle implements Drawable, Clickable, Touchable, Hoverable {
+class DeleteCircle implements Drawable, Clickable, Touchable, Hoverable, MyObservable {
     public get hovering() {
         return this.mouseHoveringOver();
     }
@@ -174,13 +190,15 @@ class DeleteCircle implements Drawable, Clickable, Touchable, Hoverable {
         return vertexToMouse <= this.baseRadius;
     };
 
+    private observers: MyObserver[] = [];
+
     private lastInteraction: 'touch' | 'cursor' | undefined;
 
     private currentRadius = 3;
     private hoverRadiusMultiplier = 1.5;
 
 
-    constructor(private p5: p5, public position: p5.Vector, public baseRadius = 3, private clickCallback: () => void, private touchCallback: () => void, public innerText = '') { }
+    constructor(private p5: p5, public position: p5.Vector, public baseRadius = 3, public innerText = '') { }
 
     draw(): void {
         this.currentRadius = this.hovering? this.baseRadius * this.hoverRadiusMultiplier : this.baseRadius;
@@ -210,12 +228,27 @@ class DeleteCircle implements Drawable, Clickable, Touchable, Hoverable {
 
     handleMousePressed(): void {
         this.lastInteraction = 'cursor';
-        if (this.hovering) this.clickCallback();
+        if (this.hovering) this.notify();
     }
 
     handleTouchStarted(): void {
         this.lastInteraction = 'touch';
-        if (this.tapped) this.touchCallback();
+        if (this.tapped) this.notify();
+    }
+
+    handleMouseReleased(): void { }
+    handleTouchReleased(): void { }
+
+    subscribe(observer: MyObserver): void {
+        this.observers.push(observer);
+    }
+
+    unsubscribe(observer: MyObserver): void {
+        this.observers = this.observers.filter(o => o !== observer);
+    }
+
+    notify(): void {
+        this.observers.forEach(o => o.update());
     }
 
     //copied most of this method from DragVertex
@@ -229,8 +262,5 @@ class DeleteCircle implements Drawable, Clickable, Touchable, Hoverable {
         const nearestTouch = touchesAndDistancesToVertex.reduce((prev, curr) => curr.distance < prev.distance ? curr : prev);
         return nearestTouch.distance <= 20; //"touch tolerance" should generally be bigger on touch devices (compared to mouse cursor)
     }
-
-    handleMouseReleased(): void { }
-    handleTouchReleased(): void { }
 
 }

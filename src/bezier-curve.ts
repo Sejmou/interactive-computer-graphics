@@ -1,9 +1,9 @@
 import p5 from 'p5';
-import { Touchable, Draggable, Drawable, Editable } from './ui-interfaces';
+import { Touchable, Draggable, Drawable, Editable, MyObserverForType } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { drawLineAndDotBetween, lightenDarkenColor } from './util'
 
-export class BezierCurve implements Drawable, Touchable, Draggable, Editable {
+export class BezierCurve implements Drawable, Touchable, Draggable, Editable, MyObserverForType<DragVertex> {
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
 
     private controlVertices: DragVertex[];
@@ -77,6 +77,8 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable {
             new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false)
         ];
 
+        this.controlVertices.forEach(v => v.subscribe(this));
+
         this.editButton = p5.createButton('Edit vertices');
         this.editButton.parent(divAboveCanvas);
         this.editButton.mouseClicked(() => this.editMode = !this.editMode);
@@ -102,13 +104,11 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable {
 
         this.sliderLabel = p5.createSpan(`t: ${this.t.toFixed(2)}`);
         this.sliderLabel.parent(div);
-        div.style('user-select', 'none');
 
         this.slider = p5.createSlider(0, 1, 0, 0.00125);
         this.slider.parent(div);
         this.slider.style('flex-grow', '2');
         this.slider.mousePressed(() => this.animationRunning = false);
-        div.style('user-select', 'none');
 
         this.slowerButton = p5.createButton('<span class="material-icons">fast_rewind</span>');
         this.slowerButton.parent(div);
@@ -223,5 +223,10 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable {
 
     private drawControlVertices() {
         this.controlVertices.forEach(v => v.draw());
+    }
+
+    update(updatedVertex: DragVertex): void {
+        this.controlVertices = this.controlVertices.filter(v => v !== updatedVertex);
+        console.log(this.controlVertices);
     }
 }
