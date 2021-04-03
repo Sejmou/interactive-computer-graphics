@@ -178,6 +178,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
         this.drawControlVertices();
     }
 
+    //TODO: make this work with arbitrary number of control vertices!
     private drawBezierLine() {
         this.p5.push();
         this.p5.strokeWeight(this.lineWidth * 2);
@@ -196,6 +197,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
         this.p5.pop();
     }
 
+    //TODO: make this work with arbitrary number of control vertices!
     private drawDeCasteljauVisualization() {
         this.deCasteljau(this.controlVertices.map(v => v.position));
     }
