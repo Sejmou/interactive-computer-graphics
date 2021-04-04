@@ -35,43 +35,55 @@ export function isHoverable(object: any): object is Draggable {
 }
 
 
-//Those interfaces are probably overkill for my use case, but nvm
-//Goal: notify "users" of my DragVertex class (like DragPolygon or BezierCurve) whenever the delete "button" (DeleteCircle) of a DragVertex they use has been clicked
+//Those interfaces might be overkill for my use case, but nvm
+//Initial goal: notify "users" of my DragVertex class (like DragPolygon or BezierCurve) whenever the delete or add button of a DragVertex they use has been clicked
 //The observer pattern allows an object (observable) to notify several other entities who explicitly stated that they want to get notified when it changes (its observers) whenever it changes state
 //Advantage: observers don't have to constantly check for changes, observable has reference to observers and can simply call their update() method
 // => the observable pushes changes ONLY and IMMEDIATELY after a state change occured, observers don't have to regularly poll observable for state changes
 //not sure if the pattern is really the right one for my use case, as the observer pattern is great for one to many relationships (one observable, many observers)
 
 //adding 'My' prefix so that it is clear that I don't user rxjs or anything similar
-export interface MyObservable {
-    subscribe(observer: MyObserver): void,
-    unsubscribe(observer: MyObserver): void,
+export interface MyObservable<T> {
+    subscribe(observer: MyObserver<T>): void,
+    unsubscribe(observer: MyObserver<T>): void,
 
-    //notify all observers of a change
-    notify(): void
+    /**
+     * notify all observers of a 
+     * @param action action which the observable can emit and its obervers can handle
+     */
+    notify(action: T): void
 }
 
-export interface MyObserver {
-    //called by the observable which the observer listens to if it wants to inform the observer that some state change occured
-    //typically this would happen in the observable's notify() method
-    update(): void
+export interface MyObserver<T> {
+    /**
+     * Called by the observable which the observer listens to if it wants to inform the observer that some state change occured
+     * Typically this would happen in the observable's notify() method
+     * @param action one of a certain set of actions which the observer understands and it can react to
+     */
+    update(action: T): void
 }
 
 
-//don't know if the foloowing two interfaces make any sense at all lol
+export type AddOrRemove = 'add' | 'remove';
 
 
-export interface MyTypedObservable<T> {
-    subscribe(observer: MyObserverForType<T>): void,
-    unsubscribe(observer: MyObserverForType<T>): void,
-
-    //in this method, update() of observers should be called
-    notify(): void
+export interface Container<T> {
+    /**
+     * 
+     * @param element element after which a new element should be added (if the provided element is part of container)
+     */
+    addElementAfter(element: T): void,
+    /**
+     * 
+     * @param element element which should be removed from the container (if it is part of the container)
+     */
+    remove(element: T): void
 }
 
-export interface MyObserverForType<T> {
-    //don't know if this method is a good idea, but I figured it might be useful for my use case
-    //handles notify() of one of the Observables
-    //However, the observer also receives a reference to the instance which changed and whose changes he subscribed to 
-    update(updatedObservable: T): void
+export interface ContainerElement<T> {
+    /**
+     * 
+     * @param container container which the element should become part of
+     */
+    assign(container: Container<T>): void
 }

@@ -24,7 +24,7 @@ export function clamp(val: number, min: number, max: number) {
     return Math.max(Math.min(val, Math.max(min, max)), Math.min(min, max));
 }
 
-export function drawLineAndDotBetween(
+export function drawLineAndPointBetweenAtT(
     p5Instance: p5, start: p5.Vector, stop: p5.Vector, percent: number,
     lineWidth: number = 4, lineColor: p5.Color = p5Instance.color(0), dotDiameter: number = 10, dotColor: p5.Color = p5Instance.color(60)
 ) {

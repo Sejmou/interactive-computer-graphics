@@ -1,22 +1,24 @@
 import p5 from 'p5';
-import { Touchable, Draggable, Drawable, Editable, MyObserverForType } from './ui-interfaces';
+import { Touchable, Draggable, Drawable, Editable, Container } from './ui-interfaces';
 import { DragVertex } from './vertex';
-import { drawLine, drawLineAndDotBetween, lightenDarkenColor } from './util'
+import { drawLine, drawLineAndPointBetweenAtT, lightenDarkenColor, lightenDarkenP5Color } from './util'
 
 
-export class BezierCurve implements Drawable, Touchable, Draggable, Editable, MyObserverForType<DragVertex> {
+export class BezierCurve implements Drawable, Touchable, Draggable, Editable, Container<DragVertex> {
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
 
     //create range of numbers from 0 to 1 (inclusive) in 0.02 steps https://stackoverflow.com/a/10050831
     private static readonly zeroToOne = [...Array(51).keys()].map(num => num / 50);
+    
+    private pointDiameter: number;
 
     private controlVertices: DragVertex[];
+    private controlVertexColor: p5.Color;
 
-    //config for lines between control points and dots rendered onto them for visualization
+    //config for lines between control points and current point between them (dependent on current value of t) rendered onto them for visualization
     private controlPolygonLineWidth: number;
     private controlPolygonLineColor: p5.Color;
-    private dotDiameter: number;
-    private dotColor: p5.Color;
+    private controlPolygonLinePointAtTColor: p5.Color;
 
     private bezierCurveColor: p5.Color;
     private bezierCurveWidth: number;
@@ -73,21 +75,23 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
     constructor(private p5: p5, parentContainerId: string, divAboveCanvas: p5.Element, w: number, h: number, shift: number, x: number, y: number) {
         this.controlPolygonLineWidth = p5.width * 0.0025;
         this.controlPolygonLineColor = p5.color('#E1B000');
-        this.dotDiameter = p5.width * 0.015;
-        this.dotColor = p5.color('#E1B000');
+        this.pointDiameter = p5.width * 0.015;
+        this.controlPolygonLinePointAtTColor = p5.color('#E1B000');
         this.colorOfPointOnBezier = p5.color('#C64821');
 
         this.bezierCurveColor = p5.color(30);
         this.bezierCurveWidth = this.controlPolygonLineWidth * 2;
 
+        this.controlVertexColor = p5.color('#2AB7A9');
+
         this.controlVertices = [
-            new DragVertex(p5, p5.createVector(x, y + h), 'anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x - shift, y), 'bezier control point 1', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x + w - shift, y), 'bezier control point 2', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false)
+            new DragVertex(p5, p5.createVector(x, y + h), 'anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.pointDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x - shift, y), 'bezier control point 1', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.pointDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x + w - shift, y), 'bezier control point 2', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.pointDiameter / 2, false, false),
+            new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.pointDiameter / 2, false, false)
         ];
 
-        this.controlVertices.forEach(v => v.subscribe(this));
+        this.controlVertices.forEach(v => v.assign(this));
 
         this.editButton = p5.createButton('Edit vertices');
         this.editButton.parent(divAboveCanvas);
@@ -134,7 +138,6 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
         this.fasterButton.mouseClicked(() => this.fastForwardClicked());
     }
 
-
     fastForwardClicked() {
         this.animationRunning = true;
         if (this.currAnimationSpeedMultiplierIndex < BezierCurve.animationSpeedMultipliers.length - 1) this.currAnimationSpeedMultiplierIndex++;
@@ -146,8 +149,12 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
     }
 
     handleMousePressed(): void {
-        for (let i = 0; i < this.controlVertices.length; i++) {
-            let v = this.controlVertices[i];
+        //operating on a copy of the array as vertices might get added or removed while iterating over the array
+        //this could potentially lead to a lot of confusing/unpredictable behavior
+        //e.g. handleMousePressed() could get called infinitely on the same vertex, or not get called on some vertices, or on newly added vertices (which were not actuall clicked on of course) 
+        const vertices = this.controlVertices.slice();
+        for (let i = 0; i < vertices.length; i++) {
+            let v = vertices[i];
             v.handleMousePressed();//after this call v.dragging might be true!
 
             //we don't want several vertices to be dragged at the same time
@@ -214,15 +221,15 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
             this.p5.push();
             this.p5.noStroke();
             this.p5.fill(this.colorOfPointOnBezier);
-            this.p5.circle(controlVertexPositions[0].x, controlVertexPositions[0].y, this.dotDiameter * 1.5);
+            this.p5.circle(controlVertexPositions[0].x, controlVertexPositions[0].y, this.pointDiameter * 1.5);
             this.p5.pop();
             return;
         }
         let controlVerticesForNextIteration: p5.Vector[] = [];
         controlVertexPositions.forEach((v, i) => {
             if (i === controlVertexPositions.length - 1) return;
-            const pointBetweenCurrAndNext = drawLineAndDotBetween(
-                this.p5, v, controlVertexPositions[i + 1], this.t, this.controlPolygonLineWidth, this.controlPolygonLineColor, this.dotDiameter, this.dotColor
+            const pointBetweenCurrAndNext = drawLineAndPointBetweenAtT(
+                this.p5, v, controlVertexPositions[i + 1], this.t, this.controlPolygonLineWidth, this.controlPolygonLineColor, this.pointDiameter, this.controlPolygonLinePointAtTColor
             );
             controlVerticesForNextIteration.push(pointBetweenCurrAndNext);
         });
@@ -233,8 +240,28 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
         this.controlVertices.forEach(v => v.draw());
     }
 
-    //called by a DragVertex of this.controlVertices when its delete button has been clicked
-    update(updatedVertex: DragVertex): void {
-        this.controlVertices = this.controlVertices.filter(v => v !== updatedVertex);
+    addElementAfter(element: DragVertex): void {
+        const i = this.controlVertices.findIndex(e => e === element);
+        if (i === -1) {
+            console.warn('could not find provided element in control vertices of bezier, cancelling adding...');
+            return;
+        }
+        element.editMode = false;
+        this.controlVertices.splice(i + 1, 0, this.createVertexWithPos(element.x - 10, element.y - 10));
+    }
+
+    private createVertexWithPos(x: number, y: number): DragVertex {
+        const vertex = new DragVertex(this.p5, this.p5.createVector(x, y));
+        vertex.label = 'new point!';
+        vertex.color = this.controlVertexColor;
+        vertex.activeColor = lightenDarkenP5Color(this.p5, this.controlVertexColor, -20);
+        vertex.baseRadius = this.pointDiameter/2;
+        vertex.stroke = false;
+        vertex.showLabel = true;
+        return vertex;
+    }
+
+    remove(element: DragVertex): void {
+        this.controlVertices = this.controlVertices.filter(v => v !== element);
     }
 }
