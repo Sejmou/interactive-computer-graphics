@@ -1,18 +1,25 @@
 import p5 from 'p5';
 import { Touchable, Draggable, Drawable, Editable, MyObserverForType } from './ui-interfaces';
 import { DragVertex } from './vertex';
-import { drawLineAndDotBetween, lightenDarkenColor } from './util'
+import { drawLine, drawLineAndDotBetween, lightenDarkenColor } from './util'
+
 
 export class BezierCurve implements Drawable, Touchable, Draggable, Editable, MyObserverForType<DragVertex> {
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
 
+    //create range of numbers from 0 to 1 (inclusive) in 0.02 steps https://stackoverflow.com/a/10050831
+    private static readonly zeroToOne = [...Array(51).keys()].map(num => num / 50);
+
     private controlVertices: DragVertex[];
 
     //config for lines between control points and dots rendered onto them for visualization
-    private lineWidth: number;
-    private lineColor: p5.Color;
+    private controlPolygonLineWidth: number;
+    private controlPolygonLineColor: p5.Color;
     private dotDiameter: number;
     private dotColor: p5.Color;
+
+    private bezierCurveColor: p5.Color;
+    private bezierCurveWidth: number;
     private colorOfPointOnBezier: p5.Color;
 
     private set t(newVal: number) {
@@ -46,7 +53,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
 
     public set editMode(newVal: boolean) {
         this._editMode = newVal;
-        this.editButton.html(this._editMode? 'Done' : 'Edit vertices');
+        this.editButton.html(this._editMode ? 'Done' : 'Edit vertices');
         this.controlVertices.forEach(v => v.editMode = this._editMode);
     }
 
@@ -64,11 +71,14 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
     private _animationRunning: boolean = false;
 
     constructor(private p5: p5, parentContainerId: string, divAboveCanvas: p5.Element, w: number, h: number, shift: number, x: number, y: number) {
-        this.lineWidth = p5.width * 0.0025;
-        this.lineColor = p5.color('#E1B000');
+        this.controlPolygonLineWidth = p5.width * 0.0025;
+        this.controlPolygonLineColor = p5.color('#E1B000');
         this.dotDiameter = p5.width * 0.015;
         this.dotColor = p5.color('#E1B000');
         this.colorOfPointOnBezier = p5.color('#C64821');
+
+        this.bezierCurveColor = p5.color(30);
+        this.bezierCurveWidth = this.controlPolygonLineWidth * 2;
 
         this.controlVertices = [
             new DragVertex(p5, p5.createVector(x, y + h), 'anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.dotDiameter / 2, false, false),
@@ -172,37 +182,33 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
         else this.t = +this.slider.value();
 
         this.drawBezierLine();
-
-        this.drawDeCasteljauVisualization();
+        this.drawDeCasteljauVisualization(this.controlVertices.map(v => v.position));
 
         this.drawControlVertices();
     }
 
-    //TODO: make this work with arbitrary number of control vertices!
     private drawBezierLine() {
-        this.p5.push();
-        this.p5.strokeWeight(this.lineWidth * 2);
-        this.p5.stroke(30);
-        this.p5.noFill();
-        this.p5.beginShape();
-        //From p5 reference: The first time bezierVertex() is used within a beginShape() call,
-        //  it must be prefaced with a call to vertex() to set the first anchor point
-        this.p5.vertex(this.controlVertices[0].x, this.controlVertices[0].y);
-        this.p5.bezierVertex(
-            this.controlVertices[1].x, this.controlVertices[1].y,
-            this.controlVertices[2].x, this.controlVertices[2].y,
-            this.controlVertices[3].x, this.controlVertices[3].y
-        );
-        this.p5.endShape();
-        this.p5.pop();
+        if (this.controlVertices.length === 0 || this.controlVertices.length === 1) return;
+        const points = BezierCurve.zeroToOne.map(t => this.findPointOnCurveWithDeCasteljau(this.controlVertices.map(v => v.position), t));
+        points.forEach((p, i) => {
+            if (i === points.length - 1) return;
+            drawLine(this.p5, p, points[i + 1], this.bezierCurveColor, this.bezierCurveWidth);
+        });
     }
 
-    //TODO: make this work with arbitrary number of control vertices!
-    private drawDeCasteljauVisualization() {
-        this.deCasteljau(this.controlVertices.map(v => v.position));
+    private findPointOnCurveWithDeCasteljau(controlVertexPositions: p5.Vector[], t: number): p5.Vector {
+        if (controlVertexPositions.length === 1) return controlVertexPositions[0]
+        let controlVerticesForNextIteration: p5.Vector[] = [];
+        controlVertexPositions.forEach((v, i) => {
+            if (i === controlVertexPositions.length - 1) return;
+            const lerpCurrAndNextAtT = p5.Vector.lerp(v, controlVertexPositions[i + 1], t) as unknown as p5.Vector;//again, fail in @types/p5???
+            controlVerticesForNextIteration.push(lerpCurrAndNextAtT);
+        });
+        return this.findPointOnCurveWithDeCasteljau(controlVerticesForNextIteration, t);
     }
 
-    private deCasteljau(controlVertexPositions: p5.Vector[]) {
+    private drawDeCasteljauVisualization(controlVertexPositions: p5.Vector[]) {
+        if (controlVertexPositions.length === 0) return;
         if (controlVertexPositions.length === 1) {
             //draw point on bezier curve
             this.p5.push();
@@ -216,19 +222,19 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, My
         controlVertexPositions.forEach((v, i) => {
             if (i === controlVertexPositions.length - 1) return;
             const pointBetweenCurrAndNext = drawLineAndDotBetween(
-                this.p5, v, controlVertexPositions[i + 1], this.t, this.lineWidth, this.lineColor, this.dotDiameter, this.dotColor
+                this.p5, v, controlVertexPositions[i + 1], this.t, this.controlPolygonLineWidth, this.controlPolygonLineColor, this.dotDiameter, this.dotColor
             );
             controlVerticesForNextIteration.push(pointBetweenCurrAndNext);
         });
-        this.deCasteljau(controlVerticesForNextIteration);
+        this.drawDeCasteljauVisualization(controlVerticesForNextIteration);
     }
 
     private drawControlVertices() {
         this.controlVertices.forEach(v => v.draw());
     }
 
+    //called by a DragVertex of this.controlVertices when its delete button has been clicked
     update(updatedVertex: DragVertex): void {
         this.controlVertices = this.controlVertices.filter(v => v !== updatedVertex);
-        console.log(this.controlVertices);
     }
 }

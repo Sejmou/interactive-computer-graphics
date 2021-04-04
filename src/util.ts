@@ -1,7 +1,8 @@
 import p5 from "p5";
 
-export function drawLine(p5: p5, a: p5.Vector, b: p5.Vector, color: p5.Color = p5.color(0)) {
+export function drawLine(p5: p5, a: p5.Vector, b: p5.Vector, color: p5.Color = p5.color(0), lineWidth = 3) {
     p5.push();
+    p5.strokeWeight(lineWidth);
     p5.stroke(color);
     p5.line(a.x, a.y, b.x, b.y);
     p5.pop();
