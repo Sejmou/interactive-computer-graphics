@@ -105,16 +105,6 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, Co
         div.parent(parentContainerId);
         div.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
 
-        //trying to prevent selection of text in controls, especially on touch devices
-        div.style('user-select', 'none');
-        div.style('-webkit-user-select', 'none');
-        div.style('-webkit-touch-callout', 'none');
-        div.style('-webkit-user-select', 'none');
-        div.style('-moz-user-select', 'none');
-        div.style('-moz-touch-callout', 'none');
-        div.style('-moz-user-select', 'none');
-        div.style('-webkit-tap-highlight-color', 'rgba(255, 255, 255, 0)'); /* mobile webkit */
-
 
         this.sliderLabel = p5.createSpan(`t: ${this.t.toFixed(2)}`);
         this.sliderLabel.parent(div);

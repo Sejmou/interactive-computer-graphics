@@ -86,6 +86,18 @@
     .disable-dbl-tap-zoom {
       touch-action: manipulation;
     }
+
+    /* trying to prevent selection of text in controls, especially on touch devices */
+    .prevent-text-select {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -moz-user-select: none;
+      -moz-touch-callout: none;
+
+      /* mobile webkit */
+      -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+    }
   </style>
 </head>
 
