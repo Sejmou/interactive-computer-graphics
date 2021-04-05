@@ -13,7 +13,7 @@ export class Vertex implements Drawable {
     }
 
     constructor(protected p5: p5, public position: p5.Vector, public label: string = '',
-        public color: p5.Color = p5.color(255), protected radius: number = 5, public stroke: boolean = true, public showLabel: boolean = true) { }
+        public color: p5.Color = p5.color(255), protected radius: number = 5, public stroke: boolean = true, public showLabel: boolean = true) {}
 
     draw(): void {
         this.p5.push();
@@ -89,6 +89,10 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     constructor(p5: p5, position: p5.Vector, label: string = '', color: p5.Color = p5.color(255), public activeColor?: p5.Color,
         public baseRadius: number = 5, stroke: boolean = true, showLabel: boolean = true, public activeRadiusMultiplier = 1.5, public radiusForTouchDrag = 15) {
         super(p5, position, label, color, baseRadius, stroke, showLabel);
+
+        //make sure vertex isn't created outside the canvas
+        this.position.x = clamp(this.x, 0, this.p5.width);
+        this.position.y = clamp(this.y, 0, this.p5.height);
 
         this.addButton = new ActionButton(p5, p5.createVector(this.position.x - 10, this.position.y - 10), this.baseRadius);
         this.addButton.action = 'add';

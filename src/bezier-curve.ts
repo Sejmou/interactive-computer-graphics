@@ -250,7 +250,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
             console.warn('could not find provided element in control vertices of bezier, cancelling adding...');
             return;
         }
-        this.controlVertices.splice(i + 1, 0, this.createVertexWithPos(element.x - 10, element.y - 20));
+        this.controlVertices.splice(i + 1, 0, this.createVertexWithPos(element.x + 10, element.y));
         this.updateCurveDegreeText();
     }
 
