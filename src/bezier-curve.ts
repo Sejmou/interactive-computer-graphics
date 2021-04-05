@@ -157,7 +157,19 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
             this.addVertexAtFirstTouchPoint();
             return;
         }
-        this.controlVertices.forEach(v => v.handleTouchStarted());
+        
+        //operating on a copy of the array as vertices might get added or removed while iterating over the array
+        //this could potentially lead to a lot of confusing/unpredictable behavior
+        const vertices = this.controlVertices.slice();
+        for (let i = 0; i < vertices.length; i++) {
+            let v = vertices[i];
+            v.handleTouchStarted();//after this call v.dragging might be true!
+
+            //we don't want several vertices to be dragged at the same time
+            //this causes buggy behavior (we can't separate vertices anymore if they are stacked on top of each other)
+            //therefore we break out of this loop as soon as one vertex is being dragged
+            if (v.dragging) break;
+        }
     }
 
     private addVertexAtFirstTouchPoint() {

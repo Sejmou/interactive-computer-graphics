@@ -55,7 +55,15 @@ export class DragPolygon extends Polygon implements Draggable, Clickable, Toucha
     }
 
     handleTouchStarted(): void {
-        this.vertices.forEach(v => v.handleTouchStarted());
+        for (let i = 0; i < this.vertices.length; i++) {
+            let v = this.vertices[i];
+            v.handleTouchStarted();//after this call v.dragging might be true!
+
+            //we don't want several vertices to be dragged at the same time
+            //this causes buggy behavior (we can't separate vertices anymore if they are stacked on top of each other)
+            //therefore we break out of this loop as soon as one vertex is being dragged
+            if (v.dragging) break;
+        }
     }
 
     handleTouchReleased(): void {

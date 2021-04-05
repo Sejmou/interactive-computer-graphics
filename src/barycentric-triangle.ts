@@ -42,8 +42,11 @@ export class BarycentricTriangle implements Drawable, Clickable, Touchable, Drag
     }
 
     handleTouchStarted() {
-        this.pointInsideTriangle.handleTouchStarted();
-        this.triangle.handleTouchStarted();
+        this.pointInsideTriangle.handleTouchStarted();//after this call pointInsideTriangle.dragging might be true
+
+        //we don't want the user to be allowed to drag a triangle vertex and the pointInsideTriangle at the same time
+        //if this were allowed, the pointInsideTriangle would be stuck at the same pos as the triangle vertex
+        if (!this.pointInsideTriangle.dragging) this.triangle.handleTouchStarted();
     };
 
     handleTouchReleased() {
