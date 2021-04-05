@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { Touchable, Draggable, Drawable, Container } from './ui-interfaces';
 import { DragVertex } from './vertex';
-import { drawLine, drawLineAndPointBetweenAtT, lightenDarkenColor, lightenDarkenP5Color } from './util'
+import { drawLine, drawLineAndPointBetweenAtT, lightenDarkenColor, lightenDarkenP5Color, p5TouchPoint } from './util'
 
 
 export class BezierCurve implements Drawable, Touchable, Draggable, Container<DragVertex> {
@@ -9,7 +9,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     //create range of numbers from 0 to 1 (inclusive) in 0.02 steps https://stackoverflow.com/a/10050831
     private static readonly zeroToOne = [...Array(51).keys()].map(num => num / 50);
-    
+
     private pointDiameter: number;
 
     private controlVertices: DragVertex[];
@@ -122,6 +122,11 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
     }
 
     handleMousePressed(): void {
+        if (this.controlVertices.length === 0) {
+            this.addVertexAtMousePos();
+            return;
+        }
+
         //operating on a copy of the array as vertices might get added or removed while iterating over the array
         //this could potentially lead to a lot of confusing/unpredictable behavior
         //e.g. handleMousePressed() could get called infinitely on the same vertex, or not get called on some vertices, or on newly added vertices (which were not actuall clicked on of course) 
@@ -137,12 +142,31 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
         }
     }
 
+    private addVertexAtMousePos() {
+        this.controlVertices = [ ...this.controlVertices, this.createVertexWithPos(this.p5.mouseX, this.p5.mouseY) ];
+        this.updateCurveDegreeText();
+    }
+
     handleMouseReleased(): void {
         this.controlVertices.forEach(v => v.handleMouseReleased());
     }
 
     handleTouchStarted(): void {
+        if (this.controlVertices.length === 0) {
+            this.addVertexAtFirstTouchPoint();
+            return;
+        }
         this.controlVertices.forEach(v => v.handleTouchStarted());
+    }
+
+    private addVertexAtFirstTouchPoint() {
+        const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
+        if (touches.length === 0) {
+            console.warn('touches was unexpectedly empty');
+            return;
+        }
+        this.controlVertices = [...this.controlVertices, this.createVertexWithPos(touches[0].x, touches[0].y)];
+        this.updateCurveDegreeText();
     }
 
     handleTouchReleased(): void {
@@ -158,13 +182,20 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
     };
 
     draw(): void {
-        if (this.animationRunning) this.t += (0.005 * BezierCurve.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
-        else this.t = +this.slider.value();
+        if (this.controlVertices.length > 0) {
+            if (this.animationRunning) this.t += (0.005 * BezierCurve.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
+            else this.t = +this.slider.value();
 
-        this.drawBezierLine();
-        this.drawDeCasteljauVisualization(this.controlVertices.map(v => v.position));
+            this.drawBezierLine();
+            this.drawDeCasteljauVisualization(this.controlVertices.map(v => v.position));
 
-        this.drawControlVertices();
+            this.drawControlVertices();
+        } else {
+            this.p5.push();
+            this.p5.textAlign(this.p5.CENTER);
+            this.p5.text('Click or touch anywhere on the canvas to add a vertex', this.p5.width / 2, this.p5.height / 2);
+            this.p5.pop();
+        }
     }
 
     private drawBezierLine() {
@@ -220,7 +251,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
             return;
         }
         this.controlVertices.splice(i + 1, 0, this.createVertexWithPos(element.x - 10, element.y - 20));
-        this.curveDegreeTextContainer.html(`Curve degree: ${this.controlVertices.length}`);
+        this.updateCurveDegreeText();
     }
 
     private createVertexWithPos(x: number, y: number): DragVertex {
@@ -228,7 +259,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
         vertex.label = 'new point!';
         vertex.color = this.controlVertexColor;
         vertex.activeColor = lightenDarkenP5Color(this.p5, this.controlVertexColor, -20);
-        vertex.baseRadius = this.pointDiameter/2;
+        vertex.baseRadius = this.pointDiameter / 2;
         vertex.stroke = false;
         vertex.showLabel = false;
         vertex.assign(this);
@@ -237,6 +268,10 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     remove(element: DragVertex): void {
         this.controlVertices = this.controlVertices.filter(v => v !== element);
+        this.updateCurveDegreeText();
+    }
+
+    updateCurveDegreeText() {
         this.curveDegreeTextContainer.html(`Curve degree: ${this.controlVertices.length}`);
     }
 }

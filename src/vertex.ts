@@ -1,14 +1,7 @@
 import p5 from "p5";
 import { AddOrRemove, Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, Touchable } from "./ui-interfaces";
-import { clamp } from "./util";
+import { clamp, p5TouchPoint } from "./util";
 
-//For some reason this is not defined in @types/p5...
-//A touch point on the screen, relative to (0, 0) of the canvas
-interface p5TouchPoint {
-    x: number,
-    y: number,
-    id: number
-}
 
 export class Vertex implements Drawable {
     public get x() {

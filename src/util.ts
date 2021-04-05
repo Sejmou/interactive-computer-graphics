@@ -1,5 +1,15 @@
 import p5 from "p5";
 
+/**
+ * For some reason this is not defined in @types/p5...
+ * A touch point on the screen, relative to (0, 0) of the canvas
+ */
+ export interface p5TouchPoint {
+    x: number,
+    y: number,
+    id: number
+}
+
 export function drawLine(p5: p5, a: p5.Vector, b: p5.Vector, color: p5.Color = p5.color(0), lineWidth = 3) {
     p5.push();
     p5.strokeWeight(lineWidth);
