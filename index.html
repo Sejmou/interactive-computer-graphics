@@ -1,5 +1,6 @@
 <!doctype html><html><head><meta charset="utf-8"><title>Interactive Computer Graphics</title><link rel="preconnect" href="https://fonts.gstatic.com"><link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script><style>:root {
       --turquoise: #2AB7A9;
+      --dark-turquoise: #397e77;
     }
 
     *,
@@ -47,6 +48,10 @@
       padding: 5px 10px;
     }
 
+    button:hover {
+      background-color: var(--turquoise);
+    }
+
     /* hides page content (shown until p5.js is set up) */
     #cover {
       position: fixed;
@@ -64,4 +69,16 @@
     /* https://stackoverflow.com/a/53236027/13727176 */
     .disable-dbl-tap-zoom {
       touch-action: manipulation;
-    }</style><link rel="icon" href="favicon.ico"><script defer="defer" src="app.c439d831545c7ded6db8.js"></script></head><body><div id="cover"><p>Loading...</p></div><nav><div class="nav-wrapper"><a href="#" class="brand-logo center">Interactive Computer Graphics</a></div></nav><main id="app" class="flex-row"><div id="barycentric-sketch" class="flex-item"><h4>Barycentric Coordinates</h4></div><div id="bezier-sketch" class="flex-item"><h4>Bezier Curve</h4></div></main><footer class="page-footer"><div class="container"><div class="row"><div class="col l6 s12"><h5 class="white-text">About</h5><p class="grey-text text-lighten-4">DISCLAIMER: This is still a work in progress!</p><p class="grey-text text-lighten-4">This web site is part of my Bachelor's thesis @ Vienna University of Technology.<br>My goal with this site is to help people interested in Computer Graphics to get a more intuitive understanding of some interesting topics in this field. I hope you find the demos on this site useful for your own learning journey :)</p></div><div class="col l4 offset-l2 s12"><h5 class="white-text">Links</h5><ul><li><a class="grey-text text-lighten-3" href="https://github.com/Sejmou" target="_blank">GitHub</a></li><li><a class="grey-text text-lighten-3" href="https://www.linkedin.com/in/samo-kolter-1b6aa3128/" target="_blank">LinkedIn</a></li></ul></div></div></div><div class="footer-copyright"><div class="container">Created by Samo Kolter (2021)</div></div></footer></body></html>
+    }
+
+    /* trying to prevent selection of text in controls, especially on touch devices */
+    .prevent-text-select {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -moz-user-select: none;
+      -moz-touch-callout: none;
+
+      /* mobile webkit */
+      -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+    }</style><link rel="icon" href="favicon.ico"><script defer="defer" src="app.5eba1a0666a7fe35101c.js"></script></head><body><div id="cover"><p>Loading...</p></div><nav><div class="nav-wrapper"><a href="#" class="brand-logo center">Interactive Computer Graphics</a></div></nav><main id="app" class="flex-row"><div id="barycentric-sketch" class="flex-item"><h4>Barycentric Coordinates</h4></div><div id="bezier-sketch" class="flex-item"><h4>Bezier Curve</h4></div></main><footer class="page-footer"><div class="container"><div class="row"><div class="col l6 s12"><h5 class="white-text">About</h5><p class="grey-text text-lighten-4">DISCLAIMER: This is still a work in progress!</p><p class="grey-text text-lighten-4">This web site is part of my Bachelor's thesis @ Vienna University of Technology.<br>My goal with this site is to help people interested in Computer Graphics to get a more intuitive understanding of some interesting topics in this field. I hope you find the demos on this site useful for your own learning journey :)</p></div><div class="col l4 offset-l2 s12"><h5 class="white-text">Links</h5><ul><li><a class="grey-text text-lighten-3" href="https://github.com/Sejmou" target="_blank">GitHub</a></li><li><a class="grey-text text-lighten-3" href="https://www.linkedin.com/in/samo-kolter-1b6aa3128/" target="_blank">LinkedIn</a></li></ul></div></div></div><div class="footer-copyright"><div class="container">Created by Samo Kolter (2021)</div></div></footer></body></html>
