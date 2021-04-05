@@ -86,6 +86,10 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
      * != null/undefined if user drags vertex on touch device
      */
     private touchPointID?: number | null;
+    /**
+     * max. distance of touch point from center of vertex up until which touch will be registered
+     */
+    private maxDistForRegisteringTouch = 20;
 
     constructor(p5: p5, position: p5.Vector, label: string = '', color: p5.Color = p5.color(255), public activeColor?: p5.Color,
         public baseRadius: number = 5, stroke: boolean = true, showLabel: boolean = true, public activeRadiusMultiplier = 1.5, public radiusForTouchDrag = 15) {
@@ -146,7 +150,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
         }
         const touchesAndDistancesToVertex = touches.map(t => ({ ...t, distance: this.p5.dist(this.x, this.y, t.x, t.y) }));
         const nearestTouch = touchesAndDistancesToVertex.reduce((prev, curr) => curr.distance < prev.distance ? curr : prev);
-        if (nearestTouch.distance <= 20) {//"touch tolerance" should generally be bigger on touch devices (compared to mouse cursor)
+        if (nearestTouch.distance <= this.maxDistForRegisteringTouch) {//"touch tolerance" should generally be bigger on touch devices (compared to mouse cursor)
             this._dragging = true;
             this.touchPointID = nearestTouch.id;
 
@@ -179,11 +183,12 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
         super.draw();
 
         if (this.editMode) {
-            this.addButton.position.x = this.x - 10;
-            this.addButton.position.y = this.y - 10;
+            const distFromVertexCenter = this.lastInteraction === 'touch'? this.maxDistForRegisteringTouch + 5 : 10;
+            this.addButton.position.x = this.x - distFromVertexCenter;
+            this.addButton.position.y = this.y - distFromVertexCenter;
             this.addButton.draw();
-            this.deleteButton.position.x = this.x + 10;
-            this.deleteButton.position.y = this.y - 10;
+            this.deleteButton.position.x = this.x + distFromVertexCenter;
+            this.deleteButton.position.y = this.y - distFromVertexCenter;
             this.deleteButton.draw();
         }
 
@@ -234,6 +239,11 @@ class ActionButton implements Drawable, Clickable, Touchable, Hoverable, MyObser
 
     private currentRadius = 3;
     private hoverRadiusMultiplier = 1.5;
+
+    /**
+     * max. distance of touch point from center of button up until which touch will be registered
+     */
+     private maxDistForRegisteringTouch = 20;
 
 
     constructor(private p5: p5, public position: p5.Vector, public baseRadius = 3, public action: AddOrRemove = 'remove', public color: p5.Color = p5.color('#F44336')) { }
@@ -299,7 +309,7 @@ class ActionButton implements Drawable, Clickable, Touchable, Hoverable, MyObser
         }
         const touchesAndDistancesToVertex = touches.map(t => ({ ...t, distance: this.p5.dist(this.position.x, this.position.y, t.x, t.y) }));
         const nearestTouch = touchesAndDistancesToVertex.reduce((prev, curr) => curr.distance < prev.distance ? curr : prev);
-        return nearestTouch.distance <= 20; //"touch tolerance" should generally be bigger on touch devices (compared to mouse cursor)
+        return nearestTouch.distance <= this.maxDistForRegisteringTouch; //"touch tolerance" should generally be bigger on touch devices (compared to mouse cursor)
     }
 
 }
