@@ -1,10 +1,10 @@
 import p5 from 'p5';
-import { Touchable, Draggable, Drawable, Editable, Container } from './ui-interfaces';
+import { Touchable, Draggable, Drawable, Container } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { drawLine, drawLineAndPointBetweenAtT, lightenDarkenColor, lightenDarkenP5Color } from './util'
 
 
-export class BezierCurve implements Drawable, Touchable, Draggable, Editable, Container<DragVertex> {
+export class BezierCurve implements Drawable, Touchable, Draggable, Container<DragVertex> {
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
 
     //create range of numbers from 0 to 1 (inclusive) in 0.02 steps https://stackoverflow.com/a/10050831
@@ -47,19 +47,6 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, Co
     private slowerButton: p5.Element;
 
     private curveDegreeTextContainer: p5.Element;
-    private editButton: p5.Element;
-
-    public get editMode(): boolean {
-        return this._editMode;
-    };
-
-    public set editMode(newVal: boolean) {
-        this._editMode = newVal;
-        this.editButton.html(this._editMode ? 'Done' : 'Edit vertices');
-        this.controlVertices.forEach(v => v.editMode = this._editMode);
-    }
-
-    private _editMode = false;
 
     private set animationRunning(newVal: boolean) {
         this._animationRunning = newVal;
@@ -92,10 +79,6 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, Co
         ];
 
         this.controlVertices.forEach(v => v.assign(this));
-
-        this.editButton = p5.createButton('Edit vertices');
-        this.editButton.parent(divAboveCanvas);
-        this.editButton.mouseClicked(() => this.editMode = !this.editMode);
 
         this.curveDegreeTextContainer = p5.createDiv(`Curve degree: ${this.controlVertices.length}`);
         this.curveDegreeTextContainer.parent(divAboveCanvas);
@@ -236,8 +219,8 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, Co
             console.warn('could not find provided element in control vertices of bezier, cancelling adding...');
             return;
         }
-        element.editMode = false;
-        this.controlVertices.splice(i + 1, 0, this.createVertexWithPos(element.x - 10, element.y - 10));
+        this.controlVertices.splice(i + 1, 0, this.createVertexWithPos(element.x - 10, element.y - 20));
+        this.curveDegreeTextContainer.html(`Curve degree: ${this.controlVertices.length}`);
     }
 
     private createVertexWithPos(x: number, y: number): DragVertex {
@@ -247,11 +230,13 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Editable, Co
         vertex.activeColor = lightenDarkenP5Color(this.p5, this.controlVertexColor, -20);
         vertex.baseRadius = this.pointDiameter/2;
         vertex.stroke = false;
-        vertex.showLabel = true;
+        vertex.showLabel = false;
+        vertex.assign(this);
         return vertex;
     }
 
     remove(element: DragVertex): void {
         this.controlVertices = this.controlVertices.filter(v => v !== element);
+        this.curveDegreeTextContainer.html(`Curve degree: ${this.controlVertices.length}`);
     }
 }

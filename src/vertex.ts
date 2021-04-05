@@ -45,7 +45,7 @@ export class Vertex implements Drawable {
 
 export class DragVertex extends Vertex implements Draggable, Clickable, Touchable, Editable, ContainerElement<DragVertex>, MyObserver<AddOrRemove> {
     public get hovering(): boolean {
-        return this._hovering;
+        return this.mouseHoveringOver();
     }
 
 
@@ -53,20 +53,44 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
         return this._dragging;
     }
 
-    private _hovering = false;
     private _dragging = false;
 
     public editMode = false;
+
+    /**
+     * time (in ms) until edit mode is automatically deactivated (after last relevant interaction with vertex)
+     */
+    private editModeCoolDownTime = 1000;
+    /**
+     * set to current value of Date.now() in draw() (number of milliseconds elapsed since January 1, 1970) every time a relevant interaction with DragVertex happens
+     */
+    private lastInteractionTime = this.editModeCoolDownTime + 1;
+
+    private interactionWithinEditModeCooldownPeriod(): boolean {
+        return (Date.now() - this.lastInteractionTime) < this.editModeCoolDownTime;
+    }
+
+    private checkForRelevantInteraction() {
+        if (this.hovering || this.dragging || this.touchPointID || (this.editMode && (this.addButton.hovering || this.deleteButton.hovering))) {
+            this.lastInteractionTime = Date.now();
+        }
+    }
+
+
     private addButton: ActionButton;
     private deleteButton: ActionButton;
 
     private container: Container<DragVertex> | undefined;
 
-    //needed to fix problem where this.hovering was true despite the user having interacted via touch screen and not mouse cursor
-    //p5 apparently automatically sets p5's mouseX and mouseY to touch position (if only one touch point is used)
+    /**
+     * needed to fix problem where this.hovering was true despite the user having interacted via touch screen and not mouse cursor
+     * p5 apparently automatically sets p5's mouseX and mouseY to touch position (if only one touch point is used)
+     */
     private lastInteraction: 'touch' | 'cursor' | undefined;
 
-    //!= null/undefined if user drags vertex on touch device
+    /**
+     * != null/undefined if user drags vertex on touch device
+     */
     private touchPointID?: number | null;
 
     constructor(p5: p5, position: p5.Vector, label: string = '', color: p5.Color = p5.color(255), public activeColor?: p5.Color,
@@ -127,6 +151,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
         if (nearestTouch.distance <= 20) {//"touch tolerance" should generally be bigger on touch devices (compared to mouse cursor)
             this._dragging = true;
             this.touchPointID = nearestTouch.id;
+
         };
     }
 
@@ -134,17 +159,22 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
         this.container = container;
     }
 
-    //called only when delete button is clicked
+    /**
+     * called when either add or delete button is clicked
+     */
     update(action: AddOrRemove): void {
-        if (action == 'add') this.container?.addElementAfter(this);
+        if (action == 'add') {
+            this.container?.addElementAfter(this);
+            this.lastInteractionTime = this.editModeCoolDownTime + 1;//trick to deactivate edit mode on dragVertex
+        }
         if (action == 'remove') this.container?.remove(this);
     }
 
     draw(): void {
-        this._hovering = this.mouseHoveringOver();
+        this.editMode = this.interactionWithinEditModeCooldownPeriod();
 
         if (this.touchPointID != null) this.radius = this.radiusForTouchDrag;
-        else if (this._hovering || this.dragging) this.radius = this.baseRadius * this.activeRadiusMultiplier;
+        else if (this.hovering || this.dragging) this.radius = this.baseRadius * this.activeRadiusMultiplier;
         else this.radius = this.baseRadius;
 
         if (this.dragging) this.updatePos();
@@ -158,6 +188,8 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
             this.deleteButton.position.y = this.y - 10;
             this.deleteButton.draw();
         }
+
+        this.checkForRelevantInteraction();
     }
 
     protected setFillColor() {

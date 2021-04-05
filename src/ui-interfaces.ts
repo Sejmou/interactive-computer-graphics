@@ -22,7 +22,7 @@ export interface Hoverable {
 }
 
 export interface Editable {
-    editMode: boolean
+    readonly editMode: boolean
 }
 
 export function isClickable(object: any): object is Clickable {
