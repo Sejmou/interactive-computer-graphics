@@ -47,20 +47,21 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     }
 
     private _dragging = false;
-
-    public editMode = false;
+    
+    public editable = false;
+    private editMode = false;
 
     /**
      * time (in ms) until edit mode is automatically deactivated (after last relevant interaction with vertex)
      */
-    private editModeCoolDownTime = 1000;
+    private editModeCoolDownPeriodLength = 1000;
     /**
      * set to current value of Date.now() in draw() (number of milliseconds elapsed since January 1, 1970) every time a relevant interaction with DragVertex happens
      */
-    private lastInteractionTime = this.editModeCoolDownTime + 1;
+    private lastInteractionTime = this.editModeCoolDownPeriodLength + 1;
 
-    private interactionWithinEditModeCooldownPeriod(): boolean {
-        return (Date.now() - this.lastInteractionTime) < this.editModeCoolDownTime;
+    private editableAndInteractionInEditModeCooldownPeriod(): boolean {
+        return this.editable && ((Date.now() - this.lastInteractionTime) < this.editModeCoolDownPeriodLength);
     }
 
     private checkForRelevantInteraction() {
@@ -162,13 +163,13 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     update(action: AddOrRemove): void {
         if (action == 'add') {
             this.container?.addElementAfter(this);
-            this.lastInteractionTime = this.editModeCoolDownTime + 1;//trick to deactivate edit mode on dragVertex
+            this.lastInteractionTime = this.editModeCoolDownPeriodLength + 1;//trick to deactivate edit mode on dragVertex
         }
         if (action == 'remove') this.container?.remove(this);
     }
 
     draw(): void {
-        this.editMode = this.interactionWithinEditModeCooldownPeriod();
+        this.editMode = this.editableAndInteractionInEditModeCooldownPeriod();
 
         if (this.touchPointID != null) this.radius = this.radiusForTouchDrag;
         else if (this.hovering || this.dragging) this.radius = this.baseRadius * this.activeRadiusMultiplier;

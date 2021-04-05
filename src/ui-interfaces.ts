@@ -1,28 +1,47 @@
+/**
+ * An element which can be rendered onto a p5 canvas
+ */
 export interface Drawable {
     draw(): void
 }
 
+/**
+ * an element which can be clicked on (handling mouse events)
+ */
 export interface Clickable {
     handleMousePressed(): void,
     handleMouseReleased(): void
 }
 
+/**
+ * an element which is able to/has to handle touch events
+ */
 export interface Touchable {
     handleTouchStarted(): void,
     handleTouchReleased(): void
 }
 
+/**
+ * an element which can be dragged with a mouse cursor or via touchscreen
+ */
 export interface Draggable {
     readonly hovering: boolean,
     readonly dragging: boolean
 }
 
+/**
+ * An element which reacts to mouse hover events in some way
+ */
 export interface Hoverable {
     readonly hovering: boolean
 }
 
+/**
+ * An element which supports some kind of 'edit' functionality to e.g. change its appearance/properties
+ * If editable is true, controls for editing the element will show up on user interaction
+ */
 export interface Editable {
-    readonly editMode: boolean
+    editable: boolean
 }
 
 export function isClickable(object: any): object is Clickable {

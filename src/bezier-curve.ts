@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { Touchable, Draggable, Drawable, Container } from './ui-interfaces';
 import { DragVertex } from './vertex';
-import { drawLine, drawLineAndPointBetweenAtT, lightenDarkenColor, lightenDarkenP5Color, p5TouchPoint } from './util'
+import { drawLine, drawLineAndPointBetweenAtT, indexToLowercaseLetter, lightenDarkenColor, lightenDarkenP5Color, p5TouchPoint } from './util'
 
 
 export class BezierCurve implements Drawable, Touchable, Draggable, Container<DragVertex> {
@@ -72,17 +72,18 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
         this.controlVertexColor = p5.color('#2AB7A9');
 
         this.controlVertices = [
-            new DragVertex(p5, p5.createVector(x, y + h), 'anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.pointDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x - shift, y), 'bezier control point 1', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.pointDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x + w - shift, y), 'bezier control point 2', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.pointDiameter / 2, false, false),
-            new DragVertex(p5, p5.createVector(x + w, y + h), 'bezier anchor', p5.color('#2AB7A9'), p5.color(lightenDarkenColor('#2AB7A9', -20)), this.pointDiameter / 2, false, false)
+            this.createVertexWithPos(x, y + h),
+            this.createVertexWithPos(x - shift, y),
+            this.createVertexWithPos(x + w - shift, y),
+            this.createVertexWithPos(x + w, y+ h)
         ];
 
         this.controlVertices.forEach(v => v.assign(this));
 
-        this.curveDegreeTextContainer = p5.createDiv(`Curve degree: ${this.controlVertices.length}`);
+        this.curveDegreeTextContainer = p5.createDiv();
         this.curveDegreeTextContainer.parent(divAboveCanvas);
-
+        
+        this.handleCurveDegreeChange();
 
         const div = p5.createDiv();
         div.parent(parentContainerId);
@@ -144,7 +145,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     private addVertexAtMousePos() {
         this.controlVertices = [ ...this.controlVertices, this.createVertexWithPos(this.p5.mouseX, this.p5.mouseY) ];
-        this.updateCurveDegreeText();
+        this.handleCurveDegreeChange();
     }
 
     handleMouseReleased(): void {
@@ -166,7 +167,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
             return;
         }
         this.controlVertices = [...this.controlVertices, this.createVertexWithPos(touches[0].x, touches[0].y)];
-        this.updateCurveDegreeText();
+        this.handleCurveDegreeChange();
     }
 
     handleTouchReleased(): void {
@@ -251,27 +252,28 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
             return;
         }
         this.controlVertices.splice(i + 1, 0, this.createVertexWithPos(element.x + 10, element.y));
-        this.updateCurveDegreeText();
+        this.handleCurveDegreeChange();
     }
 
     private createVertexWithPos(x: number, y: number): DragVertex {
         const vertex = new DragVertex(this.p5, this.p5.createVector(x, y));
-        vertex.label = 'new point!';
         vertex.color = this.controlVertexColor;
         vertex.activeColor = lightenDarkenP5Color(this.p5, this.controlVertexColor, -20);
         vertex.baseRadius = this.pointDiameter / 2;
         vertex.stroke = false;
         vertex.showLabel = false;
+        vertex.editable = true;
         vertex.assign(this);
         return vertex;
     }
 
     remove(element: DragVertex): void {
         this.controlVertices = this.controlVertices.filter(v => v !== element);
-        this.updateCurveDegreeText();
+        this.handleCurveDegreeChange();
     }
 
-    updateCurveDegreeText() {
+    handleCurveDegreeChange() {
         this.curveDegreeTextContainer.html(`Curve degree: ${this.controlVertices.length}`);
+        this.controlVertices.forEach((v, i) => v.label = `${indexToLowercaseLetter(i)}`);
     }
 }

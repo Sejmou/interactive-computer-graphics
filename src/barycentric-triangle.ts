@@ -21,7 +21,10 @@ export class BarycentricTriangle implements Drawable, Clickable, Touchable, Drag
         vertexPositions: [p5.Vector, p5.Vector, p5.Vector]
     ) {
         this.triangle = new DragPolygon(p5, vertexPositions, p5.color(125));
-        this.triangle.vertices.forEach(v => v.stroke = false);
+        this.triangle.vertices.forEach(v => {
+            v.stroke = false;
+            v.editable = false;
+        });
         this.triangle.vertices[0].color = p5.color('#C64821');
         this.triangle.vertices[1].color = p5.color('#E1B000');
         this.triangle.vertices[2].color = p5.color('#2AB7A9');
