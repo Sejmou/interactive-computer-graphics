@@ -285,7 +285,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
     }
 
     handleCurveDegreeChange() {
-        this.curveDegreeTextContainer.html(`Curve degree: ${this.controlVertices.length}`);
+        this.curveDegreeTextContainer.html(`Number of control vertices: ${this.controlVertices.length}`);
         this.controlVertices.forEach((v, i) => v.label = `${indexToLowercaseLetter(i)}`);
     }
 }
