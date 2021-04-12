@@ -10,6 +10,9 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
     p5Instance.setup = () => {
         const parentContainer = 'barycentric-sketch';
 
+        const heading = p5Instance.createElement('h4', 'Barycentric coordinates');
+        heading.parent(parentContainer);
+
         const canvas = p5Instance.createCanvas(600, 450);
         canvas.parent(parentContainer);
 
@@ -71,6 +74,9 @@ const bezierSketch = (p5Instance: p5) => {
 
     p5Instance.setup = () => {
         const parentContainer = 'bezier-sketch';
+
+        const heading = p5Instance.createElement('h4', 'Bézier curve');
+        heading.parent(parentContainer);
 
         const divAboveCanvas = p5Instance.createDiv();
         divAboveCanvas.parent(parentContainer);
