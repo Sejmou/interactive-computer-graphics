@@ -24,6 +24,14 @@
       font-family: 'Roboto', sans-serif;
     }
 
+    #app {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 10px 0;
+      gap: 10px;
+    }
+    
     .flex-column {
       display: flex;
       flex-direction: column;
@@ -38,6 +46,18 @@
       align-items: center;
     }
 
+    #bezier-sketch .flex-row span {
+      white-space: nowrap;
+    }
+
+    #bezier-sketch .flex-row input[type=range] {
+      margin: 0 10px;
+    }
+
+    #bezier-sketch .flex-row {
+      margin: 5px 0;
+    }
+
     button {
       border: none;
       padding: 5px 10px;
@@ -45,6 +65,20 @@
 
     button:hover {
       background-color: var(--turquoise);
+    }
+
+    /* hides page content (shown until p5.js is set up) */
+    #cover {
+      position: fixed;
+      height: 100%;
+      width: 100%;
+      top: 0;
+      left: 0;
+      background: #fff;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* https://stackoverflow.com/a/53236027/13727176 */
@@ -64,42 +98,23 @@
       -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
     }
 
-    .center-text {
-      text-align: center;
-    }
 
-
-
-
-
-    .demo-preview-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 1em 0;
-      margin-bottom: 200px; /* quick hack to increase distance to footer */
-    }
-
-    .demo-preview {
-      color: inherit; /* https://stackoverflow.com/a/6722667/13727176 */
-      border: 1px solid grey;
-      width: 500px;
-      padding: 1em;
-    }
-
-    .demo-preview:hover {
-      background-color: lightgrey;
-      border: 1px solid black;
+    .back-to-main-btn {
+      margin-top: 2em;
+      margin-left: 1em;
     }
   </style>
 </head>
 
 <body>
+  <!-- covers whole page until whole page until p5 demo has loaded (setup() of p5 removes this from the DOM on its last line) -->
+  <div id="cover">
+    <p>Loading...</p>
+  </div>
+
   <nav>
     <div class="nav-wrapper">
-      <a href="#" class="brand-logo center">Interactive Computer Graphics</a>
+      <a href="#" class="brand-logo">Interactive Computer Graphics</a>
       <!-- <ul id="nav-mobile" class="right hide-on-med-and-down">
         <li><a href="sass.html">Sass</a></li>
         <li><a href="badges.html">Components</a></li>
@@ -107,19 +122,13 @@
       </ul> -->
     </div>
   </nav>
-  <main class="center-text">
-    <h2>Demos</h2>
-    <!-- TODO: figure out how to make images from ./src/pages/index available in webpack output -->
-    <div class="demo-preview-container">
-      <a href="/barycentric-coordinates.html" class="demo-preview">
-        <h3>Barycentric coordinates</h3>
-        <img src="https://picsum.photos/300/200" alt="">
-      </a>
-      <a href="/bezier-curve.html" class="demo-preview">
-        <h3>Bezier Curve</h3>
-        <img src="https://picsum.photos/300/200" alt="">
-      </a>
-    </div>
+
+  <a href="index.html">
+    <button class="back-to-main-btn">Back to main page</button>
+  </a>
+
+  <main id="app" class="flex-row">
+    <div id="bezier-sketch" class="flex-column"></div>
   </main>
   <footer class="page-footer">
     <div class="container">

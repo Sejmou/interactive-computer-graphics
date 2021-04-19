@@ -1,0 +1,1 @@
+//this is actually not really needed but I couldn't figure out how to tell Webpack that I don't need any typescript code for index.html
