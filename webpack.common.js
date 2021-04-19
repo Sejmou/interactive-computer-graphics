@@ -15,20 +15,20 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({//creates an index.html with script tag for app.js (bundled transpiled code for application) automatically
             favicon: "favicon.ico",
-            template: 'index.html',// Loads a custom template (using lodash by default)
+            template: 'src/pages/index/index.ejs',// Loads a custom template (using lodash by default)
             title: 'Interactive Computer Graphics',//will be inserted at placeholder spot in generated html,
             chunks: []
         }),
         new HtmlWebpackPlugin({
             favicon: "favicon.ico",
-            template: 'bezier-curve.html',
+            template: 'src/pages/bezier/bezier-curve.ejs',
             title: 'Bezier Curve Demo (Interactive Computer Graphics)',
             chunks: ['bezier'],
             filename: 'bezier-curve.html'// don't forget this! otherwise plugin would emit to index.html!
         }),
         new HtmlWebpackPlugin({
             favicon: "favicon.ico",
-            template: 'barycentric-coordinates.html',
+            template: 'src/pages/bary/barycentric-coordinates.ejs',
             title: 'Barycentric Coordinates Demo (Interactive Computer Graphics)',
             chunks: ['bary'],
             filename: 'barycentric-coordinates.html' // don't forget this! otherwise plugin would emit to index.html!
@@ -36,7 +36,20 @@ module.exports = {
     ],
     module: {
         rules: [
-            { test: /\.ts$/, use: 'awesome-typescript-loader' }
+            { test: /\.ts$/, use: 'awesome-typescript-loader' },
+            //getting imgs to work with my config was a shit ton of work, digging through lots of SO threads and GitHub issues
+            //this finally helped me: https://stackoverflow.com/a/48242662/13727176
+            {
+                test: /\.(svg|png|jpg|jpeg|gif)$/,
+                use: {
+                    loader: 'file-loader',
+                    options: {
+                        name: "[name].[hash].[ext]",
+                        outputPath: "imgs",
+                        esModule: false //important, else [object Object] shows up instead of img URL
+                    }
+                }
+            }
         ]
     },
     resolve: {

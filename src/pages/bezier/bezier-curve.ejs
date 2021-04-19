@@ -31,8 +31,7 @@
       margin: 10px 0;
       gap: 10px;
     }
-
-    #app>div,
+    
     .flex-column {
       display: flex;
       flex-direction: column;
@@ -99,6 +98,7 @@
       -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
     }
 
+
     .back-to-main-btn {
       margin-top: 2em;
       margin-left: 1em;
@@ -111,7 +111,7 @@
   <div id="cover">
     <p>Loading...</p>
   </div>
-  
+
   <nav>
     <div class="nav-wrapper">
       <a href="#" class="brand-logo">Interactive Computer Graphics</a>
@@ -128,8 +128,7 @@
   </a>
 
   <main id="app" class="flex-row">
-    <div id="barycentric-sketch" class="flex-item"></div>
-    <div id="bezier-sketch" class="flex-item"></div>
+    <div id="bezier-sketch" class="flex-column"></div>
   </main>
   <footer class="page-footer">
     <div class="container">
@@ -161,8 +160,6 @@
       </div>
     </div>
   </footer>
-  <!-- We don't need any script tags, html-wepack-plugin includes them automatically with correct paths, yay -->
-  <!-- <script src="app.js"></script> -->
 </body>
 
 </html>
