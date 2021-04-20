@@ -1,6 +1,6 @@
 import './bary.scss';
 import p5 from "p5";
-import { BarycentricTriangle } from "../../ts/barycentric-triangle";
+import { BarycentricTriangle } from "../ts/barycentric-triangle";
 
 
 const bgColor = 230;

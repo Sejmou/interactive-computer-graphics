@@ -1,4 +1,4 @@
-@import "../../styles.scss";
+@import '../styles.scss';
 
 .demo-preview-container {
     display: flex;
@@ -13,6 +13,7 @@
 .demo-preview {
     color: inherit; /* https://stackoverflow.com/a/6722667/13727176 */
     border: 1px solid grey;
+    border-radius: 3px;
     width: 500px;
     padding: 1em;
 

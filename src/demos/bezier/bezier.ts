@@ -1,6 +1,6 @@
 import './bezier.scss';
 import p5 from "p5";
-import { BezierCurve } from "../../ts/bezier-curve";
+import { BezierCurve } from "../ts/bezier-curve";
 
 
 const bgColor = 230;

@@ -2,9 +2,9 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     entry: {
-        index: './src/pages/index/index.ts',
-        bezier: './src/pages/bezier/bezier.ts',
-        bary: './src/pages/bary/bary.ts'
+        index: './src/index/index.ts',
+        bezier: './src/demos/bezier/bezier.ts',
+        bary: './src/demos/bary/bary.ts'
     },
     optimization: {
         splitChunks: {// this allows webpack to load dependencies (per default those from /node_modules, e.g. p5) only when we are on a site which needs them; probably an unnecessary optimization lol
@@ -15,20 +15,20 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({//creates an index.html with script tag for app.js (bundled transpiled code for application) automatically
             favicon: "favicon.ico",
-            template: 'src/pages/index/index.ejs',// Loads a custom template (using lodash by default)
+            template: 'src/index/index.ejs',// Loads a custom template (using lodash by default)
             title: 'Interactive Computer Graphics',//will be inserted at placeholder spot in generated html,
             chunks: ['index']
         }),
         new HtmlWebpackPlugin({
             favicon: "favicon.ico",
-            template: 'src/pages/bezier/bezier-curve.ejs',
+            template: 'src/demos/demo.ejs',
             title: 'Bezier Curve Demo (Interactive Computer Graphics)',
             chunks: ['bezier'],
             filename: 'bezier-curve.html'// don't forget this! otherwise plugin would emit to index.html!
         }),
         new HtmlWebpackPlugin({
             favicon: "favicon.ico",
-            template: 'src/pages/bary/barycentric-coordinates.ejs',
+            template: 'src/demos/demo.ejs',
             title: 'Barycentric Coordinates Demo (Interactive Computer Graphics)',
             chunks: ['bary'],
             filename: 'barycentric-coordinates.html' // don't forget this! otherwise plugin would emit to index.html!
