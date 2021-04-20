@@ -22,10 +22,6 @@ export function isCloseToZero(val: number) {
     return Math.abs(val) < 1e-10;
 }
 
-export function linearInterpolation(a: p5.Vector, b: p5.Vector, u: number = 0.5) {
-    return p5.Vector.add(a, p5.Vector.mult(p5.Vector.sub(b, a), u));
-}
-
 export function directionVector(pointA: p5.Vector, pointB: p5.Vector) {
     return p5.Vector.sub(pointB, pointA);
 }
@@ -53,6 +49,13 @@ export function drawLineAndPointBetweenAtT(
     p5Instance.pop();
 
     return pointBetween;
+}
+
+export function drawCircle(p5Instance: p5, pos: p5.Vector, color: p5.Color, diameter: number) {
+    p5Instance.noStroke();
+    p5Instance.fill(color);
+    p5Instance.circle(pos.x, pos.y, diameter);
+    p5Instance.pop();
 }
 
 //determinant can be interpreted as the oriented area of a parallelogram spanned by the two column vectors of a 2x2 matrix
