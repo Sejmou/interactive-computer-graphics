@@ -124,7 +124,9 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     handleMousePressed(): void {
         if (this.controlVertices.length === 0) {
-            this.addVertexAtMousePos();
+            const newVertex = this.addVertexAtMousePos();
+            //we want to allow the user to drag the added vertex immediately, therefore we call handleTouchStarted() on it
+            newVertex.handleMousePressed();
             return;
         }
 
@@ -143,9 +145,11 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
         }
     }
 
-    private addVertexAtMousePos() {
-        this.controlVertices = [ ...this.controlVertices, this.createVertexWithPos(this.p5.mouseX, this.p5.mouseY) ];
+    private addVertexAtMousePos(): DragVertex {
+        const newVertex = this.createVertexWithPos(this.p5.mouseX, this.p5.mouseY);
+        this.controlVertices = [ ...this.controlVertices, newVertex ];
         this.handleCurveDegreeChange();
+        return newVertex;
     }
 
     handleMouseReleased(): void {
@@ -154,7 +158,9 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     handleTouchStarted(): void {
         if (this.controlVertices.length === 0) {
-            this.addVertexAtFirstTouchPoint();
+            const newVertex = this.addVertexAtFirstTouchPoint();
+            //if the vertex was added, we want to allow the user drag it immediately, therefore we call handleTouchStarted() on it
+            if (newVertex) newVertex.handleTouchStarted();
             return;
         }
         
@@ -172,14 +178,20 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
         }
     }
 
-    private addVertexAtFirstTouchPoint() {
+    /**
+     * adds a new vertex to the curve's control vertices
+     * @returns the vertex added (or null, if the vertex could not be added as for some reason the touches array of p5 was empty)
+     */
+    private addVertexAtFirstTouchPoint(): DragVertex | null {
         const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
         if (touches.length === 0) {
             console.warn('touches was unexpectedly empty');
-            return;
+            return null;
         }
-        this.controlVertices = [...this.controlVertices, this.createVertexWithPos(touches[0].x, touches[0].y)];
+        const newVertex = this.createVertexWithPos(touches[0].x, touches[0].y);
+        this.controlVertices = [...this.controlVertices, newVertex];
         this.handleCurveDegreeChange();
+        return newVertex;
     }
 
     handleTouchReleased(): void {
