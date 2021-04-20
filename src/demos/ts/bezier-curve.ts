@@ -4,8 +4,6 @@ import { DragVertex } from './vertex';
 import { drawCircle, drawLine, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util'
 
 export class BezierCurveDemo implements Drawable, Touchable, Draggable, Container<DragVertex> {
-    private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
-
     public basePointDiameter: number;
     public baseLineWidth: number;
 
@@ -16,12 +14,15 @@ export class BezierCurveDemo implements Drawable, Touchable, Draggable, Containe
 
     private deCasteljauVis: DeCasteljauVisualization;
 
+    private controlsForT: ControlsForParameterT;
+
+    private curveDegreeTextContainer: p5.Element;
+
     public set t(newVal: number) {
         this._t = newVal;
         if (this._t > 1) this._t = 0;
         if (this.t < 0) this._t = 1;
-        this.sliderLabel.html(`t: ${this._t.toFixed(2)}`);
-        this.slider.value(this._t);
+        this.controlsForT.updateSlider();
     };
 
     public get t(): number {
@@ -30,74 +31,16 @@ export class BezierCurveDemo implements Drawable, Touchable, Draggable, Containe
 
     private _t: number = 0;
 
-    private currAnimationSpeedMultiplierIndex = BezierCurveDemo.animationSpeedMultipliers.findIndex(_ => _ === 1);
-
-    private sliderLabel: p5.Element;
-    private slider: p5.Element;
-    private playPauseButton: p5.Element;
-    private fasterButton: p5.Element;
-    private slowerButton: p5.Element;
-
-    private curveDegreeTextContainer: p5.Element;
-
-    private set animationRunning(newVal: boolean) {
-        this._animationRunning = newVal;
-        if (this.animationRunning) this.playPauseButton.html('<span class="material-icons">pause</span>');
-        else this.playPauseButton.html('<span class="material-icons">play_arrow</span>');
-    }
-
-    private get animationRunning(): boolean {
-        return this._animationRunning;
-    }
-    private _animationRunning: boolean = false;
-
     constructor(private p5: p5, parentContainerId: string, divAboveCanvas: p5.Element) {
         this.basePointDiameter = p5.width * 0.015;
         this.baseLineWidth = p5.width * 0.0025;
+        this.controlVertexColor = p5.color('#2AB7A9');
 
         this.bezierCurve = new BezierCurve(this.p5, this);
         this.deCasteljauVis = new DeCasteljauVisualization(this.p5, this);
-
-        this.controlVertexColor = p5.color('#2AB7A9');
-
+        this.controlsForT = new ControlsForParameterT(this.p5, this, parentContainerId);
         this.curveDegreeTextContainer = p5.createDiv();
         this.curveDegreeTextContainer.parent(divAboveCanvas);
-
-        const div = p5.createDiv();
-        div.parent(parentContainerId);
-        div.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
-
-
-        this.sliderLabel = p5.createSpan(`t: ${this.t.toFixed(2)}`);
-        this.sliderLabel.parent(div);
-
-        this.slider = p5.createSlider(0, 1, 0, 0.00125);
-        this.slider.parent(div);
-        this.slider.style('flex-grow', '2');
-        this.slider.mousePressed(() => this.animationRunning = false);
-
-        this.slowerButton = p5.createButton('<span class="material-icons">fast_rewind</span>');
-        this.slowerButton.parent(div);
-        this.slowerButton.mouseClicked(() => this.rewindClicked());
-
-        this.playPauseButton = p5.createButton('<span class="material-icons">play_arrow</span>');
-        this.playPauseButton.parent(div);
-        this.playPauseButton.mouseClicked(() => this.animationRunning = !this.animationRunning);
-
-
-        this.fasterButton = p5.createButton('<span class="material-icons">fast_forward</span>');
-        this.fasterButton.parent(div);
-        this.fasterButton.mouseClicked(() => this.fastForwardClicked());
-    }
-
-    fastForwardClicked() {
-        this.animationRunning = true;
-        if (this.currAnimationSpeedMultiplierIndex < BezierCurveDemo.animationSpeedMultipliers.length - 1) this.currAnimationSpeedMultiplierIndex++;
-    }
-
-    rewindClicked() {
-        this.animationRunning = true;
-        if (this.currAnimationSpeedMultiplierIndex > 0) this.currAnimationSpeedMultiplierIndex--;
     }
 
     handleMousePressed(): void {
@@ -176,8 +119,7 @@ export class BezierCurveDemo implements Drawable, Touchable, Draggable, Containe
 
     draw(): void {
         if (this.controlVertices.length > 0) {
-            if (this.animationRunning) this.t += (0.005 * BezierCurveDemo.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
-            else this.t = +this.slider.value();
+            this.controlsForT.updateT();
 
             //we don't really need the bezier line or De Casteljau visualization if we have a single point
             if (this.controlVertices.length > 1) this.bezierCurve.draw();
@@ -237,7 +179,8 @@ export class BezierCurveDemo implements Drawable, Touchable, Draggable, Containe
     handleCurveDegreeChange() {
         this.curveDegreeTextContainer.html(`Number of control vertices: ${this.controlVertices.length}`);
         this.controlVertices.forEach((v, i) => v.label = `${indexToLowercaseLetter(i)}`);
-        this.deCasteljauVis.onlyDrawPointOnBezier = this.controlVertices.length <= 2;
+        this.deCasteljauVis.onlyDrawPointOnBezier = this.controlVertices.length < 3;
+        this.controlsForT.visible = this.controlVertices.length > 1;
     }
 }
 
@@ -321,5 +264,86 @@ class DeCasteljauVisualization implements Drawable {
             vertexPositionsForNextIteration.push(posBetweenCurrAndNextAtT);
         });
         this.recursiveDraw(vertexPositionsForNextIteration);
+    }
+}
+
+
+
+class ControlsForParameterT {
+    private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
+    private currAnimationSpeedMultiplierIndex = ControlsForParameterT.animationSpeedMultipliers.findIndex(_ => _ === 1);
+
+    private controlsContainer: p5.Element;
+    private sliderLabel: p5.Element;
+    private slider: p5.Element;
+    private playPauseButton: p5.Element;
+    private fasterButton: p5.Element;
+    private slowerButton: p5.Element;
+
+    public set visible(visible: boolean) {
+        this.controlsContainer.style('visibility', visible? 'visible' : 'hidden');
+    };
+
+    private set animationRunning(newVal: boolean) {
+        this._animationRunning = newVal;
+        if (this._animationRunning) this.playPauseButton.html('<span class="material-icons">pause</span>');
+        else this.playPauseButton.html('<span class="material-icons">play_arrow</span>');
+    }
+
+    private get animationRunning(): boolean {
+        return this._animationRunning;
+    }
+    private _animationRunning: boolean = false;
+
+
+    constructor(p5: p5, private demo: BezierCurveDemo, parentContainerId: string) {
+        this.controlsContainer = p5.createDiv();
+        
+        this.controlsContainer.parent(parentContainerId);
+        this.controlsContainer.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
+        
+        
+        this.sliderLabel = p5.createSpan(`t: ${this.demo.t.toFixed(2)}`);
+        this.sliderLabel.parent(this.controlsContainer);
+        
+        this.slider = p5.createSlider(0, 1, 0, 0.00125);
+        this.slider.parent(this.controlsContainer);
+        this.slider.style('flex-grow', '2');
+        this.slider.mousePressed(() => this.animationRunning = false);
+        
+        this.slowerButton = p5.createButton('<span class="material-icons">fast_rewind</span>');
+        this.slowerButton.parent(this.controlsContainer);
+        this.slowerButton.mouseClicked(() => this.rewindClicked());
+        
+        this.playPauseButton = p5.createButton('<span class="material-icons">play_arrow</span>');
+        this.playPauseButton.parent(this.controlsContainer);
+        this.playPauseButton.mouseClicked(() => this.animationRunning = !this.animationRunning);
+
+        this.visible = false;
+
+
+        this.fasterButton = p5.createButton('<span class="material-icons">fast_forward</span>');
+        this.fasterButton.parent(this.controlsContainer);
+        this.fasterButton.mouseClicked(() => this.fastForwardClicked());
+    }
+
+    public updateT() {
+        if (this.animationRunning) this.demo.t += (0.005 * ControlsForParameterT.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
+        else this.demo.t = +this.slider.value();
+    }
+
+    public updateSlider() {
+        this.sliderLabel.html(`t: ${this.demo.t.toFixed(2)}`);
+        this.slider.value(this.demo.t);
+    }
+
+    private fastForwardClicked() {
+        this.animationRunning = true;
+        if (this.currAnimationSpeedMultiplierIndex < ControlsForParameterT.animationSpeedMultipliers.length - 1) this.currAnimationSpeedMultiplierIndex++;
+    }
+
+    private rewindClicked() {
+        this.animationRunning = true;
+        if (this.currAnimationSpeedMultiplierIndex > 0) this.currAnimationSpeedMultiplierIndex--;
     }
 }

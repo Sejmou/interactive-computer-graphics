@@ -30,28 +30,8 @@ export function clamp(val: number, min: number, max: number) {
     return Math.max(Math.min(val, Math.max(min, max)), Math.min(min, max));
 }
 
-export function drawLineAndPointBetweenAtT(
-    p5Instance: p5, start: p5.Vector, stop: p5.Vector, percent: number,
-    lineWidth: number = 4, lineColor: p5.Color = p5Instance.color(0), dotDiameter: number = 10, dotColor: p5.Color = p5Instance.color(60)
-) {
-    const pointBetween = p5.Vector.lerp(start, stop, percent) as unknown as p5.Vector;
-
-    p5Instance.push();
-    // draw line
-    p5Instance.stroke(lineColor);
-    p5Instance.strokeWeight(lineWidth);
-    p5Instance.line(start.x, start.y, stop.x, stop.y);
-
-    // draw dot
-    p5Instance.noStroke();
-    p5Instance.fill(dotColor);
-    p5Instance.circle(pointBetween.x, pointBetween.y, dotDiameter);
-    p5Instance.pop();
-
-    return pointBetween;
-}
-
 export function drawCircle(p5Instance: p5, pos: p5.Vector, color: p5.Color, diameter: number) {
+    p5Instance.push();
     p5Instance.noStroke();
     p5Instance.fill(color);
     p5Instance.circle(pos.x, pos.y, diameter);
