@@ -3,7 +3,7 @@ import { Touchable, Draggable, Drawable, Container } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { drawCircle, drawLine, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util'
 
-export class BezierCurveDemo implements Drawable, Touchable, Draggable, Container<DragVertex> {
+export class BezierDemo implements Drawable, Touchable, Draggable, Container<DragVertex> {
     public basePointDiameter: number;
     public baseLineWidth: number;
 
@@ -11,10 +11,9 @@ export class BezierCurveDemo implements Drawable, Touchable, Draggable, Containe
     private controlVertexColor: p5.Color;
 
     private bezierCurve: BezierCurve;
-
     private deCasteljauVis: DeCasteljauVisualization;
-
     private controlsForT: ControlsForParameterT;
+    private demoGuide: BezierDemoGuide;
 
     private curveDegreeTextContainer: p5.Element;
 
@@ -36,11 +35,14 @@ export class BezierCurveDemo implements Drawable, Touchable, Draggable, Containe
         this.baseLineWidth = p5.width * 0.0025;
         this.controlVertexColor = p5.color('#2AB7A9');
 
-        this.bezierCurve = new BezierCurve(this.p5, this);
-        this.deCasteljauVis = new DeCasteljauVisualization(this.p5, this);
-        this.controlsForT = new ControlsForParameterT(this.p5, this, parentContainerId);
+        this.bezierCurve = new BezierCurve(p5, this);
+        this.deCasteljauVis = new DeCasteljauVisualization(p5, this);
+        this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId);
+
         this.curveDegreeTextContainer = p5.createDiv();
         this.curveDegreeTextContainer.parent(divAboveCanvas);
+
+        this.demoGuide = new BezierDemoGuide(p5, this, parentContainerId);
     }
 
     handleMousePressed(): void {
@@ -202,7 +204,7 @@ class BezierCurve implements Drawable {
 
     private color: p5.Color;
 
-    constructor(private p5: p5, private demo: BezierCurveDemo) {
+    constructor(private p5: p5, private demo: BezierDemo) {
         this.evaluationSteps = 50;
         this.zeroToOne = [...Array(this.evaluationSteps + 1).keys()].map(num => num / this.evaluationSteps);
         this.color = p5.color(30);
@@ -237,7 +239,7 @@ class DeCasteljauVisualization implements Drawable {
     private colorOfPointOnBezier: p5.Color;
     public onlyDrawPointOnBezier = false;
 
-    constructor(private p5: p5, private bezierCurve: BezierCurveDemo) {
+    constructor(private p5: p5, private bezierCurve: BezierDemo) {
         this.color = p5.color('#E1B000');
         this.colorOfPointOnBezier = p5.color('#C64821');
     }
@@ -296,7 +298,7 @@ class ControlsForParameterT {
     private _animationRunning: boolean = false;
 
 
-    constructor(p5: p5, private demo: BezierCurveDemo, parentContainerId: string) {
+    constructor(p5: p5, private demo: BezierDemo, parentContainerId: string) {
         this.controlsContainer = p5.createDiv();
         
         this.controlsContainer.parent(parentContainerId);
@@ -345,5 +347,22 @@ class ControlsForParameterT {
     private rewindClicked() {
         this.animationRunning = true;
         if (this.currAnimationSpeedMultiplierIndex > 0) this.currAnimationSpeedMultiplierIndex--;
+    }
+}
+
+
+//TODO: implement
+class BezierDemoGuide {
+    private demoContainer: p5.Element;
+
+    set visible(visible: boolean) {
+        this.demoContainer.style('display', visible? 'inherit' : 'none');
+    }
+
+    constructor(p5: p5, private demo: BezierDemo, parentContainerId: string) {
+        this.demoContainer = p5.createDiv('Test');
+        this.demoContainer.id('demo-guide');
+        this.demoContainer.parent(p5.select(`#${parentContainerId}`)!.parent());
+        this.visible = false;
     }
 }

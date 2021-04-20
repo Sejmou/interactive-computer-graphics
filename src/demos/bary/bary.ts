@@ -9,10 +9,10 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
     let triangle: BarycentricTriangle;
 
     p5Instance.setup = () => {
-        const parentContainer = 'sketch';
+        const parentContainer = 'demo';
 
-        const heading = p5Instance.createElement('h4', 'Barycentric coordinates');
-        heading.parent(parentContainer);
+        const heading = p5Instance.select('#demo-title')!;
+        heading.html('Barycentric coordinates');
 
         const canvas = p5Instance.createCanvas(600, 450);
         canvas.parent(parentContainer);
