@@ -2,7 +2,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     entry: {
-        // index: './src/pages/index.ts',
+        index: './src/pages/index/index.ts',
         bezier: './src/pages/bezier/bezier.ts',
         bary: './src/pages/bary/bary.ts'
     },
@@ -17,7 +17,7 @@ module.exports = {
             favicon: "favicon.ico",
             template: 'src/pages/index/index.ejs',// Loads a custom template (using lodash by default)
             title: 'Interactive Computer Graphics',//will be inserted at placeholder spot in generated html,
-            chunks: []
+            chunks: ['index']
         }),
         new HtmlWebpackPlugin({
             favicon: "favicon.ico",
@@ -49,6 +49,14 @@ module.exports = {
                         esModule: false //important, else [object Object] shows up instead of img URL
                     }
                 }
+            },
+            {
+                test: /\.scss$/,
+                use: [
+                    "style-loader", // 3. inject styles into DOM
+                    "css-loader", // 2. turn CSS into CommonJS
+                    "sass-loader" // 1. Turns Sass into CSS
+                ]
             }
         ]
     },

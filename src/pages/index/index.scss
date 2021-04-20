@@ -1,0 +1,27 @@
+@import "../../styles.scss";
+
+.demo-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 1em 0;
+    margin-bottom: 200px; /* quick hack to increase distance to footer */
+}
+
+.demo-preview {
+    color: inherit; /* https://stackoverflow.com/a/6722667/13727176 */
+    border: 1px solid grey;
+    width: 500px;
+    padding: 1em;
+
+    &:hover {
+        background-color: lightgrey;
+        border: 1px solid black;
+    }
+
+    img {
+        width: 90%;
+    }
+}

@@ -1,5 +1,6 @@
+import './bary.scss';
 import p5 from "p5";
-import { BarycentricTriangle } from "../../barycentric-triangle";
+import { BarycentricTriangle } from "../../ts/barycentric-triangle";
 
 
 const bgColor = 230;
@@ -8,7 +9,7 @@ const barycentricCoordinatesSketch = (p5Instance: p5) => {
     let triangle: BarycentricTriangle;
 
     p5Instance.setup = () => {
-        const parentContainer = 'barycentric-sketch';
+        const parentContainer = 'sketch';
 
         const heading = p5Instance.createElement('h4', 'Barycentric coordinates');
         heading.parent(parentContainer);

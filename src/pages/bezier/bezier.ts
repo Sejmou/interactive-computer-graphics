@@ -1,5 +1,6 @@
+import './bezier.scss';
 import p5 from "p5";
-import { BezierCurve } from "../../bezier-curve";
+import { BezierCurve } from "../../ts/bezier-curve";
 
 
 const bgColor = 230;
@@ -8,7 +9,7 @@ const bezierSketch = (p5Instance: p5) => {
     let bezierCurve: BezierCurve;
 
     p5Instance.setup = () => {
-        const parentContainer = 'bezier-sketch';
+        const parentContainer = 'sketch';
 
         const heading = p5Instance.createElement('h4', 'Bézier curve');
         heading.parent(parentContainer);
