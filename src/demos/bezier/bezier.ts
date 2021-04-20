@@ -1,12 +1,12 @@
 import './bezier.scss';
 import p5 from "p5";
-import { BezierCurve } from "../ts/bezier-curve";
+import { BezierCurveDemo } from "../ts/bezier-curve";
 
 
 const bgColor = 230;
 
 const bezierSketch = (p5Instance: p5) => {
-    let bezierCurve: BezierCurve;
+    let bezierCurve: BezierCurveDemo;
 
     p5Instance.setup = () => {
         const parentContainer = 'sketch';
@@ -26,7 +26,7 @@ const bezierSketch = (p5Instance: p5) => {
         const x = (p5Instance.width / 2) - (w / 2) + (shift / 2);
         const y = (p5Instance.height / 2) - (h / 2);
 
-        bezierCurve = new BezierCurve(p5Instance, parentContainer, divAboveCanvas);
+        bezierCurve = new BezierCurveDemo(p5Instance, parentContainer, divAboveCanvas);
 
         const updateCursor = () => p5Instance.cursor(bezierCurve.dragging ? 'grabbing' : bezierCurve.hovering ? 'grab' : 'default');
 

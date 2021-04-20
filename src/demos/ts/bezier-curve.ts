@@ -3,11 +3,8 @@ import { Touchable, Draggable, Drawable, Container } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { drawCircle, drawLine, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util'
 
-export class BezierCurve implements Drawable, Touchable, Draggable, Container<DragVertex> {
+export class BezierCurveDemo implements Drawable, Touchable, Draggable, Container<DragVertex> {
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
-
-    //create range of numbers from 0 to 1 (inclusive) in 0.02 steps https://stackoverflow.com/a/10050831
-    private static readonly zeroToOne = [...Array(51).keys()].map(num => num / 50);
 
     public basePointDiameter: number;
     public baseLineWidth: number;
@@ -15,10 +12,9 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
     public controlVertices: DragVertex[] = [];
     private controlVertexColor: p5.Color;
 
-    private deCasteljauVis: DeCasteljauVisualization;
+    private bezierCurve: BezierCurve;
 
-    private bezierCurveColor: p5.Color;
-    private bezierCurveWidth: number;
+    private deCasteljauVis: DeCasteljauVisualization;
 
     public set t(newVal: number) {
         this._t = newVal;
@@ -34,7 +30,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     private _t: number = 0;
 
-    private currAnimationSpeedMultiplierIndex = BezierCurve.animationSpeedMultipliers.findIndex(_ => _ === 1);
+    private currAnimationSpeedMultiplierIndex = BezierCurveDemo.animationSpeedMultipliers.findIndex(_ => _ === 1);
 
     private sliderLabel: p5.Element;
     private slider: p5.Element;
@@ -59,10 +55,8 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
         this.basePointDiameter = p5.width * 0.015;
         this.baseLineWidth = p5.width * 0.0025;
 
+        this.bezierCurve = new BezierCurve(this.p5, this);
         this.deCasteljauVis = new DeCasteljauVisualization(this.p5, this);
-
-        this.bezierCurveColor = p5.color(30);
-        this.bezierCurveWidth = this.baseLineWidth * 2;
 
         this.controlVertexColor = p5.color('#2AB7A9');
 
@@ -98,7 +92,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     fastForwardClicked() {
         this.animationRunning = true;
-        if (this.currAnimationSpeedMultiplierIndex < BezierCurve.animationSpeedMultipliers.length - 1) this.currAnimationSpeedMultiplierIndex++;
+        if (this.currAnimationSpeedMultiplierIndex < BezierCurveDemo.animationSpeedMultipliers.length - 1) this.currAnimationSpeedMultiplierIndex++;
     }
 
     rewindClicked() {
@@ -182,11 +176,11 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     draw(): void {
         if (this.controlVertices.length > 0) {
-            if (this.animationRunning) this.t += (0.005 * BezierCurve.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
+            if (this.animationRunning) this.t += (0.005 * BezierCurveDemo.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
             else this.t = +this.slider.value();
 
             //we don't really need the bezier line or De Casteljau visualization if we have a single point
-            if (this.controlVertices.length > 1) this.drawBezierLine();
+            if (this.controlVertices.length > 1) this.bezierCurve.draw();
             if (this.controlVertices.length > 1) this.deCasteljauVis.draw();
 
             this.drawControlVertices();
@@ -196,26 +190,6 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
             this.p5.text('Click or touch anywhere on the canvas to add a vertex', this.p5.width / 2, this.p5.height / 2);
             this.p5.pop();
         }
-    }
-
-    private drawBezierLine() {
-        if (this.controlVertices.length === 0 || this.controlVertices.length === 1) return;
-        const points = BezierCurve.zeroToOne.map(t => this.findPointOnCurveWithDeCasteljau(this.controlVertices.map(v => v.position), t));
-        points.forEach((p, i) => {
-            if (i === points.length - 1) return;
-            drawLine(this.p5, p, points[i + 1], this.bezierCurveColor, this.bezierCurveWidth);
-        });
-    }
-
-    private findPointOnCurveWithDeCasteljau(controlVertexPositions: p5.Vector[], t: number): p5.Vector {
-        if (controlVertexPositions.length === 1) return controlVertexPositions[0]
-        let controlVerticesForNextIteration: p5.Vector[] = [];
-        controlVertexPositions.forEach((v, i) => {
-            if (i === controlVertexPositions.length - 1) return;
-            const lerpCurrAndNextAtT = p5.Vector.lerp(v, controlVertexPositions[i + 1], t) as unknown as p5.Vector;//again, fail in @types/p5???
-            controlVerticesForNextIteration.push(lerpCurrAndNextAtT);
-        });
-        return this.findPointOnCurveWithDeCasteljau(controlVerticesForNextIteration, t);
     }
 
     private drawControlVertices() {
@@ -269,6 +243,50 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
 
 
+class BezierCurve implements Drawable {
+    //TODO: maybe make this settable from outside so that users can see how changes in evaluationSteps change smoothness of bezier curve?
+    /**
+     * Signifies on how many steps of t between 0 and 1 (inclusive) the bezier curve will be evaluated
+     * The less steps the less smooth the curve becomes
+     */
+    private evaluationSteps: number;
+
+
+    /**
+     * range of numbers from 0 to 1 (inclusive) in steps of size 1/granularity https://stackoverflow.com/a/10050831
+     */
+    private zeroToOne: number[];
+
+    private color: p5.Color;
+
+    constructor(private p5: p5, private demo: BezierCurveDemo) {
+        this.evaluationSteps = 50;
+        this.zeroToOne = [...Array(this.evaluationSteps + 1).keys()].map(num => num / this.evaluationSteps);
+        this.color = p5.color(30);
+    }
+
+    public draw() {
+        if (this.demo.controlVertices.length === 0 || this.demo.controlVertices.length === 1) return;
+        const points = this.zeroToOne.map(t => this.findPointOnCurveWithDeCasteljau(this.demo.controlVertices.map(v => v.position), t));
+        points.forEach((p, i) => {
+            if (i === points.length - 1) return;
+            drawLine(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2);
+        });
+    }
+
+    private findPointOnCurveWithDeCasteljau(controlVertexPositions: p5.Vector[], t: number): p5.Vector {
+        if (controlVertexPositions.length === 1) return controlVertexPositions[0]
+        let controlVerticesForNextIteration: p5.Vector[] = [];
+        controlVertexPositions.forEach((v, i) => {
+            if (i === controlVertexPositions.length - 1) return;
+            const lerpCurrAndNextAtT = p5.Vector.lerp(v, controlVertexPositions[i + 1], t) as unknown as p5.Vector;//again, fail in @types/p5???
+            controlVerticesForNextIteration.push(lerpCurrAndNextAtT);
+        });
+        return this.findPointOnCurveWithDeCasteljau(controlVerticesForNextIteration, t);
+    }
+}
+
+
 
 class DeCasteljauVisualization implements Drawable {
     //config for lines between control points and current point between them (dependent on current value of t) rendered onto them for visualization
@@ -276,7 +294,7 @@ class DeCasteljauVisualization implements Drawable {
     private colorOfPointOnBezier: p5.Color;
     public onlyDrawPointOnBezier = false;
 
-    constructor(private p5: p5, private bezierCurve: BezierCurve) {
+    constructor(private p5: p5, private bezierCurve: BezierCurveDemo) {
         this.color = p5.color('#E1B000');
         this.colorOfPointOnBezier = p5.color('#C64821');
     }
