@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { Touchable, Draggable, Drawable, Container } from './ui-interfaces';
 import { DragVertex } from './vertex';
-import { drawLine, drawLineAndPointBetweenAtT, indexToLowercaseLetter, lightenDarkenColor, lightenDarkenP5Color, p5TouchPoint } from './util'
+import { drawLine, drawLineAndPointBetweenAtT, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util'
 
 
 export class BezierCurve implements Drawable, Touchable, Draggable, Container<DragVertex> {
@@ -19,12 +19,10 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
     private controlPolygonLineWidth: number;
     private controlPolygonLineColor: p5.Color;
     private controlPolygonLinePointAtTColor: p5.Color;
+    private colorOfPointOnBezier: p5.Color;
 
     private bezierCurveColor: p5.Color;
     private bezierCurveWidth: number;
-    private colorOfPointOnBezier: p5.Color;
-
-    private demoMode: boolean;
 
     private set t(newVal: number) {
         this._t = newVal;
@@ -72,8 +70,6 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
         this.bezierCurveWidth = this.controlPolygonLineWidth * 2;
 
         this.controlVertexColor = p5.color('#2AB7A9');
-
-        this.demoMode = true;
 
         this.curveDegreeTextContainer = p5.createDiv();
         this.curveDegreeTextContainer.parent(divAboveCanvas);
