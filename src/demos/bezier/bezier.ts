@@ -26,7 +26,7 @@ const bezierSketch = (p5Instance: p5) => {
         const x = (p5Instance.width / 2) - (w / 2) + (shift / 2);
         const y = (p5Instance.height / 2) - (h / 2);
 
-        bezierCurve = new BezierCurve(p5Instance, parentContainer, divAboveCanvas, w, h, shift, x, y);
+        bezierCurve = new BezierCurve(p5Instance, parentContainer, divAboveCanvas);
 
         const updateCursor = () => p5Instance.cursor(bezierCurve.dragging ? 'grabbing' : bezierCurve.hovering ? 'grab' : 'default');
 

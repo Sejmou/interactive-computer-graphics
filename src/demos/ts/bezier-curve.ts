@@ -12,7 +12,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     private pointDiameter: number;
 
-    private controlVertices: DragVertex[];
+    private controlVertices: DragVertex[] = [];
     private controlVertexColor: p5.Color;
 
     //config for lines between control points and current point between them (dependent on current value of t) rendered onto them for visualization
@@ -23,6 +23,8 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
     private bezierCurveColor: p5.Color;
     private bezierCurveWidth: number;
     private colorOfPointOnBezier: p5.Color;
+
+    private demoMode: boolean;
 
     private set t(newVal: number) {
         this._t = newVal;
@@ -59,7 +61,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
     }
     private _animationRunning: boolean = false;
 
-    constructor(private p5: p5, parentContainerId: string, divAboveCanvas: p5.Element, w: number, h: number, shift: number, x: number, y: number) {
+    constructor(private p5: p5, parentContainerId: string, divAboveCanvas: p5.Element) {
         this.controlPolygonLineWidth = p5.width * 0.0025;
         this.controlPolygonLineColor = p5.color('#E1B000');
         this.pointDiameter = p5.width * 0.015;
@@ -71,19 +73,10 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
         this.controlVertexColor = p5.color('#2AB7A9');
 
-        this.controlVertices = [
-            this.createVertexWithPos(x, y + h),
-            this.createVertexWithPos(x - shift, y),
-            this.createVertexWithPos(x + w - shift, y),
-            this.createVertexWithPos(x + w, y+ h)
-        ];
-
-        this.controlVertices.forEach(v => v.assign(this));
+        this.demoMode = true;
 
         this.curveDegreeTextContainer = p5.createDiv();
         this.curveDegreeTextContainer.parent(divAboveCanvas);
-        
-        this.handleCurveDegreeChange();
 
         const div = p5.createDiv();
         div.parent(parentContainerId);
@@ -124,7 +117,7 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     handleMousePressed(): void {
         if (this.controlVertices.length === 0) {
-            const newVertex = this.addVertexAtMousePos();
+            const newVertex = this.addVertexAtPos(this.p5.mouseX, this.p5.mouseY);
             //we want to allow the user to drag the added vertex immediately, therefore we call handleTouchStarted() on it
             newVertex.handleMousePressed();
             return;
@@ -145,9 +138,9 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
         }
     }
 
-    private addVertexAtMousePos(): DragVertex {
-        const newVertex = this.createVertexWithPos(this.p5.mouseX, this.p5.mouseY);
-        this.controlVertices = [ ...this.controlVertices, newVertex ];
+    addVertexAtPos(x: number, y: number): DragVertex {
+        const newVertex = this.createVertexWithPos(x, y);
+        this.controlVertices = [...this.controlVertices, newVertex];
         this.handleCurveDegreeChange();
         return newVertex;
     }
@@ -158,12 +151,18 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
 
     handleTouchStarted(): void {
         if (this.controlVertices.length === 0) {
-            const newVertex = this.addVertexAtFirstTouchPoint();
-            //if the vertex was added, we want to allow the user drag it immediately, therefore we call handleTouchStarted() on it
-            if (newVertex) newVertex.handleTouchStarted();
+            const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
+
+            if (touches.length === 0) {
+                console.warn('touches was unexpectedly empty');
+            } else {
+                const newVertex = this.addVertexAtPos(touches[0].x, touches[0].y);
+                //we want to allow the user to drag the added vertex immediately, therefore we call handleTouchStarted() on it
+                newVertex.handleTouchStarted();
+            }
             return;
         }
-        
+
         //operating on a copy of the array as vertices might get added or removed while iterating over the array
         //this could potentially lead to a lot of confusing/unpredictable behavior
         const vertices = this.controlVertices.slice();
@@ -176,22 +175,6 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
             //therefore we break out of this loop as soon as one vertex is being dragged
             if (v.dragging) break;
         }
-    }
-
-    /**
-     * adds a new vertex to the curve's control vertices
-     * @returns the vertex added (or null, if the vertex could not be added as for some reason the touches array of p5 was empty)
-     */
-    private addVertexAtFirstTouchPoint(): DragVertex | null {
-        const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
-        if (touches.length === 0) {
-            console.warn('touches was unexpectedly empty');
-            return null;
-        }
-        const newVertex = this.createVertexWithPos(touches[0].x, touches[0].y);
-        this.controlVertices = [...this.controlVertices, newVertex];
-        this.handleCurveDegreeChange();
-        return newVertex;
     }
 
     handleTouchReleased(): void {
@@ -211,8 +194,9 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
             if (this.animationRunning) this.t += (0.005 * BezierCurve.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
             else this.t = +this.slider.value();
 
-            this.drawBezierLine();
-            this.drawDeCasteljauVisualization(this.controlVertices.map(v => v.position));
+            //we don't really need the bezier line or De Casteljau visualization if we have a single point
+            if (this.controlVertices.length > 1) this.drawBezierLine();
+            if (this.controlVertices.length > 1) this.drawDeCasteljauVisualization(this.controlVertices.map(v => v.position));
 
             this.drawControlVertices();
         } else {
