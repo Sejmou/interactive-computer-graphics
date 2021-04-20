@@ -228,7 +228,18 @@ export class BezierCurve implements Drawable, Touchable, Draggable, Container<Dr
             console.warn('could not find provided element in control vertices of bezier, cancelling adding...');
             return;
         }
-        this.controlVertices.splice(i + 1, 0, this.createVertexWithPos(element.x + 25, element.y));
+
+        //add vertex at point where user clicked on or touched add button
+        const touches = this.p5.touches as p5TouchPoint[];
+        const touchInteraction = touches.length > 0;
+        const x = touchInteraction? touches[0].x : this.p5.mouseX;
+        const y = touchInteraction? touches[0].y : this.p5.mouseY; 
+        const newVertex = this.createVertexWithPos(x, y);
+
+        this.controlVertices.splice(i + 1, 0, newVertex);
+        if (touchInteraction) newVertex.handleTouchStarted();
+        else newVertex.handleMousePressed();
+
         this.handleCurveDegreeChange();
     }
 
