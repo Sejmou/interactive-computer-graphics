@@ -3,7 +3,11 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    flex-direction: column;
+}
+
+#demo {
+    max-width: 800px;
 }
 
 #cover {
@@ -22,4 +26,18 @@
 .back-to-main-btn {
     margin-top: 2em;
     margin-left: 1em;
+}
+
+#demo-guide {
+    border: 1px solid grey;
+    border-radius: 2px;
+    padding: 1em;
+    margin-bottom: 0.5em;
+
+    & > :first-child {
+        margin-top: 0;
+    }
+    & > :last-child {
+        margin-bottom: 0;
+    }
 }

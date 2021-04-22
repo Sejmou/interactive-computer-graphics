@@ -42,7 +42,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Container<Dra
         this.curveDegreeTextContainer = p5.createDiv();
         this.curveDegreeTextContainer.parent(divAboveCanvas);
 
-        this.demoGuide = new BezierDemoGuide(p5, this, parentContainerId);
+        this.demoGuide = new BezierDemoGuide(p5, this);
     }
 
     handleMousePressed(): void {
@@ -150,8 +150,8 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Container<Dra
         //add vertex at point where user clicked on or touched add button
         const touches = this.p5.touches as p5TouchPoint[];
         const touchInteraction = touches.length > 0;
-        const x = touchInteraction? touches[0].x : this.p5.mouseX;
-        const y = touchInteraction? touches[0].y : this.p5.mouseY; 
+        const x = touchInteraction ? touches[0].x : this.p5.mouseX;
+        const y = touchInteraction ? touches[0].y : this.p5.mouseY;
         const newVertex = this.createVertexWithPos(x, y);
 
         this.controlVertices.splice(i + 1, 0, newVertex);
@@ -286,7 +286,7 @@ class ControlsForParameterT {
     private slowerButton: p5.Element;
 
     public set visible(visible: boolean) {
-        this.controlsContainer.style('visibility', visible? 'visible' : 'hidden');
+        this.controlsContainer.style('visibility', visible ? 'visible' : 'hidden');
     };
 
     private set animationRunning(newVal: boolean) {
@@ -303,23 +303,23 @@ class ControlsForParameterT {
 
     constructor(p5: p5, private demo: BezierDemo, parentContainerId: string) {
         this.controlsContainer = p5.createDiv();
-        
+
         this.controlsContainer.parent(parentContainerId);
         this.controlsContainer.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
-        
-        
+
+
         this.sliderLabel = p5.createSpan(`t: ${this.demo.t.toFixed(2)}`);
         this.sliderLabel.parent(this.controlsContainer);
-        
+
         this.slider = p5.createSlider(0, 1, 0, 0.00125);
         this.slider.parent(this.controlsContainer);
         this.slider.style('flex-grow', '2');
         this.slider.mousePressed(() => this.animationRunning = false);
-        
+
         this.slowerButton = p5.createButton('<span class="material-icons">fast_rewind</span>');
         this.slowerButton.parent(this.controlsContainer);
         this.slowerButton.mouseClicked(() => this.rewindClicked());
-        
+
         this.playPauseButton = p5.createButton('<span class="material-icons">play_arrow</span>');
         this.playPauseButton.parent(this.controlsContainer);
         this.playPauseButton.mouseClicked(() => this.animationRunning = !this.animationRunning);
@@ -359,13 +359,11 @@ class BezierDemoGuide {
     private textBox: p5.Element;
 
     set visible(visible: boolean) {
-        this.textBox.style('display', visible? 'unset' : 'none');
+        this.textBox.style('display', visible ? '' : 'none');
     }
 
-    constructor(p5: p5, private demo: BezierDemo, parentContainerId: string) {
-        this.textBox = p5.createDiv();
-        this.textBox.id('demo-guide');
-        this.textBox.parent(p5.select(`#${parentContainerId}`)!.parent());
+    constructor(p5: p5, private demo: BezierDemo) {
+        this.textBox = p5.select('#demo-guide')!;
         this.visible = false;
     }
 
@@ -374,13 +372,9 @@ class BezierDemoGuide {
     }
 
     private createParagraphsHTMLFromMessage(message: string) {
-        const lines = message.split('\n');
-        const linesAsParagraphs = lines.map(str => {
-            if (str.trim().length > 0) {
-                return `<p>${str.trim()}</p>`;
-            } else return null;
-        });
-        return linesAsParagraphs.join('');
+        const paragraphContent = message.split('\n\n');
+        const paragraphs = paragraphContent.map(str => `<p>${str.trim().replace('\n', '<br>')}</p>`);
+        return paragraphs.join('');
     }
 
     private getMessage(): string {
@@ -389,19 +383,33 @@ class BezierDemoGuide {
                 return "";
             case 1:
                 return `A single point on its own is quite boring, right?
-                Maybe add another one by clicking/tapping the '+'-icon?`;
+                Add another one by clicking/tapping the '+'-icon of the point!`;
             case 2:
-                return `Great, now we have two points, yay! We can connect them with a line. But how could that actually be done? 🤔
-                One way is to "mix" the positions of the two points using linear interpolation with a parameter.
+                return `Great, now we have two points, yay! We can connect them with a line. But how could that work? 🤔
 
-                Let's call that parameter t. t ranges from 0 to 1. The bigger t, the more we move from the first point to the second.
-                So, if t is 0 we are at the first point, if t is 0.5 we are right between the first and second point, and at t = 1 we reach the second point.
+                One way is to "mix" the positions of the two points using linear interpolation with a parameter, let's call it <em>t</em>.
+                <em>t</em> ranges from 0 to 1. The bigger <em>t</em>, the more we move from the first point to the second.
+                So, if <em>t = 0</em> we are at the first point, if <em>t = 0.5</em> we are right between the first and second point, and at <em>t = 1</em> we reach the second point.
 
-                Feel free to experiment a bit, if you're ready add another vertex, we will then get to know the actual Bézier curves :)`;
+                Feel free to experiment with the controls for <em>t</em> below, if you're ready add another point, we will then get to know the actual Bézier curves :)`;
             case 3:
-                return "";
+                return `What you are seeing now, is a quadratic bézier curve. Notice that by moving the points you added, you can change the shape of this nice, smooth curve.
+                Because those points can be used to "control" the bézier curve, they are called the "control points" of the bézier curve.
+
+                The weird looking yellow lines and dots between the control points that move as <em>t</em> changes are a visualization of the so-called "De Casteljau algorithm".
+                The algorithm is used for drawing bézier curves. It works like this: we interpolate between each of the adjacent control points with the parameter <em>t</em>, just like we did when we only had two points.
+                The interpolations produce two new points on the lines between the control points. By interpolating between those two points again, we get another, single point: the position of the point on the bézier curve!`;
+            case 4:
+                return `You were brave and added another point? Congratulations, you have created a cubic bézier curve! Now you have even more control over the shape of the curve.
+                Feel free to add as many additional control points as you wish, it just works!
+                `
             default:
-                return "Feel free to add as many additional control vertices as you wish :)";
+                return `As you can see, the De Casteljau algorithm works with arbitrary numbers of control points.
+                Notice, however, that it is quite difficult to make changes to the shape of the curve, if we have lots of points.
+                Each control point has "global control" on the shape of the curve - that means, if we add a single point, it may impact the whole curve shape significantly.
+                
+                Also, the computation of bezier curves of higher degrees quickly becomes VERY computationally expensive as the number of control points increases.
+                Luckily, there is a solution for those problems of bézier curves: b-spline curves!`;
         }
     }
 }
