@@ -179,10 +179,13 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Container<Dra
     }
 
     handleCurveDegreeChange() {
-        this.curveDegreeTextContainer.html(`Number of control vertices: ${this.controlVertices.length}`);
+        const numOfVertices = this.controlVertices.length;
+        this.curveDegreeTextContainer.html(`Number of control vertices: ${numOfVertices}`);
         this.controlVertices.forEach((v, i) => v.label = `${indexToLowercaseLetter(i)}`);
-        this.deCasteljauVis.onlyDrawPointOnBezier = this.controlVertices.length < 3;
-        this.controlsForT.visible = this.controlVertices.length > 1;
+        this.deCasteljauVis.onlyDrawPointOnBezier = numOfVertices < 3;
+        this.controlsForT.visible = numOfVertices > 1;
+        this.demoGuide.visible = numOfVertices > 0;
+        this.demoGuide.update();
     }
 }
 
@@ -353,16 +356,52 @@ class ControlsForParameterT {
 
 //TODO: implement
 class BezierDemoGuide {
-    private demoContainer: p5.Element;
+    private textBox: p5.Element;
 
     set visible(visible: boolean) {
-        this.demoContainer.style('display', visible? 'inherit' : 'none');
+        this.textBox.style('display', visible? 'unset' : 'none');
     }
 
     constructor(p5: p5, private demo: BezierDemo, parentContainerId: string) {
-        this.demoContainer = p5.createDiv('Test');
-        this.demoContainer.id('demo-guide');
-        this.demoContainer.parent(p5.select(`#${parentContainerId}`)!.parent());
+        this.textBox = p5.createDiv();
+        this.textBox.id('demo-guide');
+        this.textBox.parent(p5.select(`#${parentContainerId}`)!.parent());
         this.visible = false;
+    }
+
+    update() {
+        this.textBox.html(this.createParagraphsHTMLFromMessage(this.getMessage()));
+    }
+
+    private createParagraphsHTMLFromMessage(message: string) {
+        const lines = message.split('\n');
+        const linesAsParagraphs = lines.map(str => {
+            if (str.trim().length > 0) {
+                return `<p>${str.trim()}</p>`;
+            } else return null;
+        });
+        return linesAsParagraphs.join('');
+    }
+
+    private getMessage(): string {
+        switch (this.demo.controlVertices.length) {
+            case 0:
+                return "";
+            case 1:
+                return `A single point on its own is quite boring, right?
+                Maybe add another one by clicking/tapping the '+'-icon?`;
+            case 2:
+                return `Great, now we have two points, yay! We can connect them with a line. But how could that actually be done? 🤔
+                One way is to "mix" the positions of the two points using linear interpolation with a parameter.
+
+                Let's call that parameter t. t ranges from 0 to 1. The bigger t, the more we move from the first point to the second.
+                So, if t is 0 we are at the first point, if t is 0.5 we are right between the first and second point, and at t = 1 we reach the second point.
+
+                Feel free to experiment a bit, if you're ready add another vertex, we will then get to know the actual Bézier curves :)`;
+            case 3:
+                return "";
+            default:
+                return "Feel free to add as many additional control vertices as you wish :)";
+        }
     }
 }
