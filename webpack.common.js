@@ -50,52 +50,25 @@ module.exports = {
                     }
                 }
             },
-            // ...
-            // --------
-            // SCSS ALL EXCEPT MODULES
             {
                 test: /\.scss$/,
-                exclude: /\.module\.scss$/,
                 use: [
                     {
-                        loader: 'style-loader'
+                        loader: 'style-loader'//inject styles into DOM
                     },
                     {
-                        loader: 'css-loader',
+                        loader: 'css-loader',//convert CSS -> CommonJS
                         options: {
-                            importLoaders: 1,
                             modules: {
-                                compileType: 'icss'
+                                compileType: 'icss'//have to set this to allow :export syntax for exporting SCSS variables which can then be imported into TS, default 'module' apparently more modern (keyword: CSS modules)
                             }
                         }
                     },
                     {
-                        loader: 'sass-loader'
+                        loader: 'sass-loader'//1. Sass -> CSS
                     },
                 ],
-            },
-            // --------
-            // SCSS MODULES
-            {
-                test: /\.module\.scss$/,
-                use: [
-                    {
-                        loader: 'style-loader'
-                    },
-                    {
-                        loader: 'css-loader',
-                        options: {
-                            importLoaders: 1,
-                            modules: {
-                                compileType: 'module'
-                            }
-                        }
-                    },
-                    {
-                        loader: 'sass-loader'
-                    },
-                ],
-            },
+            }
         ]
     },
     resolve: {

@@ -1,10 +1,8 @@
 @import '../../colors.scss';
 
 //this allows us to export variables from the scss file so that they can be used in JS/TS code
-//inspired by this article describing how that could work with JS and SCSS: https://css-tricks.com/getting-javascript-to-talk-to-css-and-sass/
-//and this one writing about TS and SCSS: 
-//however, things didn't work with the setup provided in this article, after A LOT of poking around on the internet, I found out that CSS-loader had apparently changed
-//this setup now works: https://github.com/webpack-contrib/css-loader#separating-interoperable-css-only-and-css-module-features
+//it all started with this article: https://mattferderer.com/use-sass-variables-in-typescript-and-javascript
+//however, a lot more trial-and-error and googling was needed until I managed to find a working solution lol 
 :export {
     primaryColor: $primary-color;
     secondaryColor: $secondary-color;
