@@ -1,6 +1,11 @@
 //styles which are useful on all sites
-$turquoise: #2ab7a9;
-$dark-turquoise: #397e77;
+
+//import custom colors used throughout application
+@import './colors.scss';
+
+//import materialize styles
+//materialize will only set color values we haven't defined explicitly (uses SASS's !default behind-the-scenes)
+@import "materialize-css/sass/materialize";
 
 *,
 body {
@@ -26,7 +31,7 @@ button {
     padding: 5px 10px;
 
     &:hover {
-        background-color: $turquoise;
+        background-color: $secondary-color;
     }
 }
 

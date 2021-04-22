@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "@types/p5": "^0.9.1",
+    "materialize-css": "^1.0.0",
     "p5": "^1.2.0"
   }
 }
