@@ -3,7 +3,7 @@ import { Touchable, Draggable, Drawable, Container } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { drawCircle, drawLine, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util';
 
-import colors from './color.scss';
+import colors from '../../global-styles/color_exports.scss';
 
 console.log(colors);
 console.log(colors.primaryColor);

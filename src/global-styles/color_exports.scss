@@ -1,8 +1,10 @@
-@import '../../colors.scss';
+@import './colors.scss';
 
 //this allows us to export variables from the scss file so that they can be used in JS/TS code
 //it all started with this article: https://mattferderer.com/use-sass-variables-in-typescript-and-javascript
 //however, a lot more trial-and-error and googling was needed until I managed to find a working solution lol 
+//Moved this export thing to a separate file instead of adding it in colors.scss directly, 
+// as I read somewhere on SO that otherwise stuff gets imported way too often, no idea lol
 :export {
     primaryColor: $primary-color;
     secondaryColor: $secondary-color;

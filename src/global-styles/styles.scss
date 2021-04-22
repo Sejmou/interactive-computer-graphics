@@ -4,7 +4,7 @@
 @import './colors.scss';
 
 //import materialize styles
-//materialize will only set color values we haven't defined explicitly (uses SASS's !default behind-the-scenes)
+//materialize will only set color values we haven't defined explicitly in colors.scss (using Sass's !default behind-the-scenes)
 @import "materialize-css/sass/materialize";
 
 *,
