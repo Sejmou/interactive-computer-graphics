@@ -1,7 +1,12 @@
 import p5 from 'p5';
 import { Touchable, Draggable, Drawable, Container } from './ui-interfaces';
 import { DragVertex } from './vertex';
-import { drawCircle, drawLine, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util'
+import { drawCircle, drawLine, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util';
+
+import colors from './color.scss';
+
+console.log(colors);
+console.log(colors.primaryColor);
 
 export class BezierDemo implements Drawable, Touchable, Draggable, Container<DragVertex> {
     public basePointDiameter: number;

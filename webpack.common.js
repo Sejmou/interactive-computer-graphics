@@ -50,14 +50,52 @@ module.exports = {
                     }
                 }
             },
+            // ...
+            // --------
+            // SCSS ALL EXCEPT MODULES
             {
                 test: /\.scss$/,
+                exclude: /\.module\.scss$/,
                 use: [
-                    "style-loader", // 3. inject styles into DOM
-                    "css-loader", // 2. turn CSS into CommonJS
-                    "sass-loader" // 1. Turns Sass into CSS
-                ]
-            }
+                    {
+                        loader: 'style-loader'
+                    },
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            importLoaders: 1,
+                            modules: {
+                                compileType: 'icss'
+                            }
+                        }
+                    },
+                    {
+                        loader: 'sass-loader'
+                    },
+                ],
+            },
+            // --------
+            // SCSS MODULES
+            {
+                test: /\.module\.scss$/,
+                use: [
+                    {
+                        loader: 'style-loader'
+                    },
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            importLoaders: 1,
+                            modules: {
+                                compileType: 'module'
+                            }
+                        }
+                    },
+                    {
+                        loader: 'sass-loader'
+                    },
+                ],
+            },
         ]
     },
     resolve: {

@@ -8,14 +8,3 @@ $secondary-color: color("teal", "lighten-1");
 $success-color: color("green", "base");
 $error-color: color("red", "base");
 $link-color: color("light-blue", "darken-1");
-
-//extremely useful: this allows us to export variables from the scss file so that they can be used in JS/TS code
-//https://css-tricks.com/getting-javascript-to-talk-to-css-and-sass/
-//TODO: figure out how to get this to actually work
-:export {
-    primaryColor: $primary-color;
-    secondaryColor: $secondary-color;
-    successColor: $success-color;
-    errorColor: $error-color;
-    linkColor: $link-color;
-}
