@@ -1,6 +1,7 @@
 import p5 from "p5";
 import { AddOrRemove, Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, Touchable } from "./ui-interfaces";
 import { clamp, p5TouchPoint } from "./util";
+import colors from '../../global-styles/color_exports.scss';
 
 
 export class Vertex implements Drawable {
@@ -101,7 +102,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
 
         this.addButton = new ActionButton(p5, p5.createVector(this.position.x - 10, this.position.y - 10), this.baseRadius);
         this.addButton.action = 'add';
-        this.addButton.color = p5.color('#388e3c');
+        this.addButton.color = p5.color(colors.successColor);
         this.addButton.subscribe(this);
 
         this.deleteButton = new ActionButton(p5, p5.createVector(this.position.x + 10, this.position.y - 10), this.baseRadius);
@@ -246,7 +247,7 @@ class ActionButton implements Drawable, Clickable, Touchable, Hoverable, MyObser
      private maxDistForRegisteringTouch = 20;
 
 
-    constructor(private p5: p5, public position: p5.Vector, public baseRadius = 3, public action: AddOrRemove = 'remove', public color: p5.Color = p5.color('#F44336')) { }
+    constructor(private p5: p5, public position: p5.Vector, public baseRadius = 3, public action: AddOrRemove = 'remove', public color: p5.Color = p5.color(colors.errorColor)) { }
 
     draw(): void {
         this.currentRadius = this.hovering ? this.baseRadius * this.hoverRadiusMultiplier : this.baseRadius;

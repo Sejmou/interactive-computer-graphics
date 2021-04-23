@@ -12,6 +12,10 @@
     max-width: 800px;
 }
 
+#demo-guide {
+    display: none;/* property removed by code of demo if needed */
+}
+
 #cover {
     position: fixed;
     height: 100%;

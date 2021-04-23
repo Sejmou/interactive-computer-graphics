@@ -3,9 +3,10 @@ import p5 from "p5";
 import { BezierDemo } from "../ts/bezier-curve";
 
 
-const bgColor = 230;
 
 const bezierSketch = (p5Instance: p5) => {
+    const bgColor = p5Instance.color(230);
+
     let bezierDemo: BezierDemo;
 
     function calcCanvasX() {

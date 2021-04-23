@@ -3,8 +3,11 @@
 @import "materialize-css/sass/components/_color-variables";
 
 //define color theme (a bit confusing and not documented anywhere at all?! looooooooool)
-$primary-color: color("blue", "lighten-2");
+$primary-color: color("purple", "lighten-2");
 $secondary-color: color("teal", "lighten-1");
 $success-color: color("green", "base");
 $error-color: color("red", "base");
 $link-color: color("light-blue", "darken-1");
+
+//$radio-fill-color is used for materialize's slider, too -> we want to set it to the primary color
+$radio-fill-color: $primary-color;

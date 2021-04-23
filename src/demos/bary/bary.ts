@@ -3,9 +3,9 @@ import p5 from "p5";
 import { BarycentricTriangle } from "../ts/barycentric-triangle";
 
 
-const bgColor = 230;
 
 const barycentricCoordinatesSketch = (p5Instance: p5) => {
+    const bgColor = p5Instance.color(230);
     let triangle: BarycentricTriangle;
 
     p5Instance.setup = () => {
