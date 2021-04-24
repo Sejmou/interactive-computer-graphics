@@ -202,14 +202,14 @@ class BezierCurve implements Drawable {
 
 
     /**
-     * range of numbers from 0 to 1 (inclusive) in steps of size 1/granularity https://stackoverflow.com/a/10050831
+     * range of numbers from 0 to 1 (inclusive) in steps of size 1/evaluationSteps https://stackoverflow.com/a/10050831
      */
     private zeroToOne: number[];
 
     private color: p5.Color;
 
     constructor(private p5: p5, private demo: BezierDemo) {
-        this.evaluationSteps = 50;
+        this.evaluationSteps = 100;
         this.zeroToOne = [...Array(this.evaluationSteps + 1).keys()].map(num => num / this.evaluationSteps);
         this.color = p5.color(30);
     }

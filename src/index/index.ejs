@@ -6,6 +6,21 @@
   <title>
     <%= htmlWebpackPlugin.options.title %>
   </title>
+  <style>
+    #cover {
+      font-family: sans-serif;
+      position: fixed;
+      height: 100%;
+      width: 100%;
+      top: 0;
+      left: 0;
+      background: #fff;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
   <link rel="preconnect" href="https://fonts.gstatic.com">
   <link
     href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
@@ -14,6 +29,11 @@
 </head>
 
 <body>
+  <div id="cover">
+    <!-- #cover covers whole page until whole page until the page is done loading (index.ts then removes element) -->
+    <p>Loading...</p>
+  </div>
+
   <nav>
     <div class="nav-wrapper">
       <a href="#" class="brand-logo center">Interactive Computer Graphics</a>

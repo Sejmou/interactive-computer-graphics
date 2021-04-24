@@ -16,19 +16,6 @@
     display: none;/* property removed by code of demo if needed */
 }
 
-#cover {
-    position: fixed;
-    height: 100%;
-    width: 100%;
-    top: 0;
-    left: 0;
-    background: #fff;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .back-to-main-btn {
     margin-top: 2em;
     margin-left: 1em;
