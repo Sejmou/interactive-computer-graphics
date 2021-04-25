@@ -1,10 +1,10 @@
 import p5 from 'p5';
-import { Touchable, Draggable, Drawable, Container } from './ui-interfaces';
+import { Touchable, Draggable, Drawable, Container, Clickable } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { drawCircle, drawLine, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util';
 import colors from '../../global-styles/color_exports.scss';
 
-export class BezierDemo implements Drawable, Touchable, Draggable, Container<DragVertex> {
+export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex> {
     public basePointDiameter: number;
     public baseLineWidth: number;
 
@@ -34,7 +34,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Container<Dra
     constructor(private p5: p5, parentContainerId: string, divAboveCanvas: p5.Element) {
         this.basePointDiameter = p5.width * 0.015;
         this.baseLineWidth = p5.width * 0.0025;
-        this.controlVertexColor = p5.color(colors.secondaryColor);
+        this.controlVertexColor = p5.color(colors.primaryColor);
 
         this.bezierCurve = new BezierCurve(p5, this);
         this.deCasteljauVis = new DeCasteljauVisualization(p5, this);
@@ -245,7 +245,7 @@ class DeCasteljauVisualization implements Drawable {
 
     constructor(private p5: p5, private bezierCurve: BezierDemo) {
         this.color = p5.color('#E1B000');
-        this.colorOfPointOnBezier = p5.color(colors.primaryColor);
+        this.colorOfPointOnBezier = p5.color(colors.errorColor);
     }
 
     public draw() {

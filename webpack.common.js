@@ -3,7 +3,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
     entry: {
         index: './src/index/index.ts',
-        bezier: './src/demos/bezier/bezier.ts',
+        bezierBasic: './src/demos/bezier/basic/basic.ts',
+        bezierBernstein: './src/demos/bezier/bernstein/bernstein.ts',
         bary: './src/demos/bary/bary.ts'
     },
     optimization: {
@@ -22,16 +23,26 @@ module.exports = {
         new HtmlWebpackPlugin({
             favicon: "favicon.ico",
             template: 'src/demos/demo.ejs',
-            title: 'Bezier Curve Demo (Interactive Computer Graphics)',
-            chunks: ['bezier'],
-            filename: 'bezier-curve.html'// don't forget this! otherwise plugin would emit to index.html!
+            filename: 'bezier-curve.html',// don't forget this! otherwise plugin would emit to index.html!
+            chunks: ['bezierBasic'],
+            title: 'Bézier Curve Demo (Interactive Computer Graphics)',
+            heading: 'Bézier Curves'
         }),
         new HtmlWebpackPlugin({
             favicon: "favicon.ico",
             template: 'src/demos/demo.ejs',
-            title: 'Barycentric Coordinates Demo (Interactive Computer Graphics)',
+            filename: 'bezier-bernstein.html',// don't forget this! otherwise plugin would emit to index.html!
+            chunks: ['bezierBernstein'],
+            title: 'Bézier Curves and Bernstein Polynomials Demo (Interactive Computer Graphics)',
+            heading: 'Bézier Curves and Bernstein Polynomials',
+        }),
+        new HtmlWebpackPlugin({
+            favicon: "favicon.ico",
+            template: 'src/demos/demo.ejs',
             chunks: ['bary'],
-            filename: 'barycentric-coordinates.html' // don't forget this! otherwise plugin would emit to index.html!
+            filename: 'barycentric-coordinates.html', // don't forget this! otherwise plugin would emit to index.html!
+            title: 'Barycentric Coordinates Demo (Interactive Computer Graphics)',
+            heading: 'Barycentric Coordinates'
         })
     ],
     module: {

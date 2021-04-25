@@ -1,66 +1,83 @@
-import './bary.scss';
+import './bernstein.scss';
 import p5 from "p5";
-import { BarycentricTriangle } from "../ts/barycentric-triangle";
+import { BezierDemo } from "../../ts/bezier-curve";
 
 
 
-const barycentricCoordinatesSketch = (p5Instance: p5) => {
+const bezierSketch = (p5Instance: p5) => {
     const bgColor = p5Instance.color(230);
-    let triangle: BarycentricTriangle;
+
+    let bezierDemo: BezierDemo;
+
+    function calcCanvasX() {
+        return Math.min(p5Instance.windowWidth, 800);
+    }
+
+    function calcCanvasY() {
+        return p5Instance.windowHeight * 0.6;
+    }
 
     p5Instance.setup = () => {
         const parentContainer = 'demo';
 
-        const canvas = p5Instance.createCanvas(600, 450);
+        const divAboveCanvas = p5Instance.createDiv();
+        divAboveCanvas.parent(parentContainer);
+
+        const canvas = p5Instance.createCanvas(calcCanvasX(), calcCanvasY());
         canvas.parent(parentContainer);
 
-        p5Instance.background(bgColor);
+        bezierDemo = new BezierDemo(p5Instance, parentContainer, divAboveCanvas);
 
-        triangle = new BarycentricTriangle(p5Instance, [p5Instance.createVector(80, 100), p5Instance.createVector(130, 310), p5Instance.createVector(400, 140)]);
-
-        const updateCursor = () => p5Instance.cursor(triangle.dragging ? 'grabbing' : triangle.hovering ? 'grab' : 'default');
+        const updateCursor = () => p5Instance.cursor(bezierDemo.dragging ? 'grabbing' : bezierDemo.hovering ? 'grab' : 'default');
 
         canvas.mousePressed(() => {
-            triangle.handleMousePressed();
+            bezierDemo.handleMousePressed();
             updateCursor();
             return false; // prevent any browser defaults
         });
         canvas.touchStarted(() => {
             //calling this in setTimeout as p5Inst.touches is apparently not updated until after handleTouchStarted is done executing
             setTimeout(() => {
-                triangle.handleTouchStarted();
+                bezierDemo.handleTouchStarted();
+                if (!bezierDemo.dragging) canvas.style('touch-action', 'auto');
+                else canvas.style('touch-action', 'none');
             });
             return false; // prevent any browser defaults
         });
         canvas.mouseReleased(() => {
-            triangle.handleMouseReleased();
+            bezierDemo.handleMouseReleased();
             updateCursor();
         });
         canvas.touchEnded(() => {
-            triangle.handleTouchReleased();
+            bezierDemo.handleTouchReleased();
+            if (!bezierDemo.dragging) canvas.style('touch-action', 'auto');
+            else canvas.style('touch-action', 'none');
             return false; // prevent any browser defaults
         });
         canvas.mouseMoved(() => {
             updateCursor();
-            return false; // prevent any browser defaults
+            return false;
         });
 
         const preventScrollIfDragging = (e: TouchEvent) => {
-            if (triangle.dragging) e.preventDefault();
+            if (bezierDemo.dragging) e.preventDefault();
         };
         document.addEventListener('touchstart', preventScrollIfDragging, { passive: false });// https://stackoverflow.com/a/49582193/13727176
         document.addEventListener('touchmove', preventScrollIfDragging, { passive: false });
         document.addEventListener('touchend', preventScrollIfDragging, { passive: false });
         document.addEventListener('touchcancel', preventScrollIfDragging, { passive: false });
 
-        //remove cover (full page loading screen)
         document.querySelector('#cover')?.remove();
     };
 
     p5Instance.draw = () => {
         p5Instance.background(bgColor);
-        triangle.draw();
+        bezierDemo.draw();
     };
+
+    p5Instance.windowResized = () => {
+        p5Instance.resizeCanvas(calcCanvasX(), calcCanvasY());
+    }
 };
 
-new p5(barycentricCoordinatesSketch);
+new p5(bezierSketch);
