@@ -49,10 +49,15 @@ export function isClickable(object: any): object is Clickable {
         ('handleMouseReleased' in object) && (typeof object.handleMouseReleased === 'function');
 }
 
-export function isHoverable(object: any): object is Draggable {
-    return ('handleMouseMoved' in object) && (typeof object.handleMouseMoved === 'function');
+export function isDraggable(object: any): object is Draggable {
+    return ('hovering' in object) && (typeof object.hovering === 'boolean') &&
+        ('dragging' in object) && (typeof object.dragging === 'boolean');
 }
 
+export function isTouchable(object: any): object is Touchable {
+    return ('handleTouchStarted' in object) && (typeof object.handleTouchStarted === 'function') &&
+        ('handleTouchReleased' in object) && (typeof object.handleTouchReleased === 'function');
+}
 
 //Those interfaces might be overkill for my use case, but nvm
 //Initial goal: notify "users" of my DragVertex class (like DragPolygon or BezierCurve) whenever the delete or add button of a DragVertex they use has been clicked

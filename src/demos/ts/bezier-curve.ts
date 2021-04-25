@@ -31,17 +31,18 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
 
     private _t: number = 0;
 
-    constructor(private p5: p5, parentContainerId: string, divAboveCanvas: p5.Element) {
+    constructor(private p5: p5, canvas: p5.Element, parentContainerId?: string) {
         this.basePointDiameter = p5.width * 0.015;
         this.baseLineWidth = p5.width * 0.0025;
         this.controlVertexColor = p5.color(colors.primaryColor);
 
         this.bezierCurve = new BezierCurve(p5, this);
         this.deCasteljauVis = new DeCasteljauVisualization(p5, this);
-        this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId);
-
+        
         this.curveDegreeTextContainer = p5.createDiv();
-        this.curveDegreeTextContainer.parent(divAboveCanvas);
+        if (parentContainerId) this.curveDegreeTextContainer.parent(parentContainerId);
+        if (parentContainerId) canvas.parent(parentContainerId);
+        this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId);
 
         this.demoGuide = new BezierDemoGuide(p5, this);
     }
@@ -302,10 +303,10 @@ class ControlsForParameterT {
     private _animationRunning: boolean = false;
 
 
-    constructor(p5: p5, private demo: BezierDemo, parentContainerId: string) {
+    constructor(p5: p5, private demo: BezierDemo, parentContainerId?: string) {
         this.controlsContainer = p5.createDiv();
 
-        this.controlsContainer.parent(parentContainerId);
+        if (parentContainerId) this.controlsContainer.parent(parentContainerId);
         this.controlsContainer.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
 
 
