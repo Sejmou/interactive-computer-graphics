@@ -1,20 +1,35 @@
 import p5 from 'p5';
-import { Touchable, Draggable, Drawable, Container, Clickable } from './ui-interfaces';
+import { Touchable, Draggable, Drawable, Container, Clickable, MyObservable, MyObserver } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { drawCircle, drawLine, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util';
 import colors from '../../global-styles/color_exports.scss';
 
-export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex> {
-    public basePointDiameter: number;
-    public baseLineWidth: number;
+export type BezierDemoChange = 'controlVerticesChanged';
 
-    public controlVertices: DragVertex[] = [];
+export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<BezierDemoChange> {
+    private _basePointDiameter: number;
+
+    public get basePointDiameter(): number {
+        return this._basePointDiameter;
+    }
+
+    private _baseLineWidth: number;
+    public get baseLineWidth(): number {
+        return this._baseLineWidth;
+    }
+
+    private _controlVertices: DragVertex[] = [];
+
+    //other's might be interested in the control vertices, however they shouldn't modify them, only read!
+    public get controlVertices(): Readonly<DragVertex>[] {
+        return this._controlVertices;
+    }
+
     private controlVertexColor: p5.Color;
 
     private bezierCurve: BezierCurve;
     private deCasteljauVis: DeCasteljauVisualization;
     private controlsForT: ControlsForParameterT;
-    private demoGuide: BezierDemoGuide;
 
     private curveDegreeTextContainer: p5.Element;
 
@@ -32,19 +47,17 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     private _t: number = 0;
 
     constructor(private p5: p5, canvas: p5.Element, parentContainerId?: string) {
-        this.basePointDiameter = p5.width * 0.015;
-        this.baseLineWidth = p5.width * 0.0025;
+        this._basePointDiameter = p5.width * 0.015;
+        this._baseLineWidth = p5.width * 0.0025;
         this.controlVertexColor = p5.color(colors.primaryColor);
 
         this.bezierCurve = new BezierCurve(p5, this);
         this.deCasteljauVis = new DeCasteljauVisualization(p5, this);
-        
+
         this.curveDegreeTextContainer = p5.createDiv();
         if (parentContainerId) this.curveDegreeTextContainer.parent(parentContainerId);
         if (parentContainerId) canvas.parent(parentContainerId);
         this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId);
-
-        this.demoGuide = new BezierDemoGuide(p5, this);
     }
 
     handleMousePressed(): void {
@@ -72,7 +85,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
 
     addVertexAtPos(x: number, y: number): DragVertex {
         const newVertex = this.createVertexWithPos(x, y);
-        this.controlVertices = [...this.controlVertices, newVertex];
+        this._controlVertices = [...this._controlVertices, newVertex];
         this.handleCurveDegreeChange();
         return newVertex;
     }
@@ -176,18 +189,31 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
 
     remove(element: DragVertex): void {
-        this.controlVertices = this.controlVertices.filter(v => v !== element);
+        this._controlVertices = this._controlVertices.filter(v => v !== element);
         this.handleCurveDegreeChange();
     }
 
     handleCurveDegreeChange() {
         const numOfVertices = this.controlVertices.length;
         this.curveDegreeTextContainer.html(`Number of control vertices: ${numOfVertices}`);
-        this.controlVertices.forEach((v, i) => v.label = `${indexToLowercaseLetter(i)}`);
+        this._controlVertices.forEach((v, i) => v.label = `${indexToLowercaseLetter(i)}`);
         this.deCasteljauVis.onlyDrawPointOnBezier = numOfVertices < 3;
         this.controlsForT.visible = numOfVertices > 1;
-        this.demoGuide.visible = numOfVertices > 0;
-        this.demoGuide.update();
+        this.notifyObservers('controlVerticesChanged');
+    }
+
+    private observers: MyObserver<BezierDemoChange>[] = [];
+
+    subscribe(observer: MyObserver<BezierDemoChange>): void {
+        this.observers.push(observer);
+    }
+
+    unsubscribe(observer: MyObserver<BezierDemoChange>): void {
+        this.observers = this.observers.filter(o => o !== observer);
+    }
+
+    notifyObservers(change: BezierDemoChange): void {
+        this.observers.forEach(o => o.update(change));
     }
 }
 
@@ -352,97 +378,5 @@ class ControlsForParameterT {
     private rewindClicked() {
         this.animationRunning = true;
         if (this.currAnimationSpeedMultiplierIndex > 0) this.currAnimationSpeedMultiplierIndex--;
-    }
-}
-
-
-
-class BezierDemoGuide {
-    private textBox: p5.Element;
-
-    set visible(visible: boolean) {
-        this.textBox.style('display', visible ? 'block' : 'none');
-    }
-
-    constructor(p5: p5, private demo: BezierDemo) {
-        this.textBox = p5.select('#demo-guide')!;
-        this.visible = false;
-    }
-
-    update() {
-        this.textBox.html(this.createParagraphsHTMLFromMessage(this.getMessage()));
-        //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)
-        MathJax.typeset(['#demo-guide']);
-    }
-
-    private createParagraphsHTMLFromMessage(message: string) {
-        const paragraphContent = message.split('\n\n');
-        const paragraphs = paragraphContent.map(str => `<p>${str.trim().replace('\n', '<br>')}</p>`);
-        return paragraphs.join('');
-    }
-
-    private getMessage(): string {
-        //using String.raw``templateStringContent` allows use of backslashes without having to escape them (so that MathJax can parse LaTeX syntax)
-        switch (this.demo.controlVertices.length) {
-            case 0:
-                return "";
-            case 1:
-                return String.raw`A single point on its own is quite boring, right?
-                Add another one by clicking/tapping the '+'-icon of the point!`;
-            case 2:
-                return String.raw`Great, now we have two points, yay! We can connect them with a line. But how could that work? 🤔
-
-                One way is to "mix" the positions of the two points using linear interpolation with a parameter, let's call it \( t \).
-                \( t \) ranges from 0 to 1. The bigger \( t \), the more we move from the first point to the second.
-                So, if \( t = 0 \) we are at the first point, if \( t = 0.5 \) we are right between the first and second point, and at \( t = 1 \) we reach the second point.
-
-                Feel free to experiment with the controls for \( t \) below, if you're ready add another point, we will then get to know the actual Bézier curves :)`;
-            case 3:
-                return String.raw`What you are seeing now, is a quadratic bézier curve. Notice that by moving the points you added, you can change the shape of this nice, smooth curve.
-                Because those points can be used to "control" the bézier curve, they are called the "control points" of the bézier curve.
-
-                The weird looking yellow lines and dots between the control points that move as \( t \) changes are a visualization of the so-called "De Casteljau algorithm".
-                The algorithm is used for drawing bézier curves. It works like this: we interpolate between each of the adjacent control points with the parameter \( t \), just like we did when we only had two points.
-                The interpolations produce two new points on the lines between the control points. By interpolating between those two points again, we get another, single point: the position of the point on the bézier curve!`;
-            case 4:
-                return String.raw`You were brave and added another point? Congratulations, you have created a cubic bézier curve! Now you have even more control over the shape of the curve.
-                Feel free to add as many additional control points as you wish, it just works!
-                `
-            default:
-                return String.raw`As you can see, the De Casteljau algorithm works with arbitrary numbers of control points.
-                Notice, however, that it is quite difficult to make changes to the shape of the curve, if we have lots of points.
-                Each control point has "global control" on the shape of the curve - that means, if we add a single point, it may impact the whole curve shape significantly.
-                
-                Also, the computation of bezier curves of higher degrees quickly becomes VERY computationally expensive as the number of control points increases.
-                Luckily, there is a solution for those problems of bézier curves: b-spline curves!`;
-        }
-    }
-}
-
-
-
-export class BernsteinPolynomialVisualization implements Drawable {
-    /**
-     * range of numbers from 0 to 1 (inclusive) in steps of size 1/evaluationSteps https://stackoverflow.com/a/10050831
-     */
-     private evaluationSteps: number[];
-     private noOfStepsForT: number;
-
-     private noOfVerticesOnLastComputation: number = 0;
-
-     private bernSteinPolynomials: ((t: number) => number)[] = [];
-    
-    constructor(private p5: p5, private demo: BezierDemo) {
-        this.noOfStepsForT = 100;
-        this.evaluationSteps = [...Array(this.noOfStepsForT + 1).keys()].map(num => num / this.noOfStepsForT);
-    }
-
-    private recomputeBernsteinPolynomials() {
-        const numOfVertices = this.demo.controlVertices.length;
-        console.log([...Array(numOfVertices).keys()]);
-    }
-
-    draw(): void {
-        if (this.demo.controlVertices.length !== this.noOfVerticesOnLastComputation) this.recomputeBernsteinPolynomials();
     }
 }

@@ -1,7 +1,9 @@
 import p5 from "p5";
-import { AddOrRemove, Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, Touchable } from "./ui-interfaces";
+import { Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, Touchable } from "./ui-interfaces";
 import { clamp, p5TouchPoint } from "./util";
 import colors from '../../global-styles/color_exports.scss';
+
+type AddOrRemove = 'add' | 'remove';
 
 
 export class Vertex implements Drawable {
@@ -278,12 +280,12 @@ class ActionButton implements Drawable, Clickable, Touchable, Hoverable, MyObser
 
     handleMousePressed(): void {
         this.lastInteraction = 'cursor';
-        if (this.hovering) this.notify();
+        if (this.hovering) this.notifyObservers();
     }
 
     handleTouchStarted(): void {
         this.lastInteraction = 'touch';
-        if (this.tapped) this.notify();
+        if (this.tapped) this.notifyObservers();
     }
 
     handleMouseReleased(): void { }
@@ -297,7 +299,7 @@ class ActionButton implements Drawable, Clickable, Touchable, Hoverable, MyObser
         this.observers = this.observers.filter(o => o !== observer);
     }
 
-    notify(): void {
+    notifyObservers(): void {
         this.observers.forEach(o => o.update(this.action));
     }
 

@@ -4,7 +4,7 @@ import { Drawable, isClickable, isDraggable, isTouchable } from "./ui-interfaces
 
 //this is ugly as hell lol, sry
 export class SketchFactory<T extends Drawable> {
-    constructor(private factory: (p5Instance: p5, canvas: p5.Element, parentContainerId?: string) => T) { }
+    constructor(private createSketchContent: (p5Instance: p5, canvas: p5.Element, parentContainerId?: string) => T) { }
 
 
     createSketch(parentContainerId: string, onSketchContentCreated?: (sketchContent: T) => void) {
@@ -26,7 +26,7 @@ export class SketchFactory<T extends Drawable> {
             p5Instance.setup = () => {
 
                 const canvas = p5Instance.createCanvas(calcCanvasWidth(), calcCanvasHeight());
-                sketchContent = this.factory(p5Instance, canvas, parentContainerId);
+                sketchContent = this.createSketchContent(p5Instance, canvas, parentContainerId);
                 if (onSketchContentCreated) onSketchContentCreated(sketchContent);
 
                 //only !== undefined if the sketchContent is Draggable
@@ -107,7 +107,5 @@ export class SketchFactory<T extends Drawable> {
     }
 }
 
-
-
-const bezierFactoryFunction = (p5: p5, canvas: p5.Element, parentContainer?: string) => new BezierDemo(p5, canvas, parentContainer);
-export const bezierSketchFactory: SketchFactory<BezierDemo> = new SketchFactory(bezierFactoryFunction);
+const createBezierSketch = (p5: p5, canvas: p5.Element, parentContainer?: string) => new BezierDemo(p5, canvas, parentContainer);
+export const bezierSketchFactory: SketchFactory<BezierDemo> = new SketchFactory(createBezierSketch);

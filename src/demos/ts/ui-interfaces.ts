@@ -72,23 +72,20 @@ export interface MyObservable<T> {
     unsubscribe(observer: MyObserver<T>): void,
 
     /**
-     * notify all observers of a 
-     * @param action action which the observable can emit and its obervers can handle
+     * notify all observers of a certain action which the Observable has taken and the changes caused by that
+     * @param data data providing context to what happened so that Observers can react accordingly
      */
-    notify(action: T): void
+    notifyObservers(data: T): void
 }
 
 export interface MyObserver<T> {
     /**
      * Called by the observable which the observer listens to if it wants to inform the observer that some state change occured
      * Typically this would happen in the observable's notify() method
-     * @param action one of a certain set of actions which the observer understands and it can react to
+     * @param data data providing context to what changed
      */
-    update(action: T): void
+    update(data: T): void
 }
-
-
-export type AddOrRemove = 'add' | 'remove';
 
 
 export interface Container<T> {
