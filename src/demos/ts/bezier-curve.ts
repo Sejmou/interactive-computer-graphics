@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { Touchable, Draggable, Drawable, Container, Clickable, MyObservable, MyObserver } from './ui-interfaces';
 import { DragVertex } from './vertex';
-import { drawCircle, drawLine, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util';
+import { drawCircle, drawLineVector, indexToLowercaseLetter, lightenDarkenP5Color, p5TouchPoint } from './util';
 import colors from '../../global-styles/color_exports.scss';
 
 export type BezierDemoChange = 'controlVerticesChanged';
@@ -246,7 +246,7 @@ class BezierCurve implements Drawable {
         const points = this.zeroToOne.map(t => this.findPointOnCurveWithDeCasteljau(this.demo.controlVertices.map(v => v.position), t));
         points.forEach((p, i) => {
             if (i === points.length - 1) return;
-            drawLine(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2);
+            drawLineVector(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2);
         });
     }
 
@@ -291,7 +291,7 @@ class DeCasteljauVisualization implements Drawable {
             if (i === controlVertexPositions.length - 1) return;
             const posBetweenCurrAndNextAtT = p5.Vector.lerp(v, controlVertexPositions[i + 1], this.bezierCurve.t) as unknown as p5.Vector;//again, fail in @types/p5???
             if (!this.onlyDrawPointOnBezier) {
-                drawLine(this.p5, v, controlVertexPositions[i + 1], this.color, this.bezierCurve.baseLineWidth);
+                drawLineVector(this.p5, v, controlVertexPositions[i + 1], this.color, this.bezierCurve.baseLineWidth);
                 drawCircle(this.p5, posBetweenCurrAndNextAtT, this.color, this.bezierCurve.basePointDiameter);
             }
             vertexPositionsForNextIteration.push(posBetweenCurrAndNextAtT);

@@ -2,7 +2,7 @@ import p5 from 'p5';
 import { Clickable, Drawable, Draggable, Touchable } from './ui-interfaces';
 import { DragPolygon } from './polygon';
 import { DragVertex } from './vertex';
-import { twoByTwoDeterminant, directionVector, drawLine, renderTextWithDifferentColors, parseColorString, lightenDarkenP5Color } from './util';
+import { twoByTwoDeterminant, directionVector, drawLineVector, renderTextWithDifferentColors, parseColorString, lightenDarkenP5Color } from './util';
 
 export class BarycentricTriangle implements Drawable, Clickable, Touchable, Draggable {
     private pointInsideTriangle: PointOnTriangleSurface;
@@ -116,9 +116,9 @@ class PointOnTriangleSurface extends DragVertex {
     public drawLinesToTriangleVertices() {
         const [a, b, c] = this.triangleVertices.map(v => v.position);
         const [colorA, colorB, colorC] = this.triangleVertices.map(v => v.color);
-        drawLine(this.p5, a, this.position, colorA);
-        drawLine(this.p5, b, this.position, colorB);
-        drawLine(this.p5, c, this.position, colorC);
+        drawLineVector(this.p5, a, this.position, colorA);
+        drawLineVector(this.p5, b, this.position, colorB);
+        drawLineVector(this.p5, c, this.position, colorC);
     }
 
     public updateCoefficients() {

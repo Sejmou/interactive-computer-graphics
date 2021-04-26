@@ -10,11 +10,19 @@ export interface p5TouchPoint {
     id: number
 }
 
-export function drawLine(p5: p5, a: p5.Vector, b: p5.Vector, color: p5.Color = p5.color(0), lineWidth = 3) {
+export function drawLineVector(p5: p5, a: p5.Vector, b: p5.Vector, color: p5.Color = p5.color(0), lineWidth = 3) {
     p5.push();
     p5.strokeWeight(lineWidth);
     p5.stroke(color);
     p5.line(a.x, a.y, b.x, b.y);
+    p5.pop();
+}
+
+export function drawLineXYCoords(p5: p5, x1: number, y1: number, x2: number, y2: number, color: p5.Color = p5.color(0), lineWidth = 3) {
+    p5.push();
+    p5.strokeWeight(lineWidth);
+    p5.stroke(color);
+    p5.line(x1, y1, x2, y2);
     p5.pop();
 }
 
@@ -152,6 +160,11 @@ export function rgbaStringToHexA(color: string) {
 export function isNumeric(str: string) {
     return !isNaN(+str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)... wat does he mean lol?!
         !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+}
+
+
+export function randomHexColorCode() {
+    return Math.floor(Math.random()*16777215).toString(16);
 }
 
 
