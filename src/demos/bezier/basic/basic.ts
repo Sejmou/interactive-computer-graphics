@@ -1,7 +1,6 @@
 import './basic.scss';
-import p5 from "p5";
 import { BezierDemo, BezierDemoChange } from "../../ts/bezier-curve";
-import { SketchFactory, bezierSketchFactory } from '../../ts/sketch';
+import { bezierSketchFactory } from '../../ts/sketch';
 import { MyObserver } from '../../ts/ui-interfaces';
 
 
@@ -22,12 +21,12 @@ class BezierDemoGuide implements MyObserver<BezierDemoChange> {
         this.textBoxContainer.style.display = visible? 'block' : 'none';
     }
 
-    constructor(private demo: BezierDemo, parentContainerId: string) {
+    constructor(private demo: BezierDemo, demoContainerId: string) {
         this.textBoxContainer = document.createElement('div');
         this.textBoxContainer.id = this.id;
         this.visible = false;
 
-        document.getElementById(parentContainerId)?.appendChild(this.textBoxContainer);
+        document.getElementById(demoContainerId)?.insertAdjacentElement('afterend', this.textBoxContainer);
 
         //we want to get notified if the number of control vertices changes
         this.demo.subscribe(this);

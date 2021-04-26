@@ -7,15 +7,24 @@ import { Drawable, MyObserver } from '../../ts/ui-interfaces';
 
 
 const demoContainerId = 'demo';
+const bernSteinGraphContainer = document.createElement('div');
+const bernSteinGraphContainerId = 'bernstein-demo';
+bernSteinGraphContainer.id = bernSteinGraphContainerId;
+document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bernSteinGraphContainer);
 
 const onBezierDemoSketchCreated = (bezierDemo: BezierDemo) => {
     const bernSteinVisFactoryFunction = (p5Instance: p5, canvas: p5.Element, parentContainer?: string) => {
         if (parentContainer) canvas.parent(parentContainer);
         return new BernsteinPolynomialVisualization(p5Instance, bezierDemo);
     }
-    new SketchFactory<BernsteinPolynomialVisualization>(bernSteinVisFactoryFunction).createSketch(demoContainerId);
+    new SketchFactory<BernsteinPolynomialVisualization>(
+        bernSteinVisFactoryFunction, 
+        (p5) => Math.min(p5.windowWidth * 0.35, 400),
+        (p5) => Math.min(p5.windowWidth * 0.35, 400),
+        ).createSketch(bernSteinGraphContainerId);
 }
 
+bezierSketchFactory.calcCanvasWidth = (p5) => Math.min(0.55 * p5.windowWidth, 600);
 bezierSketchFactory.createSketch(demoContainerId, onBezierDemoSketchCreated);
 
 

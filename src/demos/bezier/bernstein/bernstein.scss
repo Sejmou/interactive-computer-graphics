@@ -1,1 +1,6 @@
 @import '../basic/basic.scss';
+
+#demo-wrapper {
+    flex-direction: row;
+    gap: 10px;
+}

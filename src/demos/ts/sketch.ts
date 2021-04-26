@@ -4,7 +4,11 @@ import { Drawable, isClickable, isDraggable, isResponsive, isTouchable } from ".
 
 //this is ugly as hell lol, sry
 export class SketchFactory<T extends Drawable> {
-    constructor(private createSketchContent: (p5Instance: p5, canvas: p5.Element, parentContainerId?: string) => T) { }
+
+    constructor(
+        private createSketchContent: (p5Instance: p5, canvas: p5.Element, parentContainerId?: string) => T,
+        public calcCanvasWidth?: (p5Instance: p5) => number, public calcCanvasHeight?: (p5Instance: p5) => number
+    ) {}
 
 
     createSketch(parentContainerId: string, onSketchContentCreated?: (sketchContent: T) => void) {
@@ -15,17 +19,12 @@ export class SketchFactory<T extends Drawable> {
             let sketchContent: T;
             const bgColor = p5Instance.color(230);
 
-            function calcCanvasWidth() {
-                return Math.min(p5Instance.windowWidth, 800);
-            }
-
-            function calcCanvasHeight() {
-                return p5Instance.windowHeight * 0.6;
-            }
+            const calcCanvasWidth = this.calcCanvasWidth || ( (p5: p5) => Math.min(p5.windowWidth, 800) );
+            const calcCanvasHeight = this.calcCanvasHeight || ( (p5: p5) => p5.windowHeight * 0.6 );
 
             p5Instance.setup = () => {
 
-                const canvas = p5Instance.createCanvas(calcCanvasWidth(), calcCanvasHeight());
+                const canvas = p5Instance.createCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));
                 sketchContent = this.createSketchContent(p5Instance, canvas, parentContainerId);
                 if (onSketchContentCreated) onSketchContentCreated(sketchContent);
 
@@ -99,7 +98,7 @@ export class SketchFactory<T extends Drawable> {
             };
 
             p5Instance.windowResized = () => {
-                p5Instance.resizeCanvas(calcCanvasWidth(), calcCanvasHeight());
+                p5Instance.resizeCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));
                 if (isResponsive(sketchContent)) sketchContent.canvasResized();
             }
         }
