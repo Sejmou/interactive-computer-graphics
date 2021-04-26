@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { BezierDemo } from "./bezier-curve";
-import { Drawable, isClickable, isDraggable, isTouchable } from "./ui-interfaces";
+import { Drawable, isClickable, isDraggable, isResponsive, isTouchable } from "./ui-interfaces";
 
 //this is ugly as hell lol, sry
 export class SketchFactory<T extends Drawable> {
@@ -100,6 +100,7 @@ export class SketchFactory<T extends Drawable> {
 
             p5Instance.windowResized = () => {
                 p5Instance.resizeCanvas(calcCanvasWidth(), calcCanvasHeight());
+                if (isResponsive(sketchContent)) sketchContent.canvasResized();
             }
         }
 

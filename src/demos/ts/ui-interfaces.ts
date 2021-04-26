@@ -38,10 +38,19 @@ export interface Hoverable {
 
 /**
  * An element which supports some kind of 'edit' functionality to e.g. change its appearance/properties
- * If editable is true, controls for editing the element will show up on user interaction
  */
 export interface Editable {
+    /**
+     * If true, controls for editing the element will show up on user interaction
+     */
     editable: boolean
+}
+
+/**
+ * An element which adapts itself to the current width of the canvas
+ */
+export interface Responsive {
+    canvasResized(): void
 }
 
 export function isClickable(object: any): object is Clickable {
@@ -57,6 +66,10 @@ export function isDraggable(object: any): object is Draggable {
 export function isTouchable(object: any): object is Touchable {
     return ('handleTouchStarted' in object) && (typeof object.handleTouchStarted === 'function') &&
         ('handleTouchReleased' in object) && (typeof object.handleTouchReleased === 'function');
+}
+
+export function isResponsive(object: any): object is Responsive {
+    return ('windowResized' in object) && (typeof object.windowResized === 'function');
 }
 
 //Those interfaces might be overkill for my use case, but nvm
