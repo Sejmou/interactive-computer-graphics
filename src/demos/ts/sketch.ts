@@ -1,4 +1,5 @@
 import p5 from "p5";
+import { BezierDemo } from "./bezier-curve";
 import { Drawable, isClickable, isDraggable, isTouchable } from "./ui-interfaces";
 
 //this is ugly as hell lol, sry
@@ -105,3 +106,8 @@ export class SketchFactory<T extends Drawable> {
         new p5(setupSketch);
     }
 }
+
+
+
+const bezierFactoryFunction = (p5: p5, canvas: p5.Element, parentContainer?: string) => new BezierDemo(p5, canvas, parentContainer);
+export const bezierSketchFactory: SketchFactory<BezierDemo> = new SketchFactory(bezierFactoryFunction);

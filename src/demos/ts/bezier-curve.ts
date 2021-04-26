@@ -356,7 +356,7 @@ class ControlsForParameterT {
 }
 
 
-//TODO: implement
+
 class BezierDemoGuide {
     private textBox: p5.Element;
 
@@ -416,5 +416,33 @@ class BezierDemoGuide {
                 Also, the computation of bezier curves of higher degrees quickly becomes VERY computationally expensive as the number of control points increases.
                 Luckily, there is a solution for those problems of bézier curves: b-spline curves!`;
         }
+    }
+}
+
+
+
+export class BernsteinPolynomialVisualization implements Drawable {
+    /**
+     * range of numbers from 0 to 1 (inclusive) in steps of size 1/evaluationSteps https://stackoverflow.com/a/10050831
+     */
+     private evaluationSteps: number[];
+     private noOfStepsForT: number;
+
+     private noOfVerticesOnLastComputation: number = 0;
+
+     private bernSteinPolynomials: ((t: number) => number)[] = [];
+    
+    constructor(private p5: p5, private demo: BezierDemo) {
+        this.noOfStepsForT = 100;
+        this.evaluationSteps = [...Array(this.noOfStepsForT + 1).keys()].map(num => num / this.noOfStepsForT);
+    }
+
+    private recomputeBernsteinPolynomials() {
+        const numOfVertices = this.demo.controlVertices.length;
+        console.log([...Array(numOfVertices).keys()]);
+    }
+
+    draw(): void {
+        if (this.demo.controlVertices.length !== this.noOfVerticesOnLastComputation) this.recomputeBernsteinPolynomials();
     }
 }
