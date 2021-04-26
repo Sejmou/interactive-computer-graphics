@@ -11,7 +11,7 @@ export class SketchFactory<T extends Drawable> {
     ) {}
 
 
-    createSketch(parentContainerId: string, onSketchContentCreated?: (sketchContent: T) => void) {
+    createSketch(parentContainerId?: string, onSketchContentCreated?: (sketchContent: T) => void) {
         const setupSketch = (p5Instance: p5) => {
             /**
              * the object which holds logic for what should be sketched

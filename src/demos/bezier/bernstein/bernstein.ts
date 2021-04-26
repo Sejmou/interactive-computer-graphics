@@ -3,7 +3,7 @@ import p5 from "p5";
 import { BezierDemo, BezierDemoChange } from "../../ts/bezier-curve";
 import { SketchFactory, bezierSketchFactory } from '../../ts/sketch';
 import { Drawable, MyObserver } from '../../ts/ui-interfaces';
-import { binomial, drawLineVector, drawLineXYCoords } from '../../ts/util';
+import { binomial, drawLineXYCoords } from '../../ts/util';
 import colors from '../../../global-styles/color_exports.scss';
 
 
@@ -14,12 +14,15 @@ bernSteinGraphContainer.id = bernSteinGraphContainerId;
 document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bernSteinGraphContainer);
 
 const onBezierDemoSketchCreated = (bezierDemo: BezierDemo) => {
-    const bernSteinVisFactoryFunction = (p5Instance: p5, canvas: p5.Element, parentContainer?: string) => {
+    const bernsteinVisFactoryFunction = (p5Instance: p5, canvas: p5.Element, parentContainer?: string) => {
         if (parentContainer) canvas.parent(parentContainer);
         return new BernsteinPolynomialVisualization(p5Instance, bezierDemo);
-    }
+    };
+
+    new BernsteinFormulas(bezierDemo, bernSteinGraphContainerId);
+
     new SketchFactory<BernsteinPolynomialVisualization>(
-        bernSteinVisFactoryFunction,
+        bernsteinVisFactoryFunction,
         (p5) => Math.min(p5.windowWidth * 0.35, 400),
         (p5) => Math.min(p5.windowWidth * 0.35, 400),
     ).createSketch(bernSteinGraphContainerId);
@@ -78,10 +81,95 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
             const y1 = this.p5.height - y * this.p5.height;
             const x2 = nextT * this.p5.width;
             const y2 = this.p5.height - nextY * this.p5.height;
-            drawLineXYCoords(this.p5, x1, y1, x2, y2, bPolyVertex.color, (bPolyVertex.hovering || bPolyVertex.dragging)? 4 : 1.5);
+            drawLineXYCoords(this.p5, x1, y1, x2, y2, bPolyVertex.color, (bPolyVertex.hovering || bPolyVertex.dragging) ? 4 : 1.5);
         }));
 
         drawLineXYCoords(this.p5, this.demo.t * this.p5.width, 0, this.demo.t * this.p5.height, this.p5.height, this.lineThroughTColor, 2);
 
     }
 }
+
+
+
+class BernsteinFormulas implements MyObserver<BezierDemoChange> {
+    private textBoxContainer: HTMLDivElement;
+    private id: string = 'bernstein-formulas';
+
+    private set visible(visible: boolean) {
+        this.textBoxContainer.style.display = visible ? 'block' : 'none';
+    }
+
+    constructor(private demo: BezierDemo, demoContainerId: string) {
+        this.textBoxContainer = document.createElement('div');
+        this.textBoxContainer.id = this.id;
+        this.visible = false;
+
+        document.getElementById(demoContainerId)?.appendChild(this.textBoxContainer);
+
+        //we want to get notified if the number of control vertices changes
+        this.demo.subscribe(this);
+    }
+
+    update(change: BezierDemoChange) {
+        if (change === 'controlVerticesChanged') {
+            const numOfControlVertices = this.demo.controlVertices.length;
+            this.textBoxContainer.innerHTML = this.createParagraphsHTMLFromMessage(this.getBernsteinFormulas(numOfControlVertices));
+            this.visible = this.textBoxContainer.innerHTML.length > 0;
+            //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)
+            MathJax.typeset([`#${this.id}`]);
+        }
+    }
+
+    private createParagraphsHTMLFromMessage(message: string) {
+        const paragraphContent = message.split('\n\n');
+        const paragraphs = paragraphContent.map(str => `<p>${str.trim().replace('\n', '<br>')}</p>`);
+        return paragraphs.join('');
+    }
+
+    private getBernsteinFormulas(numOfControlVertices: number): string {
+        const n = this.demo.controlVertices.length - 1;
+        if (n < 1) return '';
+        const zeroToN = [...Array(n + 1).keys()];
+        const bernSteinPolynomialLaTeXStrings = zeroToN.map(i => {
+            return String.raw`$$ \binom{${n}}{${i}} \cdot t^{${i}} \cdot (1-t)^{${n - i}} $$`;
+        });
+        return bernSteinPolynomialLaTeXStrings.join('');
+    }
+}
+
+
+
+// const createPlot = (p5: p5, canvas: p5.Element, parentContainer?: string) => new Plot(p5);
+// export const plotFactory: SketchFactory<Plot> = new SketchFactory(createPlot,
+//     (p5) => Math.min(p5.windowWidth * 0.35, 400),
+//     (p5) => Math.min(p5.windowWidth * 0.35, 400)
+// );
+
+// plotFactory.createSketch();
+
+// class Plot implements Drawable {
+//     private xAxisOffsetFromBottom: number;
+//     private yAxisOffsetFromLeft: number;
+
+//     private lineColor: p5.Color;
+
+//     // private xAxisLabel: string;
+//     // private yAxisLabel: string;
+
+//     // private xMaxVal: number;
+//     // private yMaxVal: number;
+
+//     // private xMinVal: number;
+//     // private yMinVal: number;
+
+//     constructor(private p5: p5) {
+//         this.xAxisOffsetFromBottom = 0.05 * p5.height;
+//         this.yAxisOffsetFromLeft = 0.05 * p5.width;
+//         this.lineColor = p5.color('black');
+//     }
+
+//     draw(): void {
+//         drawLineXYCoords(this.p5, this.yAxisOffsetFromLeft, this.xAxisOffsetFromBottom, this.p5.width, this.xAxisOffsetFromBottom, this.lineColor, 1);
+//         drawLineXYCoords(this.p5, this.yAxisOffsetFromLeft, this.xAxisOffsetFromBottom, this.yAxisOffsetFromLeft, this.p5.height, this.lineColor, 1);
+//     }
+// }
