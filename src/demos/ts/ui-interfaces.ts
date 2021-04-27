@@ -1,5 +1,5 @@
 /**
- * An element which can be rendered onto a p5 canvas
+ * An element which can be rendered onto a p5 canvas (or needs to be updated anytime the canvas's draw() is called)
  */
 export interface Drawable {
     draw(): void

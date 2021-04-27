@@ -1,6 +1,10 @@
-@import '../basic/basic.scss';
+@import "../basic/basic.scss";
 
 #demo-wrapper {
     flex-direction: row;
     gap: 10px;
+}
+
+.bernstein-polynomial-container:not(:first-child) {
+    margin-top: 10px;
 }

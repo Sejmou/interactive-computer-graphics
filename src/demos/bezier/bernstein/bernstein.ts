@@ -26,8 +26,10 @@ async function createDemo() {
     const bernsteinVisSketchHeight = bernsteinVisSketchWidth;
     const bernsteinVisSketch = new Sketch(bernSteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight);
     await bernsteinVisSketch.create();
-    new BernsteinFormulas(bezierDemo, bernSteinGraphContainerId);
-    bernsteinVisSketch.add((p5) => new BernsteinPolynomialVisualization(p5, bezierDemo));
+    const bernsteinVis = bernsteinVisSketch.add((p5) => new BernsteinPolynomialVisualization(p5, bezierDemo));
+
+    //this isn't actually added to the canvas or anything, however it needs to be updated every time t of bezier demo changes -> easiest solution: update on every draw()
+    bernsteinVisSketch.add(() => new BernsteinFormulas(bezierDemo, bernsteinVis, bernSteinGraphContainerId));
 
     document.querySelector('#cover')?.remove();
 }
@@ -101,15 +103,16 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
 
 
 
-class BernsteinFormulas implements MyObserver<BezierDemoChange> {
+class BernsteinFormulas implements Drawable {
     private textBoxContainer: HTMLDivElement;
+    private containersForBernsteinPolynomialValues: HTMLDivElement[] = [];
     private id: string = 'bernstein-formulas';
 
     private set visible(visible: boolean) {
         this.textBoxContainer.style.display = visible ? 'block' : 'none';
     }
 
-    constructor(private demo: BezierDemo, demoContainerId: string) {
+    constructor(private demo: BezierDemo, private bernsteinVis: BernsteinPolynomialVisualization, demoContainerId: string) {
         this.textBoxContainer = document.createElement('div');
         this.textBoxContainer.id = this.id;
         this.visible = false;
@@ -120,30 +123,46 @@ class BernsteinFormulas implements MyObserver<BezierDemoChange> {
         this.demo.subscribe(this);
     }
 
+    draw(): void {
+        const bernsteinFormulas = this.bernsteinVis.bernSteinPolynomials;
+        this.containersForBernsteinPolynomialValues.forEach((c, i) => c.innerText = bernsteinFormulas[i](this.demo.t).toFixed(2));
+        MathJax.typeset([`#${this.id}`]);
+    }
+
+    //do some updates which would be to expensive to do on every draw call
     update(change: BezierDemoChange) {
         if (change === 'controlVerticesChanged') {
-            const numOfControlVertices = this.demo.controlVertices.length;
-            this.textBoxContainer.innerHTML = this.createParagraphsHTMLFromMessage(this.getBernsteinFormulas(numOfControlVertices));
+            this.createContainersForBernsteinFormulas();
             this.visible = this.textBoxContainer.innerHTML.length > 0;
             //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)
             MathJax.typeset([`#${this.id}`]);
         }
     }
 
-    private createParagraphsHTMLFromMessage(message: string) {
-        const paragraphContent = message.split('\n\n');
-        const paragraphs = paragraphContent.map(str => `<p>${str.trim().replace('\n', '<br>')}</p>`);
-        return paragraphs.join('');
-    }
-
-    private getBernsteinFormulas(numOfControlVertices: number): string {
-        const n = this.demo.controlVertices.length - 1;
+    private createContainersForBernsteinFormulas() {
+        const controlVertices = this.demo.controlVertices;
+        const n = controlVertices.length - 1;
         if (n < 1) return '';
+
         const zeroToN = [...Array(n + 1).keys()];
         const bernSteinPolynomialLaTeXStrings = zeroToN.map(i => {
-            return String.raw`$$ \binom{${n}}{${i}} \cdot t^{${i}} \cdot (1-t)^{${n - i}} $$`;
+            return String.raw`\(${controlVertices[i].label}: \binom{${n}}{${i}} \cdot t^{${i}} \cdot (1-t)^{${n - i}} = \)`;
         });
-        return bernSteinPolynomialLaTeXStrings.join('');
+
+        this.containersForBernsteinPolynomialValues = zeroToN.map(() => {
+            const div = document.createElement('div');
+            div.className = 'polynomial-values';
+            return div;
+        });
+
+        this.textBoxContainer.innerHTML = '';//removes child nodes
+        zeroToN.forEach((b, i) => {
+            const div = document.createElement('div');
+            div.className = 'flex-row bernstein-polynomial-container';
+            div.appendChild(document.createTextNode(bernSteinPolynomialLaTeXStrings[i]));
+            div.appendChild(this.containersForBernsteinPolynomialValues[i]);
+            this.textBoxContainer.appendChild(div);
+        });
     }
 }
 
