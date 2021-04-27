@@ -8,10 +8,11 @@ import colors from '../../../global-styles/color_exports.scss';
 
 
 const demoContainerId = 'demo';
-const bernSteinGraphContainer = document.createElement('div');
-const bernSteinGraphContainerId = 'bernstein-demo';
-bernSteinGraphContainer.id = bernSteinGraphContainerId;
-document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bernSteinGraphContainer);
+const bernsteinGraphContainer = document.createElement('div');
+const bernsteinGraphContainerId = 'bernstein-demo';
+bernsteinGraphContainer.id = bernsteinGraphContainerId;
+bernsteinGraphContainer.className = 'flex-col center-cross-axis';
+document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bernsteinGraphContainer);
 
 
 async function createDemo() {
@@ -24,12 +25,14 @@ async function createDemo() {
 
     const bernsteinVisSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.35, 400);
     const bernsteinVisSketchHeight = bernsteinVisSketchWidth;
-    const bernsteinVisSketch = new Sketch(bernSteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight);
+    const bernsteinVisSketch = new Sketch(bernsteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight);
     await bernsteinVisSketch.create();
     const bernsteinVis = bernsteinVisSketch.add((p5) => new BernsteinPolynomialVisualization(p5, bezierDemo));
 
     //this isn't actually added to the canvas or anything, however it needs to be updated every time t of bezier demo changes -> easiest solution: update on every draw()
-    bernsteinVisSketch.add(() => new BernsteinFormulas(bezierDemo, bernsteinVis, bernSteinGraphContainerId));
+    bernsteinVisSketch.add(() => new BernsteinPolynomials(bezierDemo, bernsteinVis, bernsteinGraphContainerId));
+
+    bezierSketch.add((p5) => new VertexInfluenceBar(p5, bezierDemo, bernsteinVis));
 
     document.querySelector('#cover')?.remove();
 }
@@ -48,6 +51,14 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
     private _bernSteinPolynomials: ((t: number) => number)[] = [];
     public get bernSteinPolynomials(): ((t: number) => number)[] {
         return this._bernSteinPolynomials;
+    }
+
+    /**
+     * current values of each bernsteinPolynomial, depending on t, updated each frame in draw()
+     */
+    private _bernsteinPolynomialValues: number[] = [];
+    public get bernsteinPolynomialValues(): number[] {
+        return this._bernsteinPolynomialValues;
     }
 
     private evaluatedBernsteinPolynomials: number[][] = [];
@@ -98,15 +109,22 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
         //draw vertical line at current value of t
         drawLineXYCoords(this.p5, this.demo.t * this.p5.width, 0, this.demo.t * this.p5.height, this.p5.height, this.lineThroughTColor, 2);
 
+        //we also want to recompute the current values of each bernsteinPolynomial each frame, depending on t
+        this.recomputeBernsteinPolynomialValues();
+    }
+
+    private recomputeBernsteinPolynomialValues() {
+        const t = this.demo.t;
+        this._bernsteinPolynomialValues = this.bernSteinPolynomials.map(b => b(t));
     }
 }
 
 
 
-class BernsteinFormulas implements Drawable {
+class BernsteinPolynomials implements Drawable {
     private textBoxContainer: HTMLDivElement;
     private containersForBernsteinPolynomialValues: HTMLDivElement[] = [];
-    private id: string = 'bernstein-formulas';
+    private id: string = 'bernstein-polynomials';
 
     private set visible(visible: boolean) {
         this.textBoxContainer.style.display = visible ? 'block' : 'none';
@@ -163,6 +181,37 @@ class BernsteinFormulas implements Drawable {
             div.appendChild(this.containersForBernsteinPolynomialValues[i]);
             this.textBoxContainer.appendChild(div);
         });
+    }
+}
+
+class VertexInfluenceBar implements Drawable {
+    private barFillColor: p5.Color;
+    private restOfBarColor: p5.Color;
+    private barHeight = 60;
+    private barWidth = 30;
+    private borderThickness = 5;
+
+    constructor(private p5: p5, private bezierDemo: BezierDemo, private bernsteinVis: BernsteinPolynomialVisualization) {
+        this.barFillColor = p5.color(colors.successColor);
+        this.restOfBarColor = p5.color(120);
+    }
+    draw(): void {
+        const controlVertices = this.bezierDemo.controlVertices;
+        if (controlVertices.length < 2) return;
+        const influenceOfEachVertex = this.bernsteinVis.bernsteinPolynomialValues;
+
+        this.p5.push();
+        this.p5.noStroke();
+        this.p5.rectMode(this.p5.CENTER);
+        controlVertices.forEach((v, i) => {
+            const fillHeight = influenceOfEachVertex[i] * (this.barHeight - this.borderThickness);
+
+            this.p5.fill(this.restOfBarColor);
+            this.p5.rect(v.x - this.barWidth * 1.25, v.y + this.barWidth / 2, this.barWidth, this.barHeight);
+            this.p5.fill(this.barFillColor);
+            this.p5.rect(v.x - this.barWidth * 1.25, (v.y + this.barWidth / 2) + (this.barHeight - fillHeight) / 2 - this.borderThickness / 2, this.barWidth - this.borderThickness, fillHeight);
+        });
+        this.p5.pop();
     }
 }
 

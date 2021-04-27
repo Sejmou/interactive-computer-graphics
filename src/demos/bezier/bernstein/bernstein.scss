@@ -5,6 +5,28 @@
     gap: 10px;
 }
 
+
+#bernstein-polynomials {
+    border: 1px solid grey;
+    border-radius: 2px;
+    padding: 1em;
+    margin-bottom: 0.5em;
+
+    & > :first-child {
+        margin-top: 0;
+    }
+    & > :last-child {
+        margin-bottom: 0;
+    }
+}
+
+
 .bernstein-polynomial-container:not(:first-child) {
     margin-top: 10px;
+}
+
+.polynomial-values {
+    padding-left: 0.25em;
+    font-family: "Computer Modern", serif;
+    font-weight: 600;
 }
