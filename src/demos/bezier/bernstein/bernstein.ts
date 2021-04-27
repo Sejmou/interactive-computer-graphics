@@ -89,28 +89,37 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
     }
 
     draw(): void {
-        this.evaluatedBernsteinPolynomials.forEach((polyYVals, bIndex) => {
-            const bPolyVertex = this.demo.controlVertices[bIndex];
-            const lineThickness = (bPolyVertex.hovering || bPolyVertex.dragging) ? 4 : 1.5;
-            const color = bPolyVertex.color;
-            polyYVals.forEach((y, i) => {
-                if (i === this.evaluationSteps.length - 1) return;
-                const t = this.evaluationSteps[i];
-                const nextY = polyYVals[i + 1];
-                const nextT = this.evaluationSteps[i + 1];
-                const x1 = t * this.p5.width;
-                const y1 = this.p5.height - y * this.p5.height;
-                const x2 = nextT * this.p5.width;
-                const y2 = this.p5.height - nextY * this.p5.height;
-                drawLineXYCoords(this.p5, x1, y1, x2, y2, color, lineThickness);
+        if (this.demo.controlVertices.length > 1) {
+            this.evaluatedBernsteinPolynomials.forEach((polyYVals, bIndex) => {
+                const bPolyVertex = this.demo.controlVertices[bIndex];
+                const lineThickness = (bPolyVertex.hovering || bPolyVertex.dragging) ? 4 : 1.5;
+                const color = bPolyVertex.color;
+                polyYVals.forEach((y, i) => {
+                    if (i === this.evaluationSteps.length - 1) return;
+                    const t = this.evaluationSteps[i];
+                    const nextY = polyYVals[i + 1];
+                    const nextT = this.evaluationSteps[i + 1];
+                    const x1 = t * this.p5.width;
+                    const y1 = this.p5.height - y * this.p5.height;
+                    const x2 = nextT * this.p5.width;
+                    const y2 = this.p5.height - nextY * this.p5.height;
+                    drawLineXYCoords(this.p5, x1, y1, x2, y2, color, lineThickness);
+                });
             });
-        });
-
-        //draw vertical line at current value of t
-        drawLineXYCoords(this.p5, this.demo.t * this.p5.width, 0, this.demo.t * this.p5.height, this.p5.height, this.lineThroughTColor, 2);
-
-        //we also want to recompute the current values of each bernsteinPolynomial each frame, depending on t
-        this.recomputeBernsteinPolynomialValues();
+    
+            //draw vertical line at current value of t
+            drawLineXYCoords(this.p5, this.demo.t * this.p5.width, 0, this.demo.t * this.p5.height, this.p5.height, this.lineThroughTColor, 2);
+    
+            //we also want to recompute the current values of each bernsteinPolynomial each frame, depending on t
+            this.recomputeBernsteinPolynomialValues();
+        }
+        
+        else {
+            this.p5.push();
+            this.p5.textAlign(this.p5.CENTER);
+            this.p5.text('Add at least two control points to the canvas on the left!\nThe Bernstein polynomials will then show up here.', this.p5.width / 2, this.p5.height / 2);
+            this.p5.pop();
+        }
     }
 
     private recomputeBernsteinPolynomialValues() {
@@ -142,6 +151,7 @@ class BernsteinPolynomials implements Drawable {
     }
 
     draw(): void {
+        if (this.demo.controlVertices.length < 2) return;
         const bernsteinFormulas = this.bernsteinVis.bernSteinPolynomials;
         this.containersForBernsteinPolynomialValues.forEach((c, i) => c.innerText = bernsteinFormulas[i](this.demo.t).toFixed(2));
         MathJax.typeset([`#${this.id}`]);
@@ -164,7 +174,7 @@ class BernsteinPolynomials implements Drawable {
 
         const zeroToN = [...Array(n + 1).keys()];
         const bernSteinPolynomialLaTeXStrings = zeroToN.map(i => {
-            return String.raw`\(${controlVertices[i].label}: \binom{${n}}{${i}} \cdot t^{${i}} \cdot (1-t)^{${n - i}} = \)`;
+            return String.raw`\( (${controlVertices[i].label}): B_{${i},${n}} = \binom{${n}}{${i}} \cdot t^{${i}} \cdot (1-t)^{${n - i}} = \)`;
         });
 
         this.containersForBernsteinPolynomialValues = zeroToN.map(() => {

@@ -153,7 +153,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         } else {
             this.p5.push();
             this.p5.textAlign(this.p5.CENTER);
-            this.p5.text('Click or touch anywhere on the canvas to add a vertex', this.p5.width / 2, this.p5.height / 2);
+            this.p5.text('Click or touch anywhere on the canvas to add a point', this.p5.width / 2, this.p5.height / 2);
             this.p5.pop();
         }
     }
