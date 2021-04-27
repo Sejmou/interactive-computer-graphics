@@ -1,7 +1,7 @@
 import './bernstein.scss';
 import p5 from "p5";
 import { BezierDemo, BezierDemoChange } from "../../ts/bezier-curve";
-import { SketchFactory, bezierSketchFactory } from '../../ts/sketch';
+import { Sketch } from '../../ts/sketch';
 import { Drawable, MyObserver } from '../../ts/ui-interfaces';
 import { binomial, drawLineXYCoords } from '../../ts/util';
 import colors from '../../../global-styles/color_exports.scss';
@@ -13,23 +13,26 @@ const bernSteinGraphContainerId = 'bernstein-demo';
 bernSteinGraphContainer.id = bernSteinGraphContainerId;
 document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bernSteinGraphContainer);
 
-const onBezierDemoSketchCreated = (bezierDemo: BezierDemo) => {
-    const bernsteinVisFactoryFunction = (p5Instance: p5, canvas: p5.Element, parentContainer?: string) => {
-        if (parentContainer) canvas.parent(parentContainer);
-        return new BernsteinPolynomialVisualization(p5Instance, bezierDemo);
-    };
 
+async function createDemo() {
+    //override default sketch width for bezier sketch
+    const bezierSketchWidth = (p5: p5) => Math.min(0.55 * p5.windowWidth, 600);
+    const bezierSketch = new Sketch(demoContainerId, bezierSketchWidth);
+    await bezierSketch.create();
+    const bezierDemo = bezierSketch.add((p5, containerId) => new BezierDemo(p5, containerId));
+    bezierDemo.showVertexLabels = true;
+
+    const bernsteinVisSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.35, 400);
+    const bernsteinVisSketchHeight = bernsteinVisSketchWidth;
+    const bernsteinVisSketch = new Sketch(bernSteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight);
+    await bernsteinVisSketch.create();
     new BernsteinFormulas(bezierDemo, bernSteinGraphContainerId);
+    bernsteinVisSketch.add((p5) => new BernsteinPolynomialVisualization(p5, bezierDemo));
 
-    new SketchFactory<BernsteinPolynomialVisualization>(
-        bernsteinVisFactoryFunction,
-        (p5) => Math.min(p5.windowWidth * 0.35, 400),
-        (p5) => Math.min(p5.windowWidth * 0.35, 400),
-    ).createSketch(bernSteinGraphContainerId);
+    document.querySelector('#cover')?.remove();
 }
 
-bezierSketchFactory.calcCanvasWidth = (p5) => Math.min(0.55 * p5.windowWidth, 600);
-bezierSketchFactory.createSketch(demoContainerId, onBezierDemoSketchCreated);
+createDemo();
 
 
 
@@ -40,7 +43,10 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
     private evaluationSteps: number[];
     private noOfStepsForT: number;
 
-    private bernSteinPolynomials: ((t: number) => number)[] = [];
+    private _bernSteinPolynomials: ((t: number) => number)[] = [];
+    public get bernSteinPolynomials(): ((t: number) => number)[] {
+        return this._bernSteinPolynomials;
+    }
 
     private evaluatedBernsteinPolynomials: number[][] = [];
 
@@ -61,29 +67,33 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
 
     private updateBernsteinPolynomials() {
         const n = this.demo.controlVertices.length - 1;
-        if (n < 1) return this.bernSteinPolynomials = [];
+        if (n < 1) return this._bernSteinPolynomials = [];
         const zeroToN = [...Array(n + 1).keys()];
-        this.bernSteinPolynomials = zeroToN.map(i => ((t: number) => binomial(n, i) * Math.pow(t, i) * Math.pow((1 - t), n - i)));
+        this._bernSteinPolynomials = zeroToN.map(i => ((t: number) => binomial(n, i) * Math.pow(t, i) * Math.pow((1 - t), n - i)));
         console.log();
 
         this.evaluatedBernsteinPolynomials = this.bernSteinPolynomials.map(b => this.evaluationSteps.map(t => b(t)));
     }
 
     draw(): void {
-        this.evaluatedBernsteinPolynomials.forEach((polyYVals, bIndex) => polyYVals.forEach((y, i) => {
-            if (i === this.evaluationSteps.length - 1) return;
-
+        this.evaluatedBernsteinPolynomials.forEach((polyYVals, bIndex) => {
             const bPolyVertex = this.demo.controlVertices[bIndex];
-            const t = this.evaluationSteps[i];
-            const nextY = polyYVals[i + 1];
-            const nextT = this.evaluationSteps[i + 1];
-            const x1 = t * this.p5.width;
-            const y1 = this.p5.height - y * this.p5.height;
-            const x2 = nextT * this.p5.width;
-            const y2 = this.p5.height - nextY * this.p5.height;
-            drawLineXYCoords(this.p5, x1, y1, x2, y2, bPolyVertex.color, (bPolyVertex.hovering || bPolyVertex.dragging) ? 4 : 1.5);
-        }));
+            const lineThickness = (bPolyVertex.hovering || bPolyVertex.dragging) ? 4 : 1.5;
+            const color = bPolyVertex.color;
+            polyYVals.forEach((y, i) => {
+                if (i === this.evaluationSteps.length - 1) return;
+                const t = this.evaluationSteps[i];
+                const nextY = polyYVals[i + 1];
+                const nextT = this.evaluationSteps[i + 1];
+                const x1 = t * this.p5.width;
+                const y1 = this.p5.height - y * this.p5.height;
+                const x2 = nextT * this.p5.width;
+                const y2 = this.p5.height - nextY * this.p5.height;
+                drawLineXYCoords(this.p5, x1, y1, x2, y2, color, lineThickness);
+            });
+        });
 
+        //draw vertical line at current value of t
         drawLineXYCoords(this.p5, this.demo.t * this.p5.width, 0, this.demo.t * this.p5.height, this.p5.height, this.lineThroughTColor, 2);
 
     }

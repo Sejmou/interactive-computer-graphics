@@ -16,7 +16,7 @@ export class Vertex implements Drawable {
     }
 
     constructor(protected p5: p5, public position: p5.Vector, public label: string = '',
-        public color: p5.Color = p5.color(255), protected radius: number = 5, public stroke: boolean = true, public showLabel: boolean = true) {}
+        public color: p5.Color = p5.color(255), protected radius: number = 5, public stroke: boolean = true, public showLabel: boolean = true, public showPosition: boolean = false) { }
 
     draw(): void {
         this.p5.push();
@@ -26,8 +26,8 @@ export class Vertex implements Drawable {
         this.p5.fill(0);
         if (this.showLabel) {
             this.p5.text(
-                `${this.label ? this.label + ' ' : ''}(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`,
-                this.position.x + 5, this.position.y - 5
+                `${this.label ? this.label + ' ' : ''}${this.showPosition ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})` : ''}`,
+                this.position.x + 10, this.position.y + 5
             );
         }
         this.p5.pop();
@@ -50,7 +50,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
     }
 
     private _dragging = false;
-    
+
     public editable = false;
     private editMode = false;
 
@@ -186,7 +186,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
         super.draw();
 
         if (this.editMode) {
-            const distFromVertexCenter = this.lastInteraction === 'touch'? this.maxDistForRegisteringTouch + 5 : 10;
+            const distFromVertexCenter = this.lastInteraction === 'touch' ? this.maxDistForRegisteringTouch + 5 : 10;
             this.addButton.position.x = this.x - distFromVertexCenter;
             this.addButton.position.y = this.y - distFromVertexCenter;
             this.addButton.draw();
@@ -246,7 +246,7 @@ class ActionButton implements Drawable, Clickable, Touchable, Hoverable, MyObser
     /**
      * max. distance of touch point from center of button up until which touch will be registered
      */
-     private maxDistForRegisteringTouch = 20;
+    private maxDistForRegisteringTouch = 20;
 
 
     constructor(private p5: p5, public position: p5.Vector, public baseRadius = 3, public action: AddOrRemove = 'remove', public color: p5.Color = p5.color(colors.errorColor)) { }

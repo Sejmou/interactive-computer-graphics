@@ -1,15 +1,22 @@
 import './basic.scss';
 import { BezierDemo, BezierDemoChange } from "../../ts/bezier-curve";
-import { bezierSketchFactory } from '../../ts/sketch';
+import { Sketch } from '../../ts/sketch';
 import { MyObserver } from '../../ts/ui-interfaces';
 
 
 
 const demoContainerId = 'demo';
 
-const onBezierDemoSketchCreated = (demo: BezierDemo) => new BezierDemoGuide(demo, demoContainerId);
+async function createDemo() {
+    const sketch = new Sketch(demoContainerId);
+    await sketch.create();
+    const demo = sketch.add((p5, containerId) => new BezierDemo(p5, containerId));
+    new BezierDemoGuide(demo, demoContainerId);
+    document.querySelector('#cover')?.remove();
+};
 
-bezierSketchFactory.createSketch(demoContainerId, onBezierDemoSketchCreated);
+createDemo();
+
 
 
 
@@ -18,7 +25,7 @@ class BezierDemoGuide implements MyObserver<BezierDemoChange> {
     private id: string = 'demo-guide';
 
     private set visible(visible: boolean) {
-        this.textBoxContainer.style.display = visible? 'block' : 'none';
+        this.textBoxContainer.style.display = visible ? 'block' : 'none';
     }
 
     constructor(private demo: BezierDemo, demoContainerId: string) {

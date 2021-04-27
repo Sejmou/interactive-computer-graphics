@@ -6,6 +6,9 @@ import colors from '../../global-styles/color_exports.scss';
 
 export type BezierDemoChange = 'controlVerticesChanged';
 
+//TODO: add curveDegreeTextContainer back
+// this.curveDegreeTextContainer.html(`Number of control vertices: ${numOfVertices}`);
+
 export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<BezierDemoChange> {
     private _basePointDiameter: number;
 
@@ -19,19 +22,26 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
 
     private _controlVertices: DragVertex[] = [];
-
-    //other's might be interested in the control vertices, however they shouldn't modify them, only read!
+    //others should only be able to read data from vertices, but not change them directly
     public get controlVertices(): Readonly<DragVertex>[] {
         return this._controlVertices;
     }
 
     private controlVertexColor: p5.Color;
 
+    private _showVertexLabels: boolean = false;
+    public get showVertexLabels(): boolean {
+        return this._showVertexLabels;
+    }
+    public set showVertexLabels(value: boolean) {
+        this._showVertexLabels = value;
+        this._controlVertices.forEach(v => v.showLabel = value);
+    }
+
+
     private bezierCurve: BezierCurve;
     private deCasteljauVis: DeCasteljauVisualization;
     private controlsForT: ControlsForParameterT;
-
-    private curveDegreeTextContainer: p5.Element;
 
     public set t(newVal: number) {
         this._t = newVal;
@@ -46,17 +56,13 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
 
     private _t: number = 0;
 
-    constructor(private p5: p5, canvas: p5.Element, parentContainerId?: string) {
+    constructor(private p5: p5, parentContainerId?: string) {
         this._basePointDiameter = p5.width * 0.015;
         this._baseLineWidth = p5.width * 0.0025;
         this.controlVertexColor = p5.color(colors.primaryColor);
 
         this.bezierCurve = new BezierCurve(p5, this);
         this.deCasteljauVis = new DeCasteljauVisualization(p5, this);
-
-        this.curveDegreeTextContainer = p5.createDiv();
-        if (parentContainerId) this.curveDegreeTextContainer.parent(parentContainerId);
-        if (parentContainerId) canvas.parent(parentContainerId);
         this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId);
     }
 
@@ -86,6 +92,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     addVertexAtPos(x: number, y: number): DragVertex {
         const newVertex = this.createVertexWithPos(x, y);
         this._controlVertices = [...this._controlVertices, newVertex];
+        newVertex.label = indexToLowercaseLetter(this._controlVertices.findIndex(v => v === newVertex));
         this.handleCurveDegreeChange();
         return newVertex;
     }
@@ -182,7 +189,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         vertex.activeColor = lightenDarkenP5Color(this.p5, this.controlVertexColor, -20);
         vertex.baseRadius = this.basePointDiameter / 2;
         vertex.stroke = false;
-        vertex.showLabel = false;
+        vertex.showLabel = this._showVertexLabels;
         vertex.editable = true;
         vertex.assign(this);
         return vertex;
@@ -195,7 +202,6 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
 
     handleCurveDegreeChange() {
         const numOfVertices = this.controlVertices.length;
-        this.curveDegreeTextContainer.html(`Number of control vertices: ${numOfVertices}`);
         this._controlVertices.forEach((v, i) => v.label = `${indexToLowercaseLetter(i)}`);
         this.deCasteljauVis.onlyDrawPointOnBezier = numOfVertices < 3;
         this.controlsForT.visible = numOfVertices > 1;

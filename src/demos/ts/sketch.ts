@@ -1,111 +1,111 @@
 import p5 from "p5";
-import { BezierDemo } from "./bezier-curve";
-import { Drawable, isClickable, isDraggable, isResponsive, isTouchable } from "./ui-interfaces";
+import { Clickable, Draggable, Drawable, isClickable, isDraggable, isResponsive, isTouchable, Responsive, Touchable } from "./ui-interfaces";
 
-//this is ugly as hell lol, sry
-export class SketchFactory<T extends Drawable> {
+
+export class Sketch {
+    private p5?: p5;
 
     constructor(
-        private createSketchContent: (p5Instance: p5, canvas: p5.Element, parentContainerId?: string) => T,
-        public calcCanvasWidth?: (p5Instance: p5) => number, public calcCanvasHeight?: (p5Instance: p5) => number
+        private parentContainerId: string, public calcCanvasWidth?: (p5Instance: p5) => number, public calcCanvasHeight?: (p5Instance: p5) => number
     ) {}
 
+    private drawables: Drawable[] = [];
+    private clickables: Clickable[] = [];
+    private touchables: Touchable[] = [];
+    private draggables: Draggable[] = [];
+    private responsiveThings: Responsive[] = [];
 
-    createSketch(parentContainerId?: string, onSketchContentCreated?: (sketchContent: T) => void) {
-        const setupSketch = (p5Instance: p5) => {
-            /**
-             * the object which holds logic for what should be sketched
-             */
-            let sketchContent: T;
-            const bgColor = p5Instance.color(230);
+    private updateCursor = (p5Instance: p5) => {
+        p5Instance.cursor(
+            this.draggables.some(d => d.dragging) ? 'grabbing' : this.draggables.some(d => d.hovering) ? 'grab' : 'default'
+        )
+    };
 
-            const calcCanvasWidth = this.calcCanvasWidth || ( (p5: p5) => Math.min(p5.windowWidth, 800) );
-            const calcCanvasHeight = this.calcCanvasHeight || ( (p5: p5) => p5.windowHeight * 0.6 );
-
-            p5Instance.setup = () => {
-
-                const canvas = p5Instance.createCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));
-                sketchContent = this.createSketchContent(p5Instance, canvas, parentContainerId);
-                if (onSketchContentCreated) onSketchContentCreated(sketchContent);
-
-                //only !== undefined if the sketchContent is Draggable
-                let updateCursor: () => void;
-
-                if (isDraggable(sketchContent)) {
-                    //without this assignment typescript somehow can't infer that this._sketchContent is draggable? -> can't use this._sketchContent in p5Instance.cursor() below
-                    const draggable = sketchContent;
-                    updateCursor = () => p5Instance.cursor(draggable.dragging ? 'grabbing' : draggable.hovering ? 'grab' : 'default');
-
-                    if (isTouchable(sketchContent)) {
-                        const touchable = sketchContent;
-                        canvas.touchStarted(() => {
-                            //calling this in setTimeout as p5Inst.touches is apparently not updated until after canvas.touchStarted is done executing
-                            setTimeout(() => {
-                                touchable.handleTouchStarted();
-                                //TODO: think about whether those two code lines below are even useful at all
-                                //we can't really prevent touch-actions once they have already started (before .dragging is evaluated)...
-                                if (!touchable.dragging) canvas.style('touch-action', 'auto');
-                                else canvas.style('touch-action', 'none');
-                            });
-                            return false; // prevent any browser defaults
-                        });
-
-                        canvas.touchEnded(() => {
-                            touchable.handleTouchReleased();
-                            //TODO: think about whether those two code lines below are even useful at all
-                            //we can't really prevent touch-actions once they have already started (before .dragging is evaluated)...
-                            if (!touchable.dragging) canvas.style('touch-action', 'auto');
-                            else canvas.style('touch-action', 'none');
-                            return false; // prevent any browser defaults
-                        });
-
-                        const preventScrollIfDragging = (e: TouchEvent) => {
-                            if (touchable.dragging) e.preventDefault();
-                        };
-                        document.addEventListener('touchstart', preventScrollIfDragging, { passive: false });// https://stackoverflow.com/a/49582193/13727176
-                        document.addEventListener('touchmove', preventScrollIfDragging, { passive: false });
-                        document.addEventListener('touchend', preventScrollIfDragging, { passive: false });
-                        document.addEventListener('touchcancel', preventScrollIfDragging, { passive: false });
-                    }
-                }
-
-                if (isClickable(sketchContent)) {
-                    //similar to above, without this assignment typescript somehow can't infer that this._sketchContent is clickable?
-                    const clickable = sketchContent;
+    /**
+     * Creates the sketch; The promise this method returns has to resolve, otherwise add() will not work as p5 is not configured yet
+     * 
+     * @returns promise that resolves as soon as sketch was created
+     */
+    public async create(): Promise<void> {
+        return new Promise((resolve) => {
+            const setupSketch = (p5Instance: p5) => {
+                const bgColor = p5Instance.color(230);
+    
+                const calcCanvasWidth = this.calcCanvasWidth || ((p5: p5) => Math.min(p5.windowWidth, 800));
+                const calcCanvasHeight = this.calcCanvasHeight || ((p5: p5) => p5.windowHeight * 0.6);
+    
+                p5Instance.setup = () => {
+                    const canvas = p5Instance.createCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));
+                    if (this.parentContainerId) canvas.parent(this.parentContainerId);
+    
                     canvas.mousePressed(() => {
-                        clickable.handleMousePressed();
-                        if (updateCursor) updateCursor();
+                        this.clickables.forEach(c => c.handleMousePressed());
+                        this.updateCursor(p5Instance);
                         return false; // prevent any browser defaults
                     });
-
+    
                     canvas.mouseReleased(() => {
-                        clickable.handleMouseReleased();
-                        if (updateCursor) updateCursor();
+                        this.clickables.forEach(c => c.handleMouseReleased());
+                        this.updateCursor(p5Instance);
                     });
+    
+                    canvas.mouseMoved(() => {
+                        this.updateCursor(p5Instance);
+                        return false;
+                    });
+    
+                    canvas.touchStarted(() => {
+                        //calling this in setTimeout as p5Inst.touches is apparently not updated until after canvas.touchStarted is done executing
+                        setTimeout(() => this.touchables.forEach(t => t.handleTouchStarted()));
+                        return false; // prevent any browser defaults
+                    });
+    
+                    canvas.touchEnded(() => {
+                        this.touchables.forEach(t => t.handleTouchReleased());
+                        return false; // prevent any browser defaults
+                    });
+    
+                    const preventScrollIfDragging = (e: TouchEvent) => {
+                        if (this.draggables.some(t => t.dragging)) e.preventDefault();
+                    };
+    
+                    document.addEventListener('touchstart', preventScrollIfDragging, { passive: false });// https://stackoverflow.com/a/49582193/13727176
+                    document.addEventListener('touchmove', preventScrollIfDragging, { passive: false });
+                    document.addEventListener('touchend', preventScrollIfDragging, { passive: false });
+                    document.addEventListener('touchcancel', preventScrollIfDragging, { passive: false });
+
+                    //everything set up, we can resolve the promise
+                    resolve();
+                };
+    
+                p5Instance.draw = () => {
+                    p5Instance.background(bgColor);
+                    this.drawables.forEach(d => d.draw());
+                };
+    
+                p5Instance.windowResized = () => {
+                    p5Instance.resizeCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));
+                    this.responsiveThings.forEach(r => r.canvasResized());
                 }
-
-                canvas.mouseMoved(() => {
-                    if (updateCursor) updateCursor();
-                    return false;
-                });
-
-                document.querySelector('#cover')?.remove();
-            };
-
-            p5Instance.draw = () => {
-                p5Instance.background(bgColor);
-                if (sketchContent) sketchContent.draw();
-            };
-
-            p5Instance.windowResized = () => {
-                p5Instance.resizeCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));
-                if (isResponsive(sketchContent)) sketchContent.canvasResized();
             }
-        }
+    
+            //after this line this.p5 is defined, but the sketch actually hasn't been set up yet!
+            //for example, width and height are still 0!
+            //that's why we package the whole thing in a promise which is resolved on the last line of the p5.setup function we defined in setupSketch 
+            this.p5 = new p5(setupSketch);
+        });
+    }
 
-        new p5(setupSketch);
+    public add<T extends Drawable>(creatorFunction: (p5Instance: p5, parentContainerId?: string) => T): T {
+        if (!this.p5) {
+            throw Error(`couldn't add Drawable, p5 instance of sketch not created yet!`);
+        }
+        const drawable = creatorFunction(this.p5, this.parentContainerId);
+        this.drawables.push(drawable);
+        if (isClickable(drawable)) this.clickables.push(drawable);
+        if (isTouchable(drawable)) this.touchables.push(drawable);
+        if (isDraggable(drawable)) this.draggables.push(drawable);
+        if (isResponsive(drawable)) this.responsiveThings.push(drawable);
+        return drawable;
     }
 }
-
-const createBezierSketch = (p5: p5, canvas: p5.Element, parentContainer?: string) => new BezierDemo(p5, canvas, parentContainer);
-export const bezierSketchFactory: SketchFactory<BezierDemo> = new SketchFactory(createBezierSketch);
