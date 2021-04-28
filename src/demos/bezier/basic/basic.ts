@@ -7,6 +7,11 @@ import { MyObserver } from '../../ts/ui-interfaces';
 
 const demoContainerId = 'demo';
 
+const descriptionId = 'demo-description'
+const descriptionParagraph = document.getElementById(descriptionId);
+if (descriptionParagraph) descriptionParagraph.innerText = 'Get an intuition for Bézier curves (which are used in many graphics applications for drawing nice, smooth curves) interactively!';
+
+
 async function createDemo() {
     const sketch = new Sketch(demoContainerId);
     await sketch.create();
@@ -68,6 +73,7 @@ class BezierDemoGuide implements MyObserver<BezierDemoChange> {
 
                 One way is to "mix" the positions of the two points using linear interpolation with a parameter, let's call it \( t \).
                 \( t \) ranges from 0 to 1. The bigger \( t \), the more we move from the first point to the second.
+
                 So, if \( t = 0 \) we are at the first point, if \( t = 0.5 \) we are right between the first and second point, and at \( t = 1 \) we reach the second point.
 
                 Feel free to experiment with the controls for \( t \), if you're ready add another point, we will then get to know the actual Bézier curves :)`;

@@ -212,6 +212,10 @@ export function binomial(n: number, k: number) {
 }
 
 
+export function randomColorHexString() {
+    return '#' + Math.floor(Math.random()*16777215).toString(16);
+}
+
 
 export class FrameRateMonitor implements Drawable {
     constructor(private p5: p5) {}

@@ -7,7 +7,7 @@
 #demo-wrapper {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
     margin-bottom: 2em;
     gap: 10px;
 }
@@ -21,7 +21,6 @@
     border: 1px solid grey;
     border-radius: 2px;
     padding: 1em;
-    margin-bottom: 0.5em;
 
     & > :first-child {
         margin-top: 0;
