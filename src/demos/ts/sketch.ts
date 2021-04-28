@@ -6,7 +6,8 @@ export class Sketch {
     private p5?: p5;
 
     constructor(
-        private parentContainerId: string, public calcCanvasWidth?: (p5Instance: p5) => number, public calcCanvasHeight?: (p5Instance: p5) => number
+        private parentContainerId: string, public calcCanvasWidth?: (p5Instance: p5) => number, public calcCanvasHeight?: (p5Instance: p5) => number,
+        private createBGColor: (p5: p5) => p5.Color | null = (p5) => p5.color(230), private frameRate?: number
     ) {}
 
     private drawables: Drawable[] = [];
@@ -29,7 +30,8 @@ export class Sketch {
     public async create(): Promise<void> {
         return new Promise((resolve) => {
             const setupSketch = (p5Instance: p5) => {
-                const bgColor = p5Instance.color(230);
+                if (this.frameRate) p5Instance.frameRate(this.frameRate);
+                const bgColor = this.createBGColor(p5Instance);
     
                 const calcCanvasWidth = this.calcCanvasWidth || ((p5: p5) => Math.min(p5.windowWidth, 800));
                 const calcCanvasHeight = this.calcCanvasHeight || ((p5: p5) => p5.windowHeight * 0.6);
@@ -79,7 +81,8 @@ export class Sketch {
                 };
     
                 p5Instance.draw = () => {
-                    p5Instance.background(bgColor);
+                    if (bgColor) p5Instance.background(bgColor);
+                    else p5Instance.clear();
                     this.drawables.forEach(d => d.draw());
                 };
     

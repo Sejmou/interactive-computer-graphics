@@ -1,4 +1,5 @@
 import p5 from "p5";
+import { Drawable } from "./ui-interfaces";
 
 /**
  * For some reason this is not defined in @types/p5...
@@ -208,4 +209,14 @@ export function binomial(n: number, k: number) {
         binomials.push(nextRow);
     }
     return binomials[n][k];
+}
+
+
+
+export class FrameRateMonitor implements Drawable {
+    constructor(private p5: p5) {}
+
+    draw(): void {
+        this.p5.text(`FPS: ${this.p5.frameRate().toFixed(2)}`, 20, 20);
+    }
 }

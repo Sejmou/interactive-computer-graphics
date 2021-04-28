@@ -1,6 +1,9 @@
 @import '../global-styles/styles.scss';
 
-/* hides page content (shown until p5.js is set up) */
+#demo-description {
+    text-align: center;
+}
+
 #demo-wrapper {
     display: flex;
     justify-content: center;

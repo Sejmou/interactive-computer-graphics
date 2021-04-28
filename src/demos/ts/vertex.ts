@@ -25,10 +25,17 @@ export class Vertex implements Drawable {
         this.p5.circle(this.position.x, this.position.y, 2 * this.radius);
         this.p5.fill(0);
         if (this.showLabel) {
-            this.p5.text(
-                `${this.label ? this.label + ' ' : ''}${this.showPosition ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})` : ''}`,
-                this.position.x + 10, this.position.y + 5
-            );
+            const label = `${this.label ? this.label + ' ' : ''}${this.showPosition ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})` : ''}`;
+            if (this.label.includes('_')) {//use subscript
+                const textBeforeSubscript = this.label.substring(0, this.label.indexOf('_'));
+                const textAfterSubscript = this.label.substr(this.label.indexOf('_') + 1);
+                const xOffsetForSubscript = this.p5.textWidth(textBeforeSubscript);
+                this.p5.text(textBeforeSubscript, this.position.x + 10, this.position.y + 5);
+                this.p5.text(textAfterSubscript, this.position.x + 10 + xOffsetForSubscript, this.position.y + 2 * this.p5.textDescent());
+                
+            } else {
+                this.p5.text(label, this.position.x + 10, this.position.y + 5);
+            }
         }
         this.p5.pop();
     }

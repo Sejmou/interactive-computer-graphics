@@ -27,11 +27,12 @@
     rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-
-  <!-- Mathjax JS library for rendering mathematical expressions -->
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <!-- input: tex, output: svg (alternative chtml looked wrong for some reason) -->
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <!-- Load pre-configured Mathjax with input TeX and output SVG configuration -->
+  <!-- I really wanted to include MathJax TS and not load it as plain JS from CDN, but couldn't get it to work after lots of digging around - didn't understand docs lol, GitHub etc. also didn't help :((( -->
+  <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <!-- Got some weird race conditions because of async attribute which is used in the import example on the MathJax website -->
+  <!-- (in my webpack dev config sometimes mathjax would not be loaded yet when my demo's .ts file ran, in prod it worked only if my .ts code was using mathjax later and not immediately on page load) -->
+  <!-- removing async doesn't seem to significantly impact performance though, so I removed it -->
 
   <!-- Computer modern font for mathematical notation (if needed besides MathJax compiled LaTeX) -->
   <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/dreampulse/computer-modern-web-font/master/fonts.css">
@@ -55,6 +56,7 @@
 
   <main>
     <h4 id="demo-title" class="center-text"><%= htmlWebpackPlugin.options.heading %></h4>
+    <p id="demo-description"></p>
     <div id="demo-wrapper">
       <div id="demo">
         <!-- Everything related to the demo gets inserted here -->

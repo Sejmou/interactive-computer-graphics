@@ -56,14 +56,14 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
 
     private _t: number = 0;
 
-    constructor(private p5: p5, parentContainerId?: string) {
+    constructor(private p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         this._basePointDiameter = p5.width * 0.015;
         this._baseLineWidth = p5.width * 0.0025;
         this.controlVertexColor = p5.color(colors.primaryColor);
 
         this.bezierCurve = new BezierCurve(p5, this);
         this.deCasteljauVis = new DeCasteljauVisualization(p5, this);
-        this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId);
+        this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId, baseAnimationSpeedMultiplier);
     }
 
     handleMousePressed(): void {
@@ -202,7 +202,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
 
     handleCurveDegreeChange() {
         const numOfVertices = this.controlVertices.length;
-        this._controlVertices.forEach((v, i) => v.label = `${indexToLowercaseLetter(i)}`);
+        this._controlVertices.forEach((v, i) => v.label = `P_${i}`);
         this.deCasteljauVis.onlyDrawPointOnBezier = numOfVertices < 3;
         this.controlsForT.visible = numOfVertices > 1;
         this.notifyObservers('controlVerticesChanged');
@@ -309,6 +309,7 @@ class DeCasteljauVisualization implements Drawable {
 
 
 class ControlsForParameterT {
+    private baseAnimationSpeedPerFrame = 0.005;
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
     private currAnimationSpeedMultiplierIndex = ControlsForParameterT.animationSpeedMultipliers.findIndex(_ => _ === 1);
 
@@ -335,7 +336,7 @@ class ControlsForParameterT {
     private _animationRunning: boolean = false;
 
 
-    constructor(p5: p5, private demo: BezierDemo, parentContainerId?: string) {
+    constructor(p5: p5, private demo: BezierDemo, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         this.controlsContainer = p5.createDiv();
 
         if (parentContainerId) this.controlsContainer.parent(parentContainerId);
@@ -364,10 +365,12 @@ class ControlsForParameterT {
         this.fasterButton = p5.createButton('<span class="material-icons">fast_forward</span>');
         this.fasterButton.parent(this.controlsContainer);
         this.fasterButton.mouseClicked(() => this.fastForwardClicked());
+
+        if (baseAnimationSpeedMultiplier) this.baseAnimationSpeedPerFrame *= baseAnimationSpeedMultiplier;
     }
 
     public updateT() {
-        if (this.animationRunning) this.demo.t += (0.005 * ControlsForParameterT.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
+        if (this.animationRunning) this.demo.t += (this.baseAnimationSpeedPerFrame * ControlsForParameterT.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
         else this.demo.t = +this.slider.value();
     }
 

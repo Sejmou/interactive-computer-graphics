@@ -8,8 +8,16 @@ import colors from '../../../global-styles/color_exports.scss';
 
 
 const demoContainerId = 'demo';
+
+const descriptionId = 'demo-description'
+const descriptionParagraph = document.getElementById(descriptionId);
+if (descriptionParagraph) descriptionParagraph.innerHTML = String.raw`In math terms, a Bézier curve of degree \(n\) is expressed as \[ C(t) = \sum_{i=0}^{n}{b_{i,n}(t) \cdot P_{i}}. \]
+Each \( b_{i,n}(t) \) is the <b>Bernstein polynomial</b> of \(P_i\), a particular control point of the bézier curve.<br>The Bernstein polynomial represents the 'influence' of the control point on the shape of the Bézier curve for the current value of \(t\).`;
+MathJax.typeset([`#${descriptionId}`]);
+
+//add container for bernstein polynomial visualization
 const bernsteinGraphContainer = document.createElement('div');
-const bernsteinGraphContainerId = 'bernstein-demo';
+const bernsteinGraphContainerId = 'bernstein-visualization';
 bernsteinGraphContainer.id = bernsteinGraphContainerId;
 bernsteinGraphContainer.className = 'flex-col center-cross-axis';
 document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bernsteinGraphContainer);
@@ -18,14 +26,16 @@ document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bern
 async function createDemo() {
     //override default sketch width for bezier sketch
     const bezierSketchWidth = (p5: p5) => Math.min(0.55 * p5.windowWidth, 600);
-    const bezierSketch = new Sketch(demoContainerId, bezierSketchWidth);
+    //setting frame rate to 30 as steady 60 fps are not possible somehow (too many calculations?)
+    const bezierSketch = new Sketch(demoContainerId, bezierSketchWidth, undefined, undefined, 30);
     await bezierSketch.create();
-    const bezierDemo = bezierSketch.add((p5, containerId) => new BezierDemo(p5, containerId));
+    //bezierDemo animation has to be twice as fast as we use only half the FPS
+    const bezierDemo = bezierSketch.add((p5, containerId) => new BezierDemo(p5, containerId, 2));
     bezierDemo.showVertexLabels = true;
 
     const bernsteinVisSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.35, 400);
     const bernsteinVisSketchHeight = bernsteinVisSketchWidth;
-    const bernsteinVisSketch = new Sketch(bernsteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight);
+    const bernsteinVisSketch = new Sketch(bernsteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight, undefined, 30);
     await bernsteinVisSketch.create();
     const bernsteinVis = bernsteinVisSketch.add((p5) => new BernsteinPolynomialVisualization(p5, bezierDemo));
 
@@ -108,7 +118,8 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
             });
     
             //draw vertical line at current value of t
-            drawLineXYCoords(this.p5, this.demo.t * this.p5.width, 0, this.demo.t * this.p5.height, this.p5.height, this.lineThroughTColor, 2);
+            const currT = this.demo.t;
+            drawLineXYCoords(this.p5, currT * this.p5.width, 0, currT * this.p5.height, this.p5.height, this.lineThroughTColor, 2);
     
             //we also want to recompute the current values of each bernsteinPolynomial each frame, depending on t
             this.recomputeBernsteinPolynomialValues();
@@ -133,19 +144,25 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
 class BernsteinPolynomials implements Drawable {
     private textBoxContainer: HTMLDivElement;
     private containersForBernsteinPolynomialValues: HTMLDivElement[] = [];
+    private bezierCurveEquation: HTMLSpanElement;
     private id: string = 'bernstein-polynomials';
 
     private set visible(visible: boolean) {
         this.textBoxContainer.style.display = visible ? 'block' : 'none';
+        if (!visible) this.bezierCurveEquation.innerText = '';
     }
 
     constructor(private demo: BezierDemo, private bernsteinVis: BernsteinPolynomialVisualization, demoContainerId: string) {
         this.textBoxContainer = document.createElement('div');
         this.textBoxContainer.id = this.id;
-        this.visible = false;
+        this.bezierCurveEquation = document.createElement('span');
+        this.bezierCurveEquation.id = 'bezier-curve-equation';
 
+        descriptionParagraph?.appendChild(this.bezierCurveEquation);
         document.getElementById(demoContainerId)?.appendChild(this.textBoxContainer);
-
+        
+        this.visible = false;
+        
         //we want to get notified if the number of control vertices changes
         this.demo.subscribe(this);
     }
@@ -154,27 +171,29 @@ class BernsteinPolynomials implements Drawable {
         if (this.demo.controlVertices.length < 2) return;
         const bernsteinFormulas = this.bernsteinVis.bernSteinPolynomials;
         this.containersForBernsteinPolynomialValues.forEach((c, i) => c.innerText = bernsteinFormulas[i](this.demo.t).toFixed(2));
-        MathJax.typeset([`#${this.id}`]);
     }
 
-    //do some updates which would be to expensive to do on every draw call
     update(change: BezierDemoChange) {
         if (change === 'controlVerticesChanged') {
             this.createContainersForBernsteinFormulas();
-            this.visible = this.textBoxContainer.innerHTML.length > 0;
+            const visible = this.textBoxContainer.innerHTML.length > 0;
+            this.visible = visible;
+            if (!visible) return;
+            const controlVertices = this.demo.controlVertices;
+            const n = controlVertices.length - 1;
+            this.bezierCurveEquation.innerHTML = String.raw`<br>For the current set of control points the formula is: \[ C(t) = ${controlVertices.map((v, i) => String.raw`${i == 0? '': ' + '}b_{${i},${n}} \cdot ${v.label}`).join('')} \]`;
             //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)
-            MathJax.typeset([`#${this.id}`]);
+            MathJax.typeset([`#${this.id}`, `#${this.bezierCurveEquation.id}`]);
         }
     }
 
     private createContainersForBernsteinFormulas() {
-        const controlVertices = this.demo.controlVertices;
-        const n = controlVertices.length - 1;
+        const n = this.demo.controlVertices.length - 1;
         if (n < 1) return '';
 
         const zeroToN = [...Array(n + 1).keys()];
         const bernSteinPolynomialLaTeXStrings = zeroToN.map(i => {
-            return String.raw`\( (${controlVertices[i].label}): B_{${i},${n}} = \binom{${n}}{${i}} \cdot t^{${i}} \cdot (1-t)^{${n - i}} = \)`;
+            return String.raw`\( b_{${i},${n}} = \binom{${n}}{${i}} \cdot t^{${i}} \cdot (1-t)^{${n - i}} = \)`;
         });
 
         this.containersForBernsteinPolynomialValues = zeroToN.map(() => {
@@ -186,7 +205,7 @@ class BernsteinPolynomials implements Drawable {
         this.textBoxContainer.innerHTML = '';//removes child nodes
         zeroToN.forEach((b, i) => {
             const div = document.createElement('div');
-            div.className = 'flex-row bernstein-polynomial-container';
+            div.className = 'flex-row bernstein-polynomial-container center-cross-axis';
             div.appendChild(document.createTextNode(bernSteinPolynomialLaTeXStrings[i]));
             div.appendChild(this.containersForBernsteinPolynomialValues[i]);
             this.textBoxContainer.appendChild(div);
