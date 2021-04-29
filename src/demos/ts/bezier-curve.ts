@@ -219,7 +219,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
 
     handleCurveDegreeChange() {
         const numOfVertices = this.controlVertices.length;
-        this._controlVertices.forEach((v, i) => v.label = `P_${i}`);
+        this._controlVertices.forEach((v, i) => v.label = `P_{${i}}`);
         this.deCasteljauVis.onlyDrawPointOnBezier = numOfVertices < 3;
         this.controlsForT.visible = numOfVertices > 1;
         this.notifyObservers('controlVerticesChanged');

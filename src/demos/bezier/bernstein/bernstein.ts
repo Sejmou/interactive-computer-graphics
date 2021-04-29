@@ -3,7 +3,7 @@ import p5 from "p5";
 import { BezierDemo, BezierDemoChange } from "../../ts/bezier-curve";
 import { Sketch } from '../../ts/sketch';
 import { Drawable, MyObserver } from '../../ts/ui-interfaces';
-import { binomial, drawLineXYCoords } from '../../ts/util';
+import { binomial, drawLineXYCoords, renderTextWithSubscript } from '../../ts/util';
 import colors from '../../../global-styles/color_exports.scss';
 
 
@@ -35,7 +35,7 @@ async function createDemo() {
 
     const bernsteinVisSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.35, 400);
     const bernsteinVisSketchHeight = bernsteinVisSketchWidth;
-    const bernsteinVisSketch = new Sketch(bernsteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight, undefined, 30);
+    const bernsteinVisSketch = new Sketch(bernsteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight, () => null, 30);
     await bernsteinVisSketch.create();
     const bernsteinVis = bernsteinVisSketch.add((p5) => new BernsteinPolynomialVisualization(p5, bezierDemo));
 
@@ -75,10 +75,20 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
 
     private lineThroughTColor: p5.Color;
 
+    private axisRulerOffsetFromBorder: number;
+    private axisRulerAndLabelColor: p5.Color;
+    private distFromZeroToOneXAxis: number;
+    private distFromZeroToOneYAxis: number;
+
     constructor(private p5: p5, private demo: BezierDemo) {
         this.noOfStepsForT = 100;
         this.evaluationSteps = [...Array(this.noOfStepsForT + 1).keys()].map(num => num / this.noOfStepsForT);
         this.lineThroughTColor = this.p5.color(colors.errorColor);
+
+        this.axisRulerOffsetFromBorder = this.p5.width / 15;
+        this.axisRulerAndLabelColor = p5.color(30);
+        this.distFromZeroToOneXAxis = this.p5.width - this.axisRulerOffsetFromBorder * 1.5;
+        this.distFromZeroToOneYAxis = this.p5.height - this.axisRulerOffsetFromBorder * 1.5;
 
         //we want to get notified if the number of control vertices changes
         this.demo.subscribe(this);
@@ -109,22 +119,26 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
                     const t = this.evaluationSteps[i];
                     const nextY = polyYVals[i + 1];
                     const nextT = this.evaluationSteps[i + 1];
-                    const x1 = t * this.p5.width;
-                    const y1 = this.p5.height - y * this.p5.height;
-                    const x2 = nextT * this.p5.width;
-                    const y2 = this.p5.height - nextY * this.p5.height;
+                    const x1 = t * this.distFromZeroToOneXAxis + this.axisRulerOffsetFromBorder;
+                    const y1 = this.p5.height - this.axisRulerOffsetFromBorder - y * this.distFromZeroToOneYAxis;
+                    const x2 = nextT * this.distFromZeroToOneXAxis + this.axisRulerOffsetFromBorder;
+                    const y2 = this.p5.height - this.axisRulerOffsetFromBorder - nextY * this.distFromZeroToOneYAxis;
                     drawLineXYCoords(this.p5, x1, y1, x2, y2, color, lineThickness);
                 });
             });
-    
+
+            this.drawAxisRulersAndLabels();
+
             //draw vertical line at current value of t
             const currT = this.demo.t;
-            drawLineXYCoords(this.p5, currT * this.p5.width, 0, currT * this.p5.height, this.p5.height, this.lineThroughTColor, 2);
-    
+            const x = this.axisRulerOffsetFromBorder + currT * this.distFromZeroToOneXAxis;
+            drawLineXYCoords(this.p5, x, 0, x, this.p5.height, this.lineThroughTColor, 2);
+
+
             //we also want to recompute the current values of each bernsteinPolynomial each frame, depending on t
             this.recomputeBernsteinPolynomialValues();
         }
-        
+
         else {
             this.p5.push();
             this.p5.textAlign(this.p5.CENTER);
@@ -133,11 +147,60 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
         }
     }
 
+    private drawAxisRulersAndLabels() {
+        //horizontal line
+        drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder, this.p5.height - this.axisRulerOffsetFromBorder,
+            this.p5.width, this.p5.height - this.axisRulerOffsetFromBorder, this.axisRulerAndLabelColor, 1);
+        //vertical line
+        drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder, this.p5.height - this.axisRulerOffsetFromBorder,
+            this.axisRulerOffsetFromBorder, 0, this.axisRulerAndLabelColor, 1);
+        
+        
+        //ruler markers
+        const steps = 10;
+        const rulerMarkerSize = this.axisRulerOffsetFromBorder * 0.075;
+
+        const rulerMarkerIncrementX = this.distFromZeroToOneXAxis / steps;
+        for (let i = 1; i <= steps; i++) {
+            drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder + i * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder,
+                this.axisRulerOffsetFromBorder + i * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder + (i === steps/2 || i === steps? rulerMarkerSize * 2 : rulerMarkerSize),
+                this.axisRulerAndLabelColor, 1);
+        }
+
+        const rulerMarkerIncrementY = this.distFromZeroToOneYAxis / steps;
+        for (let i = 1; i <= steps; i++) {
+            drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder - (i === steps/2 || i === steps? rulerMarkerSize * 2 : rulerMarkerSize), this.p5.height - this.axisRulerOffsetFromBorder - i * rulerMarkerIncrementY, 
+                this.axisRulerOffsetFromBorder, this.p5.height - this.axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
+                this.axisRulerAndLabelColor, 1);
+        }
+
+
+        //labels
+        this.p5.push();
+        this.p5.textAlign(this.p5.CENTER);
+        this.p5.text('t', this.axisRulerOffsetFromBorder + steps/2 * rulerMarkerIncrementX, this.p5.height);
+        this.p5.text('0.5', this.axisRulerOffsetFromBorder + steps/2 * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder / 2);
+        this.p5.text('1', this.axisRulerOffsetFromBorder + steps * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder / 2);
+        
+        this.p5.text('0.5', this.axisRulerOffsetFromBorder / 2, this.p5.height - this.axisRulerOffsetFromBorder - steps/2 * rulerMarkerIncrementY);
+        this.p5.text('1', this.axisRulerOffsetFromBorder / 2, this.p5.height - this.axisRulerOffsetFromBorder - steps * rulerMarkerIncrementY);
+        this.p5.textAlign(this.p5.LEFT, this.p5.CENTER);
+        renderTextWithSubscript(this.p5, 'b_{i,n}', this.axisRulerOffsetFromBorder / 10, this.axisRulerOffsetFromBorder * 1.5 + this.distFromZeroToOneYAxis / 2);
+        this.p5.pop();
+    }
+
     private recomputeBernsteinPolynomialValues() {
         const t = this.demo.t;
         this._bernsteinPolynomialValues = this.bernSteinPolynomials.map(b => b(t));
     }
 }
+
+
+
+
+
+
+
 
 
 
@@ -160,9 +223,9 @@ class BernsteinPolynomials implements Drawable {
 
         descriptionParagraph?.appendChild(this.bezierCurveEquation);
         document.getElementById(demoContainerId)?.appendChild(this.textBoxContainer);
-        
+
         this.visible = false;
-        
+
         //we want to get notified if the number of control vertices changes
         this.demo.subscribe(this);
     }
@@ -181,7 +244,7 @@ class BernsteinPolynomials implements Drawable {
             if (!visible) return;
             const controlVertices = this.demo.controlVertices;
             const n = controlVertices.length - 1;
-            this.bezierCurveEquation.innerHTML = String.raw`<br>For the current set of control points the formula is: \[ C(t) = ${controlVertices.map((v, i) => String.raw`${i == 0? '': ' + '}b_{${i},${n}} \cdot ${v.label}`).join('')} \]`;
+            this.bezierCurveEquation.innerHTML = String.raw`<br>For the current set of control points the formula is: \[ C(t) = ${controlVertices.map((v, i) => String.raw`${i == 0 ? '' : ' + '}b_{${i},${n}} \cdot ${v.label}`).join('')} \]`;
             //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)
             MathJax.typeset([`#${this.id}`, `#${this.bezierCurveEquation.id}`]);
         }
@@ -213,15 +276,19 @@ class BernsteinPolynomials implements Drawable {
     }
 }
 
+
+
+
+
+
+
 class VertexInfluenceBar implements Drawable {
-    private barFillColor: p5.Color;
     private restOfBarColor: p5.Color;
     private barHeight = 60;
     private barWidth = 30;
     private borderThickness = 5;
 
     constructor(private p5: p5, private bezierDemo: BezierDemo, private bernsteinVis: BernsteinPolynomialVisualization) {
-        this.barFillColor = p5.color(colors.successColor);
         this.restOfBarColor = p5.color(120);
     }
     draw(): void {
@@ -237,46 +304,9 @@ class VertexInfluenceBar implements Drawable {
 
             this.p5.fill(this.restOfBarColor);
             this.p5.rect(v.x - this.barWidth * 1.25, v.y + this.barWidth / 2, this.barWidth, this.barHeight);
-            this.p5.fill(this.barFillColor);
+            this.p5.fill(v.color);
             this.p5.rect(v.x - this.barWidth * 1.25, (v.y + this.barWidth / 2) + (this.barHeight - fillHeight) / 2 - this.borderThickness / 2, this.barWidth - this.borderThickness, fillHeight);
         });
         this.p5.pop();
     }
 }
-
-
-
-// const createPlot = (p5: p5, canvas: p5.Element, parentContainer?: string) => new Plot(p5);
-// export const plotFactory: SketchFactory<Plot> = new SketchFactory(createPlot,
-//     (p5) => Math.min(p5.windowWidth * 0.35, 400),
-//     (p5) => Math.min(p5.windowWidth * 0.35, 400)
-// );
-
-// plotFactory.createSketch();
-
-// class Plot implements Drawable {
-//     private xAxisOffsetFromBottom: number;
-//     private yAxisOffsetFromLeft: number;
-
-//     private lineColor: p5.Color;
-
-//     // private xAxisLabel: string;
-//     // private yAxisLabel: string;
-
-//     // private xMaxVal: number;
-//     // private yMaxVal: number;
-
-//     // private xMinVal: number;
-//     // private yMinVal: number;
-
-//     constructor(private p5: p5) {
-//         this.xAxisOffsetFromBottom = 0.05 * p5.height;
-//         this.yAxisOffsetFromLeft = 0.05 * p5.width;
-//         this.lineColor = p5.color('black');
-//     }
-
-//     draw(): void {
-//         drawLineXYCoords(this.p5, this.yAxisOffsetFromLeft, this.xAxisOffsetFromBottom, this.p5.width, this.xAxisOffsetFromBottom, this.lineColor, 1);
-//         drawLineXYCoords(this.p5, this.yAxisOffsetFromLeft, this.xAxisOffsetFromBottom, this.yAxisOffsetFromLeft, this.p5.height, this.lineColor, 1);
-//     }
-// }

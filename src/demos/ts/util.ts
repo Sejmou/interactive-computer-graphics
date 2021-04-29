@@ -165,7 +165,7 @@ export function isNumeric(str: string) {
 
 
 export function randomHexColorCode() {
-    return Math.floor(Math.random()*16777215).toString(16);
+    return Math.floor(Math.random() * 16777215).toString(16);
 }
 
 
@@ -213,12 +213,31 @@ export function binomial(n: number, k: number) {
 
 
 export function randomColorHexString() {
-    return '#' + Math.floor(Math.random()*16777215).toString(16);
+    return '#' + Math.floor(Math.random() * 16777215).toString(16);
+}
+
+/**
+ * 
+ * @param p5 
+ * @param text text which contains '{textWhichShouldBeSubscripted}'
+ * @param x 
+ * @param y 
+ */
+export function renderTextWithSubscript(p5: p5, text: string, x: number, y: number) {
+    p5.push();
+    p5.textAlign(p5.LEFT, p5.CENTER);
+    const textBeforeSubscript = text.substring(0, text.indexOf('_{'));
+    const textAfterSubscript = text.substr(text.indexOf('_{') + 2);
+    const xOffsetForSubscript = p5.textWidth(textBeforeSubscript);
+    p5.text(textBeforeSubscript, x, y);
+    //remove closing '}'
+    p5.text(textAfterSubscript.substr(0, textAfterSubscript.length - 1), x + xOffsetForSubscript, y + p5.textDescent());
+    p5.pop();
 }
 
 
 export class FrameRateMonitor implements Drawable {
-    constructor(private p5: p5) {}
+    constructor(private p5: p5) { }
 
     draw(): void {
         this.p5.text(`FPS: ${this.p5.frameRate().toFixed(2)}`, 20, 20);

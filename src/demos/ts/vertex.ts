@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, Touchable } from "./ui-interfaces";
-import { clamp, p5TouchPoint } from "./util";
+import { clamp, p5TouchPoint, renderTextWithSubscript } from "./util";
 import colors from '../../global-styles/color_exports.scss';
 
 type AddOrRemove = 'add' | 'remove';
@@ -27,12 +27,7 @@ export class Vertex implements Drawable {
         if (this.showLabel) {
             const label = `${this.label ? this.label + ' ' : ''}${this.showPosition ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})` : ''}`;
             if (this.label.includes('_')) {//use subscript
-                const textBeforeSubscript = this.label.substring(0, this.label.indexOf('_'));
-                const textAfterSubscript = this.label.substr(this.label.indexOf('_') + 1);
-                const xOffsetForSubscript = this.p5.textWidth(textBeforeSubscript);
-                this.p5.text(textBeforeSubscript, this.position.x + 10, this.position.y + 5);
-                this.p5.text(textAfterSubscript, this.position.x + 10 + xOffsetForSubscript, this.position.y + 2 * this.p5.textDescent());
-                
+                renderTextWithSubscript(this.p5, this.label, this.position.x + 10, this.position.y + 5);
             } else {
                 this.p5.text(label, this.position.x + 10, this.position.y + 5);
             }
