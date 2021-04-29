@@ -154,8 +154,8 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
         //vertical line
         drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder, this.p5.height - this.axisRulerOffsetFromBorder,
             this.axisRulerOffsetFromBorder, 0, this.axisRulerAndLabelColor, 1);
-        
-        
+
+
         //ruler markers
         const steps = 10;
         const rulerMarkerSize = this.axisRulerOffsetFromBorder * 0.075;
@@ -163,13 +163,13 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
         const rulerMarkerIncrementX = this.distFromZeroToOneXAxis / steps;
         for (let i = 1; i <= steps; i++) {
             drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder + i * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder,
-                this.axisRulerOffsetFromBorder + i * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder + (i === steps/2 || i === steps? rulerMarkerSize * 2 : rulerMarkerSize),
+                this.axisRulerOffsetFromBorder + i * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder + (i === steps / 2 || i === steps ? rulerMarkerSize * 2 : rulerMarkerSize),
                 this.axisRulerAndLabelColor, 1);
         }
 
         const rulerMarkerIncrementY = this.distFromZeroToOneYAxis / steps;
         for (let i = 1; i <= steps; i++) {
-            drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder - (i === steps/2 || i === steps? rulerMarkerSize * 2 : rulerMarkerSize), this.p5.height - this.axisRulerOffsetFromBorder - i * rulerMarkerIncrementY, 
+            drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder - (i === steps / 2 || i === steps ? rulerMarkerSize * 2 : rulerMarkerSize), this.p5.height - this.axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
                 this.axisRulerOffsetFromBorder, this.p5.height - this.axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
                 this.axisRulerAndLabelColor, 1);
         }
@@ -178,11 +178,11 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
         //labels
         this.p5.push();
         this.p5.textAlign(this.p5.CENTER);
-        this.p5.text('t', this.axisRulerOffsetFromBorder + steps/2 * rulerMarkerIncrementX, this.p5.height);
-        this.p5.text('0.5', this.axisRulerOffsetFromBorder + steps/2 * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder / 2);
+        this.p5.text('t', this.axisRulerOffsetFromBorder + steps / 2 * rulerMarkerIncrementX, this.p5.height);
+        this.p5.text('0.5', this.axisRulerOffsetFromBorder + steps / 2 * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder / 2);
         this.p5.text('1', this.axisRulerOffsetFromBorder + steps * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder / 2);
-        
-        this.p5.text('0.5', this.axisRulerOffsetFromBorder / 2, this.p5.height - this.axisRulerOffsetFromBorder - steps/2 * rulerMarkerIncrementY);
+
+        this.p5.text('0.5', this.axisRulerOffsetFromBorder / 2, this.p5.height - this.axisRulerOffsetFromBorder - steps / 2 * rulerMarkerIncrementY);
         this.p5.text('1', this.axisRulerOffsetFromBorder / 2, this.p5.height - this.axisRulerOffsetFromBorder - steps * rulerMarkerIncrementY);
         this.p5.textAlign(this.p5.LEFT, this.p5.CENTER);
         renderTextWithSubscript(this.p5, 'b_{i,n}', this.axisRulerOffsetFromBorder / 10, this.axisRulerOffsetFromBorder * 1.5 + this.distFromZeroToOneYAxis / 2);
@@ -283,29 +283,46 @@ class BernsteinPolynomials implements Drawable {
 
 
 class VertexInfluenceBar implements Drawable {
-    private restOfBarColor: p5.Color;
+    private barBorderColor: p5.Color;
     private barHeight = 60;
     private barWidth = 30;
     private borderThickness = 5;
 
     constructor(private p5: p5, private bezierDemo: BezierDemo, private bernsteinVis: BernsteinPolynomialVisualization) {
-        this.restOfBarColor = p5.color(120);
+        this.barBorderColor = p5.color(120);
     }
     draw(): void {
         const controlVertices = this.bezierDemo.controlVertices;
         if (controlVertices.length < 2) return;
         const influenceOfEachVertex = this.bernsteinVis.bernsteinPolynomialValues;
 
+        const fillHeights = influenceOfEachVertex.map(i => i * (this.barHeight - this.borderThickness));
+
         this.p5.push();
         this.p5.noStroke();
         this.p5.rectMode(this.p5.CENTER);
         controlVertices.forEach((v, i) => {
-            const fillHeight = influenceOfEachVertex[i] * (this.barHeight - this.borderThickness);
+            const fillHeight = fillHeights[i];
 
-            this.p5.fill(this.restOfBarColor);
+            //draw bar with contribution of vertex (next to vertex)
+            this.p5.fill(this.barBorderColor);
             this.p5.rect(v.x - this.barWidth * 1.25, v.y + this.barWidth / 2, this.barWidth, this.barHeight);
             this.p5.fill(v.color);
             this.p5.rect(v.x - this.barWidth * 1.25, (v.y + this.barWidth / 2) + (this.barHeight - fillHeight) / 2 - this.borderThickness / 2, this.barWidth - this.borderThickness, fillHeight);
+        });
+
+        //draw summary bar
+        this.p5.rectMode(this.p5.CORNER);
+        const summaryBarX = this.p5.width - this.barWidth - 2 * this.borderThickness;
+        const summaryBarY = this.p5.height - this.barHeight - 2 * this.borderThickness;
+        this.p5.fill(this.barBorderColor);
+        this.p5.rect(summaryBarX, summaryBarY, this.barWidth + this.borderThickness, this.barHeight + this.borderThickness);
+        let yOffset = 0;
+        controlVertices.forEach((v, i) => {
+            const fillHeight = fillHeights[i];
+            this.p5.fill(v.color);
+            this.p5.rect(summaryBarX + this.borderThickness, summaryBarY + this.borderThickness + yOffset, this.barWidth - this.borderThickness, fillHeight);
+            yOffset += fillHeight;
         });
         this.p5.pop();
     }
