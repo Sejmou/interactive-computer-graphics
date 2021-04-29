@@ -78,23 +78,23 @@ class BezierDemoGuide implements MyObserver<BezierDemoChange> {
 
                 Feel free to experiment with the controls for \( t \), if you're ready add another point, we will then get to know the actual Bézier curves :)`;
             case 3:
-                return String.raw`What you are seeing now is a quadratic bézier curve. Notice that by moving the points you added, you can change the shape of this nice, smooth curve.
-                Because those points can be used to "control" the bézier curve, they are called the "control points" of the bézier curve.
+                return String.raw`What you are seeing now is a quadratic Bézier curve. Notice that by moving the points you added, you can change the shape of this nice, smooth curve.
+                Because those points can be used to "control" the Bézier curve, they are called the "control points" of the Bézier curve.
 
                 The weird looking yellow lines and dots between the control points that move as \( t \) changes are a visualization of the so-called "De Casteljau algorithm".
-                The algorithm is used for drawing bézier curves. It works like this: we interpolate between each of the adjacent control points with the parameter \( t \), just like we did when we only had two points.
-                The interpolations produce two new points on the lines between the control points. By interpolating between those two points again, we get another, single point: the position of the point on the bézier curve!`;
+                The algorithm is used for drawing Bézier curves. It works like this: we interpolate between each of the adjacent control points with the parameter \( t \), just like we did when we only had two points.
+                The interpolations produce two new points on the lines between the control points. By interpolating between those two points again, we get another, single point: the position of the point on the Bézier curve!`;
             case 4:
-                return String.raw`You were brave and added another point? Congratulations, you have created a cubic bézier curve! Now you have even more control over the shape of the curve.
+                return String.raw`You were brave and added another point? Congratulations, you have created a cubic Bézier curve! Now you have even more control over the shape of the curve.
                 Feel free to add as many additional control points as you wish, it just works!
                 `
             default:
                 return String.raw`As you can see, the De Casteljau algorithm works with arbitrary numbers of control points.
                 Notice, however, that it is quite difficult to make changes to the shape of the curve, if we have lots of points.
-                Each control point has "global control" on the shape of the curve - that means, if we add a single point, it may impact the whole curve shape significantly.
+                Each control point has "global control" on the shape of the curve - that means, if we move, add, or remove a single point, it may impact the whole curve shape significantly.
                 
-                Also, the computation of bezier curves of higher degrees quickly becomes VERY computationally expensive as the number of control points increases.
-                Luckily, there is a solution for those problems of bézier curves: b-spline curves!`;
+                Also, the computation of Bézier curves of higher degrees quickly becomes <em>very</em> computationally expensive as the number of control points increases.
+                Luckily, there is a solution for those problems of Bézier curves: B-Spline curves!`;
         }
     }
 }

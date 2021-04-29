@@ -31,7 +31,7 @@ async function createDemo() {
     await bezierSketch.create();
     //bezierDemo animation has to be twice as fast as we use only half the FPS
     const bezierDemo = bezierSketch.add((p5, containerId) => new BezierDemo(p5, containerId, 2));
-    bezierDemo.showVertexLabels = true;
+    bezierDemo.showPointLabels = true;
 
     const bernsteinVisSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.35, 400);
     const bernsteinVisSketchHeight = bernsteinVisSketchWidth;

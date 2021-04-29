@@ -119,5 +119,5 @@ export interface ContainerElement<T> {
      * 
      * @param container container which the element should become part of
      */
-    assign(container: Container<T>): void
+    assignTo(container: Container<T>): void
 }

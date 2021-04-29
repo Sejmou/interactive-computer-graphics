@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { Touchable, Draggable, Drawable, Container, Clickable, MyObservable, MyObserver } from './ui-interfaces';
 import { DragVertex } from './vertex';
-import { drawCircle, drawLineVector, indexToLowercaseLetter, lightenDarkenColor, lightenDarkenP5Color, p5TouchPoint, randomColorHexString } from './util';
+import { colorsTooSimilar, drawCircle, drawLineVector, indexToLowercaseLetter, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from './util';
 import colors from '../../global-styles/color_exports.scss';
 
 export type BezierDemoChange = 'controlVerticesChanged';
@@ -22,17 +22,26 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
 
     private _controlVertices: DragVertex[] = [];
+
     //others should only be able to read data from vertices, but not change them directly
-    public get controlVertices(): Readonly<DragVertex>[] {
+    //also, mutations of the array should not be allowed
+    public get controlVertices(): readonly DragVertex[] {
         return this._controlVertices;
     }
 
-    private _showVertexLabels: boolean = false;
-    public get showVertexLabels(): boolean {
-        return this._showVertexLabels;
+    /**
+     * defines whether the labels of the control points and point on the bezier curve should be displayed
+     */
+    private _showPointLabels: boolean = false;
+
+    /**
+     * defines whether the labels of the control points and point on the bezier curve should be displayed
+     */
+    public get showPointLabels(): boolean {
+        return this._showPointLabels;
     }
-    public set showVertexLabels(value: boolean) {
-        this._showVertexLabels = value;
+    public set showPointLabels(value: boolean) {
+        this._showPointLabels = value;
         this._controlVertices.forEach(v => v.showLabel = value);
     }
 
@@ -65,8 +74,8 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
 
     handleMousePressed(): void {
         if (this.controlVertices.length === 0) {
-            const newVertex = this.createVertexAtPosAndAddToControlVerticesAtIndex(this.p5.mouseX, this.p5.mouseY, 0);
-            this._controlVertices = [newVertex];
+            const newVertex = this.createVertexAtPos(this.p5.mouseX, this.p5.mouseY);
+            this.addVertexAtIndex(newVertex, 0);
             //we want to allow the user to drag the added vertex immediately, therefore we call handleTouchStarted() on it
             newVertex.handleMousePressed();
             return;
@@ -87,29 +96,53 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         }
     }
 
-    private getColorForNewVertex(index?: number) {
-        switch (index) {
+    private getColorForVertexAtIndex(i: number): p5.Color {
+        let color: p5.Color = this.p5.color(randomColorHexString());
+        switch (i) {
             case 0:
-                return this.p5.color(colors.primaryColor);
+                color = this.p5.color(colors.primaryColor);
+                break;
             case 1:
-                return this.p5.color(lightenDarkenColor(colors.successColor, 15));
+                color = this.p5.color(lightenDarkenColor(colors.successColor, 15));
+                break;
             case 2:
-                return this.p5.color('#6727e2');
+                color = this.p5.color('#6727e2');
+                break;
             case 3:
-                return this.p5.color('#c85d84');
+                color = this.p5.color('#c85d84');
+                break;
             case 4:
-                return this.p5.color('#62421c');
+                color = this.p5.color('#62421c');
+                break;
             case 5:
-                return this.p5.color('#83b9df');
+                color = this.p5.color('#4e7165');
+                break;
             case 6:
-                return this.p5.color('#d84081');
+                color = this.p5.color('#ff6600');
+                break;
             case 7:
-                return this.p5.color('#4e7165');
+                color = this.p5.color('#83b9df');
+                break;
             case 8:
-                return this.p5.color('#11e8db');
+                color = this.p5.color('#11e8db');
+                break;
             default:
-                return this.p5.color(randomColorHexString());
+                color = this.p5.color(randomColorHexString());
         }
+
+        //check that whatever color we got, it is not too similar to its neighbours and also not too bright
+        //this could probably be written cleaner, sry lol
+        let prevColor: p5.Color | null = null;
+        let nextColor: p5.Color | null = null;
+        if (i > 0) prevColor = this.controlVertices[i - 1].color;
+        if (i < this.controlVertices.length - 1) nextColor = this.controlVertices[i + 1].color;
+        while ((prevColor && colorsTooSimilar(color, prevColor)) || (nextColor && colorsTooSimilar(color, nextColor) || luminanceFromP5Color(color) > 180)) {
+            color = this.p5.color(randomColorHexString());
+        }
+
+        console.log(luminanceFromP5Color(color));
+
+        return color;
     }
 
     handleMouseReleased(): void {
@@ -123,7 +156,8 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
             if (touches.length === 0) {
                 console.warn('touches was unexpectedly empty');
             } else {
-                const newVertex = this.createVertexAtPosAndAddToControlVerticesAtIndex(touches[0].x, touches[0].y, 0);
+                const newVertex = this.createVertexAtPos(touches[0].x, touches[0].y);
+                this.addVertexAtIndex(newVertex, 0);
                 //we want to allow the user to drag the added vertex immediately, therefore we call handleTouchStarted() on it
                 newVertex.handleTouchStarted();
             }
@@ -189,27 +223,36 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         const touchInteraction = touches.length > 0;
         const x = touchInteraction ? touches[0].x : this.p5.mouseX;
         const y = touchInteraction ? touches[0].y : this.p5.mouseY;
-        const newVertex = this.createVertexAtPosAndAddToControlVerticesAtIndex(x, y, i + 1);
+        const newVertex = this.createVertexAtPos(x, y);
+        this.addVertexAtIndex(newVertex, i + 1);
+
+        //vertex should instantly be dragged after being added, so we call handle...Started() on it
         if (touchInteraction) newVertex.handleTouchStarted();
         else newVertex.handleMousePressed();
 
         this.handleCurveDegreeChange();
     }
 
-    //what a method lol, not proud of that
-    private createVertexAtPosAndAddToControlVerticesAtIndex(x: number, y: number, i: number): DragVertex {
+    private createVertexAtPos(x: number, y: number): DragVertex {
         const newVertex = new DragVertex(this.p5, this.p5.createVector(x, y));
         newVertex.baseRadius = this.basePointDiameter / 2;
         newVertex.stroke = false;
-        newVertex.showLabel = this._showVertexLabels;
+        newVertex.showLabel = this._showPointLabels;
         newVertex.editable = true;
-        newVertex.assign(this);
-
-        this.controlVertices.splice(i, 0, newVertex);
-        const indexOfNewVertex = this._controlVertices.findIndex(v => v === newVertex);
-        newVertex.color = this.getColorForNewVertex(indexOfNewVertex);
-        this.handleCurveDegreeChange();
+        newVertex.assignTo(this);
         return newVertex;
+    }
+
+    /**
+     * Adds a vertex to this.controlVertices at the specified index. Also makes sure that the newly added vertex gets a color that is not too similar to that of its neighbors
+     * and that the curve degree change is handled appropriately.
+     */
+    private addVertexAtIndex(newVertex: DragVertex, i: number) {
+        this._controlVertices.splice(i, 0, newVertex);
+        newVertex.color = this.getColorForVertexAtIndex(i);
+        //TODO: figure out how to do darken color so that it works with arbitrarily dark initial colors (lightenDarkenP5Color can't do this atm)
+        newVertex.activeColor = newVertex.color;
+        this.handleCurveDegreeChange();
     }
 
     remove(element: DragVertex): void {

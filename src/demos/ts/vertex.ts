@@ -162,7 +162,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
         };
     }
 
-    assign(container: Container<DragVertex>): void {
+    assignTo(container: Container<DragVertex>): void {
         this.container = container;
     }
 
