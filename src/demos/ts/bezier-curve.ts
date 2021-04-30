@@ -9,6 +9,11 @@ export type BezierDemoChange = 'controlVerticesChanged';
 //TODO: add curveDegreeTextContainer back
 // this.curveDegreeTextContainer.html(`Number of control vertices: ${numOfVertices}`);
 
+interface ControlPointColor {
+    color: p5.Color,
+    taken: boolean
+}
+
 export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<BezierDemoChange> {
     private _basePointDiameter: number;
 
@@ -45,6 +50,8 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         this._controlVertices.forEach(v => v.showLabel = value);
     }
 
+    private controlPointColors: ControlPointColor[];
+
 
     private bezierCurve: BezierCurve;
     private deCasteljauVis: DeCasteljauVisualization;
@@ -66,10 +73,27 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     constructor(private p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         this._basePointDiameter = p5.width * 0.015;
         this._baseLineWidth = p5.width * 0.0025;
+        this.controlPointColors = this.initControlPointColors();
 
         this.bezierCurve = new BezierCurve(p5, this);
         this.deCasteljauVis = new DeCasteljauVisualization(p5, this);
         this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId, baseAnimationSpeedMultiplier);
+    }
+
+    private initControlPointColors(): ControlPointColor[] {
+        const colorArr = [
+            this.p5.color(colors.primaryColor),
+            this.p5.color(lightenDarkenColor(colors.successColor, 15)),
+            this.p5.color('#6727e2'),
+            this.p5.color('#c85d84'),
+            this.p5.color('#62421c'),
+            this.p5.color('#4e7165'),
+            this.p5.color('#ff6600'),
+            this.p5.color('#83b9df'),
+            this.p5.color('#11e8db')
+        ];
+
+        return colorArr.map(color => ({ color, taken: false }));
     }
 
     handleMousePressed(): void {
@@ -97,52 +121,47 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
 
     private getColorForVertexAtIndex(i: number): p5.Color {
-        let color: p5.Color = this.p5.color(randomColorHexString());
-        switch (i) {
-            case 0:
-                color = this.p5.color(colors.primaryColor);
-                break;
-            case 1:
-                color = this.p5.color(lightenDarkenColor(colors.successColor, 15));
-                break;
-            case 2:
-                color = this.p5.color('#6727e2');
-                break;
-            case 3:
-                color = this.p5.color('#c85d84');
-                break;
-            case 4:
-                color = this.p5.color('#62421c');
-                break;
-            case 5:
-                color = this.p5.color('#4e7165');
-                break;
-            case 6:
-                color = this.p5.color('#ff6600');
-                break;
-            case 7:
-                color = this.p5.color('#83b9df');
-                break;
-            case 8:
-                color = this.p5.color('#11e8db');
-                break;
-            default:
+        //colors should assigned from this.controlPointColors as long as a color is still not taken yet, in the order defined in this.controlPointColors
+        //the order defined in this.controlPointColors should be preserved, so:
+        //  for example: if we already have two control points A and B a new point C gets added between them, it should NOT get the next available color
+        //  from this.controlPointColors, but a random one which is neither too bright nor too similar to A or B
+        //  if another control point is added after C, it should also get a new random color with the same conditions stated above
+
+        const idxOfNextAvailableCol = this.controlPointColors.findIndex(c => !c.taken);
+        const predefinedColAvailable = idxOfNextAvailableCol !== -1;
+        const nextVertexColor = this.controlVertices[i + 1]?.color;
+
+        //sorry, this is a bit ugly... :/
+        if (
+            predefinedColAvailable &&
+            (
+                !nextVertexColor || 
+                !this.controlPointColors.map(c => c.color).includes(nextVertexColor) //if there is a next vertex, its color must not be one of the predefined ones
+            )
+        ) {
+            const colorFromControlPointColors = this.controlPointColors[idxOfNextAvailableCol];
+            colorFromControlPointColors.taken = true;
+
+            return colorFromControlPointColors.color;
+        }
+        else {
+            let color = this.p5.color(randomColorHexString());
+
+            //check that whatever color we got, it is not too similar to its neighbours and also not too bright
+            //this could probably be written cleaner, sry lol
+            let prevColor: p5.Color | null = null;
+            let nextColor: p5.Color | null = null;
+
+            if (i > 0) prevColor = this.controlVertices[i - 1].color;
+            if (i < this.controlVertices.length - 1) nextColor = this.controlVertices[i + 1].color;
+
+            while ((prevColor && colorsTooSimilar(color, prevColor)) || (nextColor && colorsTooSimilar(color, nextColor) || luminanceFromP5Color(color) > 180)) {
+                console.log(`color ${color.toString()} and luminance ${luminanceFromP5Color(color)} was too bright or too similar`);
                 color = this.p5.color(randomColorHexString());
+            }
+
+            return color;
         }
-
-        //check that whatever color we got, it is not too similar to its neighbours and also not too bright
-        //this could probably be written cleaner, sry lol
-        let prevColor: p5.Color | null = null;
-        let nextColor: p5.Color | null = null;
-        if (i > 0) prevColor = this.controlVertices[i - 1].color;
-        if (i < this.controlVertices.length - 1) nextColor = this.controlVertices[i + 1].color;
-        while ((prevColor && colorsTooSimilar(color, prevColor)) || (nextColor && colorsTooSimilar(color, nextColor) || luminanceFromP5Color(color) > 180)) {
-            color = this.p5.color(randomColorHexString());
-        }
-
-        console.log(luminanceFromP5Color(color));
-
-        return color;
     }
 
     handleMouseReleased(): void {
@@ -229,8 +248,6 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         //vertex should instantly be dragged after being added, so we call handle...Started() on it
         if (touchInteraction) newVertex.handleTouchStarted();
         else newVertex.handleMousePressed();
-
-        this.handleCurveDegreeChange();
     }
 
     private createVertexAtPos(x: number, y: number): DragVertex {
@@ -257,6 +274,8 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
 
     remove(element: DragVertex): void {
         this._controlVertices = this._controlVertices.filter(v => v !== element);
+        const idxOfColorOfElementToRemove = this.controlPointColors.findIndex(c => c.color === element.color);
+        if (idxOfColorOfElementToRemove) this.controlPointColors[idxOfColorOfElementToRemove].taken = false;
         this.handleCurveDegreeChange();
     }
 
