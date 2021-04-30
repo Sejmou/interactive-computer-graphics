@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { Touchable, Draggable, Drawable, Container, Clickable, MyObservable, MyObserver } from './ui-interfaces';
+import { Touchable, Draggable, Drawable, Container, Clickable, MyObservable, MyObserver, PositionDisplayMode } from './ui-interfaces';
 import { DragVertex } from './vertex';
 import { colorsTooSimilar, drawCircle, drawLineVector, extractColorChannelsFromRGBAString, indexToLowercaseLetter, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from './util';
 import colors from '../../global-styles/color_exports.scss';
@@ -37,8 +37,11 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     /**
      * defines whether the labels of the control points and point on the bezier curve should be displayed
      */
-    private _showPointLabels: boolean = false;
+    /**
+     * defines whether the labels of the control points and point on the bezier curve should be displayed
+     */
 
+    private _showPointLabels: boolean = false;
     /**
      * defines whether the labels of the control points and point on the bezier curve should be displayed
      */
@@ -48,6 +51,24 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     public set showPointLabels(value: boolean) {
         this._showPointLabels = value;
         this._controlVertices.forEach(v => v.showLabel = value);
+    }
+
+    private _showPointPositions: boolean = false;
+    public get showPointPositions(): boolean {
+        return this._showPointPositions;
+    }
+    public set showPointPositions(value: boolean) {
+        this._showPointPositions = value;
+        this._controlVertices.forEach(v => v.showPosition = value);
+    }
+
+    private _positionDisplayMode: PositionDisplayMode = "absolute";
+    public get positionDisplayMode(): PositionDisplayMode {
+        return this._positionDisplayMode;
+    }
+    public set positionDisplayMode(value: PositionDisplayMode) {
+        this._positionDisplayMode = value;
+        this._controlVertices.forEach(v => v.positionDisplayMode = value);
     }
 
     private controlPointColors: ControlPointColor[];
@@ -74,6 +95,9 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         this._basePointDiameter = p5.width * 0.015;
         this._baseLineWidth = p5.width * 0.0025;
         this.controlPointColors = this.initControlPointColors();
+        this.showPointLabels = false;
+        this.showPointPositions = false;
+        this.positionDisplayMode = 'relative to canvas';
 
         this.bezierCurve = new BezierCurve(p5, this);
         this.deCasteljauVis = new DeCasteljauVisualization(p5, this);
@@ -254,8 +278,10 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         const newVertex = new DragVertex(this.p5, this.p5.createVector(x, y));
         newVertex.baseRadius = this.basePointDiameter / 2;
         newVertex.stroke = false;
-        newVertex.showLabel = this._showPointLabels;
         newVertex.editable = true;
+        newVertex.showLabel = this._showPointLabels;
+        newVertex.showPosition = this._showPointPositions;
+        newVertex.positionDisplayMode = this._positionDisplayMode;
         newVertex.assignTo(this);
         return newVertex;
     }
@@ -368,13 +394,20 @@ class DeCasteljauVisualization implements Drawable {
         if (controlVertexPositions.length === 0) return;
         if (controlVertexPositions.length === 1) {
             //draw point on bezier curve
+            const posX = controlVertexPositions[0].x;
+            const posY = controlVertexPositions[0].y;
+
             drawCircle(this.p5, controlVertexPositions[0], this.colorOfPointOnBezier, this.bezierCurve.basePointDiameter * 1.5);
-            if (this.bezierCurve.showPointLabels) {
-                const label = `C(t)`;
-                const labelPosX = controlVertexPositions[0].x - 10;
-                const labelPosY = controlVertexPositions[0].y - 10;
+            const showLabel = this.bezierCurve.showPointLabels;
+            const showPosition = this.bezierCurve.showPointPositions;
+            const positionDisplayMode = this.bezierCurve.positionDisplayMode;
+            if (this.bezierCurve.showPointLabels || this.bezierCurve.showPointPositions) {
+                const label = `${showLabel? 'C(t) ' : ''}${showPosition? `${
+                    positionDisplayMode === 'absolute'? `(${posX}, ${posY})` : `(${(posX / this.p5.width).toFixed(2)}, ${(posY / this.p5.height).toFixed(2)})`
+                }` : ''}`;
+                const labelPosX = posX + 10;
+                const labelPosY = posY - 10;
                 this.p5.push();
-                this.p5.textAlign(this.p5.CENTER);
                 this.p5.text(label, labelPosX, labelPosY);
                 this.p5.pop();
             }

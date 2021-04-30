@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, Touchable } from "./ui-interfaces";
+import { Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "./ui-interfaces";
 import { clamp, p5TouchPoint, renderTextWithSubscript } from "./util";
 import colors from '../../global-styles/color_exports.scss';
 
@@ -15,6 +15,18 @@ export class Vertex implements Drawable {
         return this.position.y;
     }
 
+    /**
+     * x and y in range [0, 1]; a position of (0, 0) would mean top left corner of the canvas, (1, 1) means bottom right corner of canvas
+     */
+    public get positionRelativeToCanvas() {
+        return this.p5.createVector(this.x / this.p5.width, this.y / this.p5.height);
+    }
+
+    /**
+     * how the position should be displayed if showPosition is true
+     */
+    public positionDisplayMode: PositionDisplayMode = 'relative to canvas';
+
     constructor(protected p5: p5, public position: p5.Vector, public label: string = '',
         public color: p5.Color = p5.color(255), protected radius: number = 5, public stroke: boolean = true, public showLabel: boolean = true, public showPosition: boolean = false) { }
 
@@ -24,12 +36,14 @@ export class Vertex implements Drawable {
         this.setFillColor();
         this.p5.circle(this.position.x, this.position.y, 2 * this.radius);
         this.p5.fill(0);
-        if (this.showLabel) {
-            const label = `${this.label ? this.label + ' ' : ''}${this.showPosition ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})` : ''}`;
+        if (this.showLabel || this.showPosition) {
+            const label = `${this.label && this.showLabel ? this.label + ' ' : ''}${this.showPosition ?
+                    this.positionDisplayMode === 'absolute' ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`
+                        : `(${(this.positionRelativeToCanvas.x).toFixed(2)}, ${(this.positionRelativeToCanvas.y).toFixed(2)})` : 'test'}`;
             const labelPosX = this.position.x + 10;
             const labelPosY = this.position.y + 5;
-            if (this.label.includes('_')) {//use subscript
-                renderTextWithSubscript(this.p5, this.label, labelPosX, labelPosY);
+            if (label.includes('_')) {//use subscript
+                renderTextWithSubscript(this.p5, label, labelPosX, labelPosY);
             } else {
                 this.p5.text(label, labelPosX, labelPosY);
             }

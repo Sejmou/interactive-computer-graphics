@@ -246,8 +246,13 @@ export function renderTextWithSubscript(p5: p5, text: string, x: number, y: numb
     const textAfterSubscript = text.substr(text.indexOf('_{') + 2);
     const xOffsetForSubscript = p5.textWidth(textBeforeSubscript);
     p5.text(textBeforeSubscript, x, y);
-    //remove closing '}'
-    p5.text(textAfterSubscript.substr(0, textAfterSubscript.length - 1), x + xOffsetForSubscript, y + p5.textDescent());
+    
+    const textInSubscript = textAfterSubscript.substring(0, textAfterSubscript.indexOf('}'));
+    p5.text(textInSubscript, x + xOffsetForSubscript, y + p5.textDescent());
+    
+    const textAfterClosingParentheses = textAfterSubscript.substr(textInSubscript.length + 1);
+    const xOffsetForTextAfterClosingParentheses = xOffsetForSubscript + p5.textWidth(textInSubscript);
+    p5.text(textAfterClosingParentheses, x + xOffsetForTextAfterClosingParentheses, y);
     p5.pop();
 }
 

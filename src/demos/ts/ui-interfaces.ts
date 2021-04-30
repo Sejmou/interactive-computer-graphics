@@ -121,3 +121,6 @@ export interface ContainerElement<T> {
      */
     assignTo(container: Container<T>): void
 }
+
+
+export type PositionDisplayMode = 'absolute' | 'relative to canvas';
