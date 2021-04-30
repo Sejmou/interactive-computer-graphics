@@ -4,7 +4,7 @@ import { DragVertex } from './vertex';
 import { colorsTooSimilar, drawCircle, drawLineVector, extractColorChannelsFromRGBAString, indexToLowercaseLetter, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from './util';
 import colors from '../../global-styles/color_exports.scss';
 
-export type BezierDemoChange = 'controlVerticesChanged';
+export type BezierDemoChange = 'controlPointsChanged';
 
 //TODO: add curveDegreeTextContainer back
 // this.curveDegreeTextContainer.html(`Number of control vertices: ${numOfVertices}`);
@@ -26,12 +26,12 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         return this._baseLineWidth;
     }
 
-    private _controlVertices: DragVertex[] = [];
+    private _controlPoints: DragVertex[] = [];
 
     //others should only be able to read data from vertices, but not change them directly
     //also, mutations of the array should not be allowed
-    public get controlVertices(): readonly DragVertex[] {
-        return this._controlVertices;
+    public get controlPoints(): readonly DragVertex[] {
+        return this._controlPoints;
     }
 
     /**
@@ -50,7 +50,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
     public set showPointLabels(value: boolean) {
         this._showPointLabels = value;
-        this._controlVertices.forEach(v => v.showLabel = value);
+        this._controlPoints.forEach(v => v.showLabel = value);
     }
 
     private _showPointPositions: boolean = false;
@@ -59,7 +59,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
     public set showPointPositions(value: boolean) {
         this._showPointPositions = value;
-        this._controlVertices.forEach(v => v.showPosition = value);
+        this._controlPoints.forEach(v => v.showPosition = value);
     }
 
     private _positionDisplayMode: PositionDisplayMode = "absolute";
@@ -68,7 +68,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
     public set positionDisplayMode(value: PositionDisplayMode) {
         this._positionDisplayMode = value;
-        this._controlVertices.forEach(v => v.positionDisplayMode = value);
+        this._controlPoints.forEach(v => v.positionDisplayMode = value);
     }
 
     private controlPointColors: ControlPointColor[];
@@ -121,30 +121,30 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
 
     handleMousePressed(): void {
-        if (this.controlVertices.length === 0) {
-            const newVertex = this.createVertexAtPos(this.p5.mouseX, this.p5.mouseY);
-            this.addVertexAtIndex(newVertex, 0);
-            //we want to allow the user to drag the added vertex immediately, therefore we call handleTouchStarted() on it
-            newVertex.handleMousePressed();
+        if (this.controlPoints.length === 0) {
+            const newPt = this.createCtrlPtAtPos(this.p5.mouseX, this.p5.mouseY);
+            this.addCtrlPtAtIndex(newPt, 0);
+            //we want to allow the user to drag the added control point immediately, therefore we call handleTouchStarted() on it
+            newPt.handleMousePressed();
             return;
         }
 
         //operating on a copy of the array as vertices might get added or removed while iterating over the array
         //this could potentially lead to a lot of confusing/unpredictable behavior
-        //e.g. handleMousePressed() could get called infinitely on the same vertex, or not get called on some vertices, or on newly added vertices (which were not actuall clicked on of course) 
-        const vertices = this.controlVertices.slice();
-        for (let i = 0; i < vertices.length; i++) {
-            let v = vertices[i];
+        //e.g. handleMousePressed() could get called infinitely on the same control point, or not get called on some vertices, or on newly added vertices (which were not actuall clicked on of course) 
+        const controlPoints = this.controlPoints.slice();
+        for (let i = 0; i < controlPoints.length; i++) {
+            let v = controlPoints[i];
             v.handleMousePressed();//after this call v.dragging might be true!
 
             //we don't want several vertices to be dragged at the same time
             //this causes buggy behavior (we can't separate vertices anymore if they are stacked on top of each other)
-            //therefore we break out of this loop as soon as one vertex is being dragged
+            //therefore we break out of this loop as soon as one control point is being dragged
             if (v.dragging) break;
         }
     }
 
-    private getColorForVertexAtIndex(i: number): p5.Color {
+    private getColorForCtrlPtAtIndex(i: number): p5.Color {
         //colors should assigned from this.controlPointColors as long as a color is still not taken yet, in the order defined in this.controlPointColors
         //the order defined in this.controlPointColors should be preserved, so:
         //  for example: if we already have two control points A and B a new point C gets added between them, it should NOT get the next available color
@@ -153,20 +153,20 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
 
         const idxOfNextAvailableCol = this.controlPointColors.findIndex(c => !c.taken);
         const predefinedColAvailable = idxOfNextAvailableCol !== -1;
-        const nextVertexColor = this.controlVertices[i + 1]?.color;
+        const nextPtColor = this.controlPoints[i + 1]?.color;
 
         //sorry, this is a bit ugly... :/
         if (
             predefinedColAvailable &&
             (
-                !nextVertexColor ||
-                !this.controlPointColors.map(c => c.color).includes(nextVertexColor) //if there is a next vertex, its color must not be one of the predefined ones
+                !nextPtColor ||
+                !this.controlPointColors.map(c => c.color).includes(nextPtColor) //if there is a following control point, its color must not be one of the predefined ones
             )
         ) {
-            const colorFromControlPointColors = this.controlPointColors[idxOfNextAvailableCol];
-            colorFromControlPointColors.taken = true;
+            const selectedColor = this.controlPointColors[idxOfNextAvailableCol];
+            selectedColor.taken = true;
 
-            return colorFromControlPointColors.color;
+            return selectedColor.color;
         }
         else {
             let color = this.p5.color(randomColorHexString());
@@ -176,8 +176,8 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
             let prevColor: p5.Color | null = null;
             let nextColor: p5.Color | null = null;
 
-            if (i > 0) prevColor = this.controlVertices[i - 1].color;
-            if (i < this.controlVertices.length - 1) nextColor = this.controlVertices[i + 1].color;
+            if (i > 0) prevColor = this.controlPoints[i - 1].color;
+            if (i < this.controlPoints.length - 1) nextColor = this.controlPoints[i + 1].color;
 
             while ((prevColor && colorsTooSimilar(color, prevColor)) || (nextColor && colorsTooSimilar(color, nextColor) || luminanceFromP5Color(color) > 180)) {
                 console.log(`color ${color.toString()} and luminance ${luminanceFromP5Color(color)} was too bright or too similar`);
@@ -189,57 +189,57 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
 
     handleMouseReleased(): void {
-        this.controlVertices.forEach(v => v.handleMouseReleased());
+        this.controlPoints.forEach(v => v.handleMouseReleased());
     }
 
     handleTouchStarted(): void {
-        if (this.controlVertices.length === 0) {
+        if (this.controlPoints.length === 0) {
             const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
 
             if (touches.length === 0) {
                 console.warn('touches was unexpectedly empty');
             } else {
-                const newVertex = this.createVertexAtPos(touches[0].x, touches[0].y);
-                this.addVertexAtIndex(newVertex, 0);
-                //we want to allow the user to drag the added vertex immediately, therefore we call handleTouchStarted() on it
-                newVertex.handleTouchStarted();
+                const newPt = this.createCtrlPtAtPos(touches[0].x, touches[0].y);
+                this.addCtrlPtAtIndex(newPt, 0);
+                //we want to allow the user to drag the added control point immediately, therefore we call handleTouchStarted() on it
+                newPt.handleTouchStarted();
             }
             return;
         }
 
         //operating on a copy of the array as vertices might get added or removed while iterating over the array
         //this could potentially lead to a lot of confusing/unpredictable behavior
-        const vertices = this.controlVertices.slice();
+        const vertices = this.controlPoints.slice();
         for (let i = 0; i < vertices.length; i++) {
             let v = vertices[i];
             v.handleTouchStarted();//after this call v.dragging might be true!
 
             //we don't want several vertices to be dragged at the same time
             //this causes buggy behavior (we can't separate vertices anymore if they are stacked on top of each other)
-            //therefore we break out of this loop as soon as one vertex is being dragged
+            //therefore we break out of this loop as soon as one control point is being dragged
             if (v.dragging) break;
         }
     }
 
     handleTouchReleased(): void {
-        this.controlVertices.forEach(v => v.handleTouchReleased());
+        this.controlPoints.forEach(v => v.handleTouchReleased());
     }
 
     public get hovering(): boolean {
-        return this.controlVertices.some(v => v.hovering);
+        return this.controlPoints.some(v => v.hovering);
     };
 
     public get dragging(): boolean {
-        return this.controlVertices.some(v => v.dragging);
+        return this.controlPoints.some(v => v.dragging);
     };
 
     draw(): void {
-        if (this.controlVertices.length > 0) {
+        if (this.controlPoints.length > 0) {
             this.controlsForT.updateT();
 
             //we don't really need the bezier line or De Casteljau visualization if we have a single point
-            if (this.controlVertices.length > 1) this.bezierCurve.draw();
-            if (this.controlVertices.length > 1) this.deCasteljauVis.draw();
+            if (this.controlPoints.length > 1) this.bezierCurve.draw();
+            if (this.controlPoints.length > 1) this.deCasteljauVis.draw();
 
             this.drawControlVertices();
         } else {
@@ -251,66 +251,66 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
 
     private drawControlVertices() {
-        this.controlVertices.forEach(v => v.draw());
+        this.controlPoints.forEach(v => v.draw());
     }
 
     addElementAfter(element: DragVertex): void {
-        const i = this.controlVertices.findIndex(e => e === element);
+        const i = this.controlPoints.findIndex(e => e === element);
         if (i === -1) {
             console.warn('could not find provided element in control vertices of bezier, cancelling adding...');
             return;
         }
 
-        //add vertex at point where user clicked on or touched add button
+        //add control point where user clicked on or touched add button
         const touches = this.p5.touches as p5TouchPoint[];
         const touchInteraction = touches.length > 0;
         const x = touchInteraction ? touches[0].x : this.p5.mouseX;
         const y = touchInteraction ? touches[0].y : this.p5.mouseY;
-        const newVertex = this.createVertexAtPos(x, y);
-        this.addVertexAtIndex(newVertex, i + 1);
+        const newPt = this.createCtrlPtAtPos(x, y);
+        this.addCtrlPtAtIndex(newPt, i + 1);
 
-        //vertex should instantly be dragged after being added, so we call handle...Started() on it
-        if (touchInteraction) newVertex.handleTouchStarted();
-        else newVertex.handleMousePressed();
+        //control point should instantly be dragged after being added, so we call handle...Started() on it
+        if (touchInteraction) newPt.handleTouchStarted();
+        else newPt.handleMousePressed();
     }
 
-    private createVertexAtPos(x: number, y: number): DragVertex {
-        const newVertex = new DragVertex(this.p5, this.p5.createVector(x, y));
-        newVertex.baseRadius = this.basePointDiameter / 2;
-        newVertex.stroke = false;
-        newVertex.editable = true;
-        newVertex.showLabel = this._showPointLabels;
-        newVertex.showPosition = this._showPointPositions;
-        newVertex.positionDisplayMode = this._positionDisplayMode;
-        newVertex.assignTo(this);
-        return newVertex;
+    private createCtrlPtAtPos(x: number, y: number): DragVertex {
+        const newPt = new DragVertex(this.p5, this.p5.createVector(x, y));
+        newPt.baseRadius = this.basePointDiameter / 2;
+        newPt.stroke = false;
+        newPt.editable = true;
+        newPt.showLabel = this._showPointLabels;
+        newPt.showPosition = this._showPointPositions;
+        newPt.positionDisplayMode = this._positionDisplayMode;
+        newPt.assignTo(this);
+        return newPt;
     }
 
     /**
-     * Adds a vertex to this.controlVertices at the specified index. Also makes sure that the newly added vertex gets a color that is not too similar to that of its neighbors
+     * Adds a control point to this.controlVertices at the specified index. Also makes sure that the newly added control point gets a color that is not too similar to that of its neighbors
      * and that the curve degree change is handled appropriately.
      */
-    private addVertexAtIndex(newVertex: DragVertex, i: number) {
-        this._controlVertices.splice(i, 0, newVertex);
-        newVertex.color = this.getColorForVertexAtIndex(i);
+    private addCtrlPtAtIndex(newPt: DragVertex, i: number) {
+        this._controlPoints.splice(i, 0, newPt);
+        newPt.color = this.getColorForCtrlPtAtIndex(i);
         //TODO: figure out how to do darken color so that it works with arbitrarily dark initial colors (lightenDarkenP5Color can't do this atm)
-        newVertex.activeColor = newVertex.color;
+        newPt.activeColor = newPt.color;
         this.handleCurveDegreeChange();
     }
 
     remove(element: DragVertex): void {
-        this._controlVertices = this._controlVertices.filter(v => v !== element);
+        this._controlPoints = this._controlPoints.filter(v => v !== element);
         const idxOfColorOfElementToRemove = this.controlPointColors.findIndex(c => c.color === element.color);
         if (idxOfColorOfElementToRemove) this.controlPointColors[idxOfColorOfElementToRemove].taken = false;
         this.handleCurveDegreeChange();
     }
 
     handleCurveDegreeChange() {
-        const numOfVertices = this.controlVertices.length;
-        this._controlVertices.forEach((v, i) => v.label = `P_{${i}}`);
+        const numOfVertices = this.controlPoints.length;
+        this._controlPoints.forEach((v, i) => v.label = `P_{${i}}`);
         this.deCasteljauVis.onlyDrawPointOnBezier = numOfVertices < 3;
         this.controlsForT.visible = numOfVertices > 1;
-        this.notifyObservers('controlVerticesChanged');
+        this.notifyObservers('controlPointsChanged');
     }
 
     private observers: MyObserver<BezierDemoChange>[] = [];
@@ -353,20 +353,20 @@ class BezierCurve implements Drawable {
     }
 
     public draw() {
-        if (this.demo.controlVertices.length === 0 || this.demo.controlVertices.length === 1) return;
-        const points = this.zeroToOne.map(t => this.findPointOnCurveWithDeCasteljau(this.demo.controlVertices.map(v => v.position), t));
+        if (this.demo.controlPoints.length === 0 || this.demo.controlPoints.length === 1) return;
+        const points = this.zeroToOne.map(t => this.findPointOnCurveWithDeCasteljau(this.demo.controlPoints.map(v => v.position), t));
         points.forEach((p, i) => {
             if (i === points.length - 1) return;
             drawLineVector(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2);
         });
     }
 
-    private findPointOnCurveWithDeCasteljau(controlVertexPositions: p5.Vector[], t: number): p5.Vector {
-        if (controlVertexPositions.length === 1) return controlVertexPositions[0]
+    private findPointOnCurveWithDeCasteljau(ctrlPtPositions: p5.Vector[], t: number): p5.Vector {
+        if (ctrlPtPositions.length === 1) return ctrlPtPositions[0]
         let controlVerticesForNextIteration: p5.Vector[] = [];
-        controlVertexPositions.forEach((v, i) => {
-            if (i === controlVertexPositions.length - 1) return;
-            const lerpCurrAndNextAtT = p5.Vector.lerp(v, controlVertexPositions[i + 1], t) as unknown as p5.Vector;//again, fail in @types/p5???
+        ctrlPtPositions.forEach((v, i) => {
+            if (i === ctrlPtPositions.length - 1) return;
+            const lerpCurrAndNextAtT = p5.Vector.lerp(v, ctrlPtPositions[i + 1], t) as unknown as p5.Vector;//again, fail in @types/p5???
             controlVerticesForNextIteration.push(lerpCurrAndNextAtT);
         });
         return this.findPointOnCurveWithDeCasteljau(controlVerticesForNextIteration, t);
@@ -387,17 +387,17 @@ class DeCasteljauVisualization implements Drawable {
     }
 
     public draw() {
-        this.recursiveDraw(this.bezierCurve.controlVertices.map(v => v.position));
+        this.recursiveDraw(this.bezierCurve.controlPoints.map(v => v.position));
     }
 
-    private recursiveDraw(controlVertexPositions: p5.Vector[]) {
-        if (controlVertexPositions.length === 0) return;
-        if (controlVertexPositions.length === 1) {
+    private recursiveDraw(ctrlPtPositions: p5.Vector[]) {
+        if (ctrlPtPositions.length === 0) return;
+        if (ctrlPtPositions.length === 1) {
             //draw point on bezier curve
-            const posX = controlVertexPositions[0].x;
-            const posY = controlVertexPositions[0].y;
+            const posX = ctrlPtPositions[0].x;
+            const posY = ctrlPtPositions[0].y;
 
-            drawCircle(this.p5, controlVertexPositions[0], this.colorOfPointOnBezier, this.bezierCurve.basePointDiameter * 1.5);
+            drawCircle(this.p5, ctrlPtPositions[0], this.colorOfPointOnBezier, this.bezierCurve.basePointDiameter * 1.5);
             const showLabel = this.bezierCurve.showPointLabels;
             const showPosition = this.bezierCurve.showPointPositions;
             const positionDisplayMode = this.bezierCurve.positionDisplayMode;
@@ -413,17 +413,17 @@ class DeCasteljauVisualization implements Drawable {
             }
             return;
         }
-        let vertexPositionsForNextIteration: p5.Vector[] = [];
-        controlVertexPositions.forEach((v, i) => {
-            if (i === controlVertexPositions.length - 1) return;
-            const posBetweenCurrAndNextAtT = p5.Vector.lerp(v, controlVertexPositions[i + 1], this.bezierCurve.t) as unknown as p5.Vector;//again, fail in @types/p5???
+        let ptPositionsForNextIter: p5.Vector[] = [];
+        ctrlPtPositions.forEach((v, i) => {
+            if (i === ctrlPtPositions.length - 1) return;
+            const posBetweenCurrAndNextAtT = p5.Vector.lerp(v, ctrlPtPositions[i + 1], this.bezierCurve.t) as unknown as p5.Vector;//again, fail in @types/p5???
             if (!this.onlyDrawPointOnBezier) {
-                drawLineVector(this.p5, v, controlVertexPositions[i + 1], this.color, this.bezierCurve.baseLineWidth);
+                drawLineVector(this.p5, v, ctrlPtPositions[i + 1], this.color, this.bezierCurve.baseLineWidth);
                 drawCircle(this.p5, posBetweenCurrAndNextAtT, this.color, this.bezierCurve.basePointDiameter);
             }
-            vertexPositionsForNextIteration.push(posBetweenCurrAndNextAtT);
+            ptPositionsForNextIter.push(posBetweenCurrAndNextAtT);
         });
-        this.recursiveDraw(vertexPositionsForNextIteration);
+        this.recursiveDraw(ptPositionsForNextIter);
     }
 }
 

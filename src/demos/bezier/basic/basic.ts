@@ -40,13 +40,13 @@ class BezierDemoGuide implements MyObserver<BezierDemoChange> {
 
         document.getElementById(demoContainerId)?.insertAdjacentElement('afterend', this.textBoxContainer);
 
-        //we want to get notified if the number of control vertices changes
+        //we want to get notified if the number of control points changes
         this.demo.subscribe(this);
     }
 
     update(change: BezierDemoChange) {
-        if (change === 'controlVerticesChanged') {
-            const numOfControlVertices = this.demo.controlVertices.length;
+        if (change === 'controlPointsChanged') {
+            const numOfControlVertices = this.demo.controlPoints.length;
             this.visible = numOfControlVertices > 0;
             this.textBoxContainer.innerHTML = this.createParagraphsHTMLFromMessage(this.getMessage(numOfControlVertices));
             //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)

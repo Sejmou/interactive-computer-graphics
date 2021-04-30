@@ -43,7 +43,7 @@ async function createDemo() {
     //this isn't actually added to the canvas or anything, however it needs to be updated every time t of bezier demo changes -> easiest solution: update on every draw() by adding to sketch
     bernsteinVisSketch.add(() => new BernsteinPolynomials(bezierDemo, bernsteinVis, bernsteinGraphContainerId));
 
-    bezierSketch.add((p5) => new VertexInfluenceBar(p5, bezierDemo, bernsteinVis));
+    bezierSketch.add((p5) => new ControlPointInfluenceBars(p5, bezierDemo, bernsteinVis));
 
     document.querySelector('#cover')?.remove();
 }
@@ -91,16 +91,16 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
         this.distFromZeroToOneXAxis = this.p5.width - this.axisRulerOffsetFromBorder * 1.5;
         this.distFromZeroToOneYAxis = this.p5.height - this.axisRulerOffsetFromBorder * 1.5;
 
-        //we want to get notified if the number of control vertices changes
+        //we want to get notified if the number of control points changes
         this.demo.subscribe(this);
     }
 
     update(change: BezierDemoChange): void {
-        if (change === 'controlVerticesChanged') this.updateBernsteinPolynomials();
+        if (change === 'controlPointsChanged') this.updateBernsteinPolynomials();
     }
 
     private updateBernsteinPolynomials() {
-        const n = this.demo.controlVertices.length - 1;
+        const n = this.demo.controlPoints.length - 1;
         if (n < 1) return this._bernSteinPolynomials = [];
         const zeroToN = [...Array(n + 1).keys()];
         this._bernSteinPolynomials = zeroToN.map(i => ((t: number) => binomial(n, i) * Math.pow(t, i) * Math.pow((1 - t), n - i)));
@@ -110,11 +110,11 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
     }
 
     draw(): void {
-        if (this.demo.controlVertices.length > 1) {
+        if (this.demo.controlPoints.length > 1) {
             this.evaluatedBernsteinPolynomials.forEach((polyYVals, bIndex) => {
-                const bPolyVertex = this.demo.controlVertices[bIndex];
-                const lineThickness = (bPolyVertex.hovering || bPolyVertex.dragging) ? 4 : 1.5;
-                const color = bPolyVertex.color;
+                const controlPtForBPoly = this.demo.controlPoints[bIndex];
+                const lineThickness = (controlPtForBPoly.hovering || controlPtForBPoly.dragging) ? 4 : 1.5;
+                const color = controlPtForBPoly.color;
                 polyYVals.forEach((y, i) => {
                     if (i === this.evaluationSteps.length - 1) return;
                     const t = this.evaluationSteps[i];
@@ -232,18 +232,18 @@ class BernsteinPolynomials implements Drawable {
     }
 
     draw(): void {
-        if (this.demo.controlVertices.length < 2) return;
+        if (this.demo.controlPoints.length < 2) return;
         const bernsteinFormulas = this.bernsteinVis.bernSteinPolynomials;
         this.containersForBernsteinPolynomialValues.forEach((c, i) => c.innerText = bernsteinFormulas[i](this.demo.t).toFixed(2));
     }
 
     update(change: BezierDemoChange) {
-        if (change === 'controlVerticesChanged') {
+        if (change === 'controlPointsChanged') {
             this.createContainersForBernsteinFormulas();
             const visible = this.textBoxContainer.innerHTML.length > 0;
             this.visible = visible;
             if (!visible) return;
-            const controlVertices = this.demo.controlVertices;
+            const controlVertices = this.demo.controlPoints;
             const n = controlVertices.length - 1;
             this.bezierCurveEquation.innerHTML = String.raw`<br>For the current set of control points the formula is: \[ C(t) = ${controlVertices.map((v, i) => String.raw`${i == 0 ? '' : ' + '}b_{${i},${n}} \cdot ${v.label}`).join('')} \]`;
             //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)
@@ -252,7 +252,7 @@ class BernsteinPolynomials implements Drawable {
     }
 
     private createContainersForBernsteinFormulas() {
-        const n = this.demo.controlVertices.length - 1;
+        const n = this.demo.controlPoints.length - 1;
         if (n < 1) return '';
 
         const zeroToN = [...Array(n + 1).keys()];
@@ -283,7 +283,7 @@ class BernsteinPolynomials implements Drawable {
 
 
 
-class VertexInfluenceBar implements Drawable {
+class ControlPointInfluenceBars implements Drawable {
     private barBorderColor: p5.Color;
     private barHeight = 60;
     private barWidth = 30;
@@ -293,19 +293,19 @@ class VertexInfluenceBar implements Drawable {
         this.barBorderColor = p5.color(120);
     }
     draw(): void {
-        const controlVertices = this.bezierDemo.controlVertices;
-        if (controlVertices.length < 2) return;
-        const influenceOfEachVertex = this.bernsteinVis.bernsteinPolynomialValues;
+        const controlPoints = this.bezierDemo.controlPoints;
+        if (controlPoints.length < 2) return;
+        const controlPtsInfluence = this.bernsteinVis.bernsteinPolynomialValues;
 
-        const fillHeights = influenceOfEachVertex.map(i => i * (this.barHeight - this.borderThickness));
+        const fillHeights = controlPtsInfluence.map(i => i * (this.barHeight - this.borderThickness));
 
         this.p5.push();
         this.p5.noStroke();
         this.p5.rectMode(this.p5.CENTER);
-        controlVertices.forEach((v, i) => {
+        controlPoints.forEach((v, i) => {
             const fillHeight = fillHeights[i];
 
-            //draw bar with contribution of vertex (next to vertex)
+            //draw bar showing a control point's influence and position it next to the control point
             this.p5.fill(this.barBorderColor);
             this.p5.rect(v.x - this.barWidth * 1.25, v.y + this.barWidth / 2, this.barWidth, this.barHeight);
             this.p5.fill(v.color);
@@ -319,7 +319,7 @@ class VertexInfluenceBar implements Drawable {
         this.p5.fill(this.barBorderColor);
         this.p5.rect(summaryBarX, summaryBarY, this.barWidth + this.borderThickness, this.barHeight + this.borderThickness);
         let yOffset = 0;
-        controlVertices.forEach((v, i) => {
+        controlPoints.forEach((v, i) => {
             const fillHeight = fillHeights[i];
             this.p5.fill(v.color);
             this.p5.rect(summaryBarX + this.borderThickness, summaryBarY + this.borderThickness + yOffset, this.barWidth - this.borderThickness, fillHeight);
