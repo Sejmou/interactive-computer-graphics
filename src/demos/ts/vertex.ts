@@ -26,10 +26,12 @@ export class Vertex implements Drawable {
         this.p5.fill(0);
         if (this.showLabel) {
             const label = `${this.label ? this.label + ' ' : ''}${this.showPosition ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})` : ''}`;
+            const labelPosX = this.position.x + 10;
+            const labelPosY = this.position.y + 5;
             if (this.label.includes('_')) {//use subscript
-                renderTextWithSubscript(this.p5, this.label, this.position.x + 10, this.position.y + 5);
+                renderTextWithSubscript(this.p5, this.label, labelPosX, labelPosY);
             } else {
-                this.p5.text(label, this.position.x + 10, this.position.y + 5);
+                this.p5.text(label, labelPosX, labelPosY);
             }
         }
         this.p5.pop();

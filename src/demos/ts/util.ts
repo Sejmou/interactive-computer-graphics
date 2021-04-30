@@ -263,7 +263,7 @@ export function colorsTooSimilar(colorA: p5.Color, colorB: p5.Color) {
 
     const colAVals = Object.values(colAAsRGBAObj);
     const colBVals = Object.values(colBAsRGBAObj);
-    return !colAVals.some((v, i) => Math.abs(v - colBVals[i]) > 50);
+    return !colAVals.some((v, i) => Math.abs(v - colBVals[i]) > 70);
 }
 
 //inspired by: https://stackoverflow.com/a/596243/13727176

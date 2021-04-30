@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { Touchable, Draggable, Drawable, Container, Clickable, MyObservable, MyObserver } from './ui-interfaces';
 import { DragVertex } from './vertex';
-import { colorsTooSimilar, drawCircle, drawLineVector, indexToLowercaseLetter, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from './util';
+import { colorsTooSimilar, drawCircle, drawLineVector, extractColorChannelsFromRGBAString, indexToLowercaseLetter, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from './util';
 import colors from '../../global-styles/color_exports.scss';
 
 export type BezierDemoChange = 'controlVerticesChanged';
@@ -85,12 +85,12 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
             this.p5.color(colors.primaryColor),
             this.p5.color(lightenDarkenColor(colors.successColor, 15)),
             this.p5.color('#6727e2'),
+            this.p5.color('#ff6600'),
             this.p5.color('#c85d84'),
+            this.p5.color('#11e8db'),
             this.p5.color('#62421c'),
             this.p5.color('#4e7165'),
-            this.p5.color('#ff6600'),
-            this.p5.color('#83b9df'),
-            this.p5.color('#11e8db')
+            this.p5.color('#1c087b')
         ];
 
         return colorArr.map(color => ({ color, taken: false }));
@@ -135,7 +135,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         if (
             predefinedColAvailable &&
             (
-                !nextVertexColor || 
+                !nextVertexColor ||
                 !this.controlPointColors.map(c => c.color).includes(nextVertexColor) //if there is a next vertex, its color must not be one of the predefined ones
             )
         ) {
@@ -369,6 +369,15 @@ class DeCasteljauVisualization implements Drawable {
         if (controlVertexPositions.length === 1) {
             //draw point on bezier curve
             drawCircle(this.p5, controlVertexPositions[0], this.colorOfPointOnBezier, this.bezierCurve.basePointDiameter * 1.5);
+            if (this.bezierCurve.showPointLabels) {
+                const label = `C(t)`;
+                const labelPosX = controlVertexPositions[0].x - 10;
+                const labelPosY = controlVertexPositions[0].y - 10;
+                this.p5.push();
+                this.p5.textAlign(this.p5.CENTER);
+                this.p5.text(label, labelPosX, labelPosY);
+                this.p5.pop();
+            }
             return;
         }
         let vertexPositionsForNextIteration: p5.Vector[] = [];
