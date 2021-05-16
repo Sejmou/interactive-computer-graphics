@@ -243,9 +243,9 @@ class BernsteinPolynomials implements Drawable {
             const visible = this.textBoxContainer.innerHTML.length > 0;
             this.visible = visible;
             if (!visible) return;
-            const controlVertices = this.demo.controlPoints;
-            const n = controlVertices.length - 1;
-            this.bezierCurveEquation.innerHTML = String.raw`<br>For the current set of control points the formula is: \[ C(t) = ${controlVertices.map((v, i) => String.raw`${i == 0 ? '' : ' + '}b_{${i},${n}} \cdot ${v.label}`).join('')} \]`;
+            const controlPoints = this.demo.controlPoints;
+            const n = controlPoints.length - 1;
+            this.bezierCurveEquation.innerHTML = String.raw`<br>For the current set of control points the formula is: \[ C(t) = ${controlPoints.map((v, i) => String.raw`${i == 0 ? '' : ' + '}b_{${i},${n}} \cdot ${v.label}`).join('')} \]`;
             //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)
             MathJax.typeset([`#${this.id}`, `#${this.bezierCurveEquation.id}`]);
         }

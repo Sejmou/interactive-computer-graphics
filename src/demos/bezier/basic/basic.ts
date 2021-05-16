@@ -46,9 +46,9 @@ class BezierDemoGuide implements MyObserver<BezierDemoChange> {
 
     update(change: BezierDemoChange) {
         if (change === 'controlPointsChanged') {
-            const numOfControlVertices = this.demo.controlPoints.length;
-            this.visible = numOfControlVertices > 0;
-            this.textBoxContainer.innerHTML = this.createParagraphsHTMLFromMessage(this.getMessage(numOfControlVertices));
+            const numOfControlPoints = this.demo.controlPoints.length;
+            this.visible = numOfControlPoints > 0;
+            this.textBoxContainer.innerHTML = this.createParagraphsHTMLFromMessage(this.getMessage(numOfControlPoints));
             //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)
             MathJax.typeset([`#${this.id}`]);
         }
@@ -60,9 +60,9 @@ class BezierDemoGuide implements MyObserver<BezierDemoChange> {
         return paragraphs.join('');
     }
 
-    private getMessage(numOfControlVertices: number): string {
+    private getMessage(numOfControlPoints: number): string {
         //using String.raw``templateStringContent` allows use of backslashes without having to escape them (so that MathJax can parse LaTeX syntax)
-        switch (numOfControlVertices) {
+        switch (numOfControlPoints) {
             case 0:
                 return "";
             case 1:

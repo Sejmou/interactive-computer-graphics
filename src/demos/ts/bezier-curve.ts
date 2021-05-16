@@ -241,7 +241,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
             if (this.controlPoints.length > 1) this.bezierCurve.draw();
             if (this.controlPoints.length > 1) this.deCasteljauVis.draw();
 
-            this.drawControlVertices();
+            this.drawControlPoints();
         } else {
             this.p5.push();
             this.p5.textAlign(this.p5.CENTER);
@@ -250,7 +250,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         }
     }
 
-    private drawControlVertices() {
+    private drawControlPoints() {
         this.controlPoints.forEach(v => v.draw());
     }
 
@@ -287,7 +287,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
 
     /**
-     * Adds a control point to this.controlVertices at the specified index. Also makes sure that the newly added control point gets a color that is not too similar to that of its neighbors
+     * Adds a control point to this.controlPoints at the specified index. Also makes sure that the newly added control point gets a color that is not too similar to that of its neighbors
      * and that the curve degree change is handled appropriately.
      */
     private addCtrlPtAtIndex(newPt: DragVertex, i: number) {
@@ -363,13 +363,13 @@ class BezierCurve implements Drawable {
 
     private findPointOnCurveWithDeCasteljau(ctrlPtPositions: p5.Vector[], t: number): p5.Vector {
         if (ctrlPtPositions.length === 1) return ctrlPtPositions[0]
-        let controlVerticesForNextIteration: p5.Vector[] = [];
+        let ctrlPtsForNextIter: p5.Vector[] = [];
         ctrlPtPositions.forEach((v, i) => {
             if (i === ctrlPtPositions.length - 1) return;
             const lerpCurrAndNextAtT = p5.Vector.lerp(v, ctrlPtPositions[i + 1], t) as unknown as p5.Vector;//again, fail in @types/p5???
-            controlVerticesForNextIteration.push(lerpCurrAndNextAtT);
+            ctrlPtsForNextIter.push(lerpCurrAndNextAtT);
         });
-        return this.findPointOnCurveWithDeCasteljau(controlVerticesForNextIteration, t);
+        return this.findPointOnCurveWithDeCasteljau(ctrlPtsForNextIter, t);
     }
 }
 
@@ -391,39 +391,39 @@ class DeCasteljauVisualization implements Drawable {
     }
 
     private recursiveDraw(ctrlPtPositions: p5.Vector[]) {
-        if (ctrlPtPositions.length === 0) return;
-        if (ctrlPtPositions.length === 1) {
-            //draw point on bezier curve
-            const posX = ctrlPtPositions[0].x;
-            const posY = ctrlPtPositions[0].y;
-
-            drawCircle(this.p5, ctrlPtPositions[0], this.colorOfPointOnBezier, this.bezierCurve.basePointDiameter * 1.5);
-            const showLabel = this.bezierCurve.showPointLabels;
-            const showPosition = this.bezierCurve.showPointPositions;
-            const positionDisplayMode = this.bezierCurve.positionDisplayMode;
-            if (this.bezierCurve.showPointLabels || this.bezierCurve.showPointPositions) {
-                const label = `${showLabel? 'C(t) ' : ''}${showPosition? `${
-                    positionDisplayMode === 'absolute'? `(${posX}, ${posY})` : `(${(posX / this.p5.width).toFixed(2)}, ${(posY / this.p5.height).toFixed(2)})`
-                }` : ''}`;
-                const labelPosX = posX + 10;
-                const labelPosY = posY - 10;
-                this.p5.push();
-                this.p5.text(label, labelPosX, labelPosY);
-                this.p5.pop();
-            }
+        if (ctrlPtPositions.length <= 1) {
+            //this shouldn't normally be reached
             return;
         }
-        let ptPositionsForNextIter: p5.Vector[] = [];
-        ctrlPtPositions.forEach((v, i) => {
-            if (i === ctrlPtPositions.length - 1) return;
-            const posBetweenCurrAndNextAtT = p5.Vector.lerp(v, ctrlPtPositions[i + 1], this.bezierCurve.t) as unknown as p5.Vector;//again, fail in @types/p5???
-            if (!this.onlyDrawPointOnBezier) {
-                drawLineVector(this.p5, v, ctrlPtPositions[i + 1], this.color, this.bezierCurve.baseLineWidth);
-                drawCircle(this.p5, posBetweenCurrAndNextAtT, this.color, this.bezierCurve.basePointDiameter);
-            }
-            ptPositionsForNextIter.push(posBetweenCurrAndNextAtT);
+
+        const interpolatedPositionsOfAdjacentCtrlPts = ctrlPtPositions.slice(0, -1).map((v, i) => p5.Vector.lerp(v, ctrlPtPositions[i + 1], this.bezierCurve.t) as unknown as p5.Vector);//again, fail in @types/p5???
+
+        interpolatedPositionsOfAdjacentCtrlPts.forEach((pos, i) => {
+            if (!this.onlyDrawPointOnBezier) drawLineVector(this.p5, ctrlPtPositions[i], ctrlPtPositions[i + 1], this.color, this.bezierCurve.baseLineWidth);
+            if (interpolatedPositionsOfAdjacentCtrlPts.length === 1) this.drawPointOnBezierCurve(interpolatedPositionsOfAdjacentCtrlPts[0]);
+            else drawCircle(this.p5, pos, this.color, this.bezierCurve.basePointDiameter);
         });
-        this.recursiveDraw(ptPositionsForNextIter);
+
+        this.recursiveDraw(interpolatedPositionsOfAdjacentCtrlPts);
+    }
+
+    private drawPointOnBezierCurve(pos: p5.Vector) {
+        const posX = pos.x;
+        const posY = pos.y;
+
+        drawCircle(this.p5, pos, this.colorOfPointOnBezier, this.bezierCurve.basePointDiameter * 1.5);
+        const showLabel = this.bezierCurve.showPointLabels;
+        const showPosition = this.bezierCurve.showPointPositions;
+        const positionDisplayMode = this.bezierCurve.positionDisplayMode;
+        if (showLabel || showPosition) {
+            const label = `${showLabel ? 'C(t) ' : ''}${showPosition ? `${positionDisplayMode === 'absolute' ? `(${posX}, ${posY})` : `(${(posX / this.p5.width).toFixed(2)}, ${(posY / this.p5.height).toFixed(2)})`
+                }` : ''}`;
+            const labelPosX = posX + 10;
+            const labelPosY = posY - 10;
+            this.p5.push();
+            this.p5.text(label, labelPosX, labelPosY);
+            this.p5.pop();
+        }
     }
 }
 
