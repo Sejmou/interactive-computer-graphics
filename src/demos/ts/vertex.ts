@@ -39,7 +39,7 @@ export class Vertex implements Drawable {
         if (this.showLabel || this.showPosition) {
             const label = `${this.label && this.showLabel ? this.label + ' ' : ''}${this.showPosition ?
                     this.positionDisplayMode === 'absolute' ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`
-                        : `(${(this.positionRelativeToCanvas.x).toFixed(2)}, ${(this.positionRelativeToCanvas.y).toFixed(2)})` : 'test'}`;
+                        : `(${(this.positionRelativeToCanvas.x).toFixed(2)}, ${(this.positionRelativeToCanvas.y).toFixed(2)})` : ''}`;
             const labelPosX = this.position.x + 10;
             const labelPosY = this.position.y + 5;
             if (label.includes('_')) {//use subscript

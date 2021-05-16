@@ -24,6 +24,7 @@ export class BarycentricTriangle implements Drawable, Clickable, Touchable, Drag
         this.triangle.vertices.forEach(v => {
             v.stroke = false;
             v.editable = false;
+            v.showPosition = true;
         });
         this.triangle.vertices[0].color = p5.color('#C64821');
         this.triangle.vertices[1].color = p5.color('#E1B000');
@@ -31,6 +32,7 @@ export class BarycentricTriangle implements Drawable, Clickable, Touchable, Drag
 
         this.pointInsideTriangle = new PointOnTriangleSurface(p5, [this.triangle.vertices[0], this.triangle.vertices[1], this.triangle.vertices[2]], 'P');
         this.pointInsideTriangle.stroke = false;
+        this.pointInsideTriangle.showPosition = true;
     }
 
     draw(): void {
@@ -80,6 +82,8 @@ class PointOnTriangleSurface extends DragVertex {
         const [u, v] = [0.3333, 0.3333];
         const w = 1 - u - v;
         this.coefficients = [u, v, w];
+
+        //initialize color
         this.updateColor();
     }
 
