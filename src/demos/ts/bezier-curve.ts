@@ -180,8 +180,12 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
             if (i < this.controlPoints.length - 1) nextColor = this.controlPoints[i + 1].color;
 
             while ((prevColor && colorsTooSimilar(color, prevColor)) || (nextColor && colorsTooSimilar(color, nextColor) || luminanceFromP5Color(color) > 180)) {
-                console.log(`color ${color.toString()} and luminance ${luminanceFromP5Color(color)} was too bright or too similar`);
+                if (prevColor) console.log(`color of previous control point: ${prevColor.toString()}`);
+                if (nextColor) console.log(`color of next control point: ${nextColor.toString()}`);
+                console.log(`current control point's color ${color.toString()} with luminance ${luminanceFromP5Color(color)} was too bright or too similar, finding better fit...`);
+
                 color = this.p5.color(randomColorHexString());
+                console.log(`new color: ${color.toString()} (luminance: ${luminanceFromP5Color(color)})`);
             }
 
             return color;
@@ -301,7 +305,7 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     remove(element: DragVertex): void {
         this._controlPoints = this._controlPoints.filter(v => v !== element);
         const idxOfColorOfElementToRemove = this.controlPointColors.findIndex(c => c.color === element.color);
-        if (idxOfColorOfElementToRemove) this.controlPointColors[idxOfColorOfElementToRemove].taken = false;
+        if (idxOfColorOfElementToRemove !== -1) this.controlPointColors[idxOfColorOfElementToRemove].taken = false;
         this.handleCurveDegreeChange();
     }
 
@@ -363,11 +367,9 @@ class BezierCurve implements Drawable {
 
     private findPointOnCurveWithDeCasteljau(ctrlPtPositions: p5.Vector[], t: number): p5.Vector {
         if (ctrlPtPositions.length === 1) return ctrlPtPositions[0]
-        let ctrlPtsForNextIter: p5.Vector[] = [];
-        ctrlPtPositions.forEach((v, i) => {
-            if (i === ctrlPtPositions.length - 1) return;
+        let ctrlPtsForNextIter = ctrlPtPositions.slice(0, -1).map((v, i) => {
             const lerpCurrAndNextAtT = p5.Vector.lerp(v, ctrlPtPositions[i + 1], t) as unknown as p5.Vector;//again, fail in @types/p5???
-            ctrlPtsForNextIter.push(lerpCurrAndNextAtT);
+            return lerpCurrAndNextAtT;
         });
         return this.findPointOnCurveWithDeCasteljau(ctrlPtsForNextIter, t);
     }
