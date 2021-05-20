@@ -5,6 +5,7 @@ module.exports = {
         index: './src/index/index.ts',
         bezierBasic: './src/demos/bezier/basic/basic.ts',
         bezierBernstein: './src/demos/bezier/bernstein/bernstein.ts',
+        bSpline: './src/demos/b-spline/b-spline.ts',
         bary: './src/demos/bary/bary.ts'
     },
     optimization: {
@@ -35,6 +36,14 @@ module.exports = {
             chunks: ['bezierBernstein'],
             title: 'Bézier Curves and Bernstein Polynomials Demo (Interactive Computer Graphics)',
             heading: 'Bézier Curves and Bernstein Polynomials',
+        }),
+        new HtmlWebpackPlugin({
+            favicon: "favicon.ico",
+            template: 'src/demos/demo.ejs',
+            filename: 'b-spline.html',// don't forget this! otherwise plugin would emit to index.html!
+            chunks: ['bSpline'],
+            title: 'B-Spline Curve Demo (Interactive Computer Graphics)',
+            heading: 'B-Spline Curves',
         }),
         new HtmlWebpackPlugin({
             favicon: "favicon.ico",
