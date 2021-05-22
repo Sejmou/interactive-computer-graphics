@@ -2,9 +2,10 @@ import './bernstein.scss';
 import p5 from "p5";
 import { BezierDemo, BezierDemoChange } from "../../ts/bezier-curve";
 import { Sketch } from '../../ts/sketch';
-import { Drawable, MyObserver } from '../../ts/ui-interfaces';
+import { Clickable, Draggable, Drawable, MyObservable, MyObserver, Touchable } from '../../ts/ui-interfaces';
 import { binomial, drawLineXYCoords, renderTextWithSubscript } from '../../ts/util';
 import colors from '../../../global-styles/color_exports.scss';
+import { DragVertex } from '../../ts/vertex';
 
 
 const demoContainerId = 'demo';
@@ -41,9 +42,9 @@ async function createDemo() {
     const bernsteinVis = bernsteinVisSketch.add((p5) => new BernsteinPolynomialVisualization(p5, bezierDemo));
 
     //this isn't actually added to the canvas or anything, however it needs to be updated every time t of bezier demo changes -> easiest solution: update on every draw() by adding to sketch
-    bernsteinVisSketch.add(() => new BernsteinPolynomials(bezierDemo, bernsteinVis, bernsteinGraphContainerId));
+    bernsteinVisSketch.add(() => new BernsteinCurveFormulas(bernsteinVis, bernsteinGraphContainerId));
 
-    bezierSketch.add((p5) => new ControlPointInfluenceBars(p5, bezierDemo, bernsteinVis));
+    bezierSketch.add((p5) => new ControlPointInfluenceVisualization(p5, bernsteinVis));
 
     document.querySelector('#cover')?.remove();
 }
@@ -52,38 +53,108 @@ createDemo();
 
 
 
-export class BernsteinPolynomialVisualization implements Drawable, MyObserver<BezierDemoChange> {
-    /**
-     * range of numbers from 0 to 1 (inclusive) in steps of size 1/evaluationSteps https://stackoverflow.com/a/10050831
-     */
-    private evaluationSteps: number[];
-    private noOfStepsForT: number;
 
-    private _bernSteinPolynomials: ((t: number) => number)[] = [];
-    public get bernSteinPolynomials(): ((t: number) => number)[] {
-        return this._bernSteinPolynomials;
+
+interface BernsteinPolynomialData {
+    controlPoint: DragVertex,
+    bernsteinPolynomialFunction: (t: number) => number,
+    bernsteinPolynomialFunctionAsLaTeXString: string
+}
+
+type BernsteinPolynomialChange = 'bernsteinPolynomialsChanged';
+
+export class BernsteinPolynomialVisualization implements Drawable, MyObserver<BezierDemoChange>, MyObservable<BernsteinPolynomialChange> {
+    public bernsteinPolynomialDataPoints: BernsteinPolynomialData[] = [];
+
+    private bernsteinGraphPlotter: BernsteinGraphPlotter;
+
+    public get t() {
+        return this.demo.t;
     }
 
-    /**
-     * current values of each bernsteinPolynomial, depending on t, updated each frame in draw()
-     */
-    private _bernsteinPolynomialValues: number[] = [];
-    public get bernsteinPolynomialValues(): number[] {
-        return this._bernsteinPolynomialValues;
+    constructor(p5: p5, private demo: BezierDemo) {
+        this.bernsteinGraphPlotter = new BernsteinGraphPlotter(p5, this);
+
+        this.bernsteinPolynomialDataPoints = this.getUpdatedDataPoints();
+
+        //we want to get notified if the number of control points changes
+        this.demo.subscribe(this);
     }
 
-    private evaluatedBernsteinPolynomials: number[][] = [];
+    draw() {
+        this.bernsteinGraphPlotter.draw();
+    }
+
+    update(change: BezierDemoChange): void {
+        if (change === 'controlPointsChanged') {
+            this.bernsteinPolynomialDataPoints = this.getUpdatedDataPoints();
+            this.notifyObservers('bernsteinPolynomialsChanged');
+        }
+    }
+
+    public getUpdatedDataPoints(): BernsteinPolynomialData[] {
+        if (this.demo.controlPoints.length < 2) {
+            return [];
+        }
+
+        const ctrlPts = this.demo.controlPoints;
+        const n = ctrlPts.length - 1;
+        const updatedDataPoints = ctrlPts.map((pt, i) => {
+            const bernsteinPolynomialFunction = (t: number) => binomial(n, i) * Math.pow(t, i) * Math.pow((1 - t), n - i);
+            const bernsteinPolynomialFunctionAsLaTeXString = String.raw`\( b_{${i},${n}} = \binom{${n}}{${i}} \cdot t^{${i}} \cdot (1-t)^{${n - i}} = \)`;
+
+            return {
+                controlPoint: pt,
+                bernsteinPolynomialFunction,
+                bernsteinPolynomialFunctionAsLaTeXString
+            }
+        });
+
+        return updatedDataPoints;
+    }
+
+    private observers: MyObserver<BernsteinPolynomialChange>[] = [];
+
+    subscribe(observer: MyObserver<BernsteinPolynomialChange>): void {
+        this.observers.push(observer);
+    }
+
+    unsubscribe(observer: MyObserver<BernsteinPolynomialChange>): void {
+        this.observers = this.observers.filter(o => o !== observer);
+    }
+
+    notifyObservers(data: BernsteinPolynomialChange): void {
+        this.observers.forEach(o => o.update(data));
+    }
+}
+
+
+
+
+
+interface BernsteinCurveData {
+    controlPoint: DragVertex;
+    yValues: number[];
+}
+
+class BernsteinGraphPlotter implements Drawable, MyObserver<BernsteinPolynomialChange> {
+    /**
+     * range of numbers from 0 to 1 (inclusive) in steps of size 1/noOfStepsForT https://stackoverflow.com/a/10050831
+     */
+    private tValues: number[];
+    private noOfStepsForT: number = 100;
 
     private lineThroughTColor: p5.Color;
-
     private axisRulerOffsetFromBorder: number;
     private axisRulerAndLabelColor: p5.Color;
     private distFromZeroToOneXAxis: number;
     private distFromZeroToOneYAxis: number;
 
-    constructor(private p5: p5, private demo: BezierDemo) {
-        this.noOfStepsForT = 100;
-        this.evaluationSteps = [...Array(this.noOfStepsForT + 1).keys()].map(num => num / this.noOfStepsForT);
+    private bernsteinCurveDataPoints: BernsteinCurveData[] = [];
+
+    constructor(private p5: p5, private bernsteinVis: BernsteinPolynomialVisualization) {
+        this.tValues = [...Array(this.noOfStepsForT + 1).keys()].map(num => num / this.noOfStepsForT);
+
         this.lineThroughTColor = this.p5.color(colors.errorColor);
 
         this.axisRulerOffsetFromBorder = this.p5.width / 15;
@@ -91,61 +162,53 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
         this.distFromZeroToOneXAxis = this.p5.width - this.axisRulerOffsetFromBorder * 1.5;
         this.distFromZeroToOneYAxis = this.p5.height - this.axisRulerOffsetFromBorder * 1.5;
 
-        //we want to get notified if the number of control points changes
-        this.demo.subscribe(this);
+        this.computeBernsteinCurves();
+        bernsteinVis.subscribe(this);
     }
 
-    update(change: BezierDemoChange): void {
-        if (change === 'controlPointsChanged') this.updateBernsteinPolynomials();
+    update(data: BernsteinPolynomialChange): void {
+        if (data === 'bernsteinPolynomialsChanged') {
+            this.computeBernsteinCurves();
+        }
     }
 
-    private updateBernsteinPolynomials() {
-        const n = this.demo.controlPoints.length - 1;
-        if (n < 1) return this._bernSteinPolynomials = [];
-        const zeroToN = [...Array(n + 1).keys()];
-        this._bernSteinPolynomials = zeroToN.map(i => ((t: number) => binomial(n, i) * Math.pow(t, i) * Math.pow((1 - t), n - i)));
-        console.log();
-
-        this.evaluatedBernsteinPolynomials = this.bernSteinPolynomials.map(b => this.evaluationSteps.map(t => b(t)));
+    computeBernsteinCurves() {
+        this.bernsteinCurveDataPoints = this.bernsteinVis.bernsteinPolynomialDataPoints.map(
+            d => ({
+                controlPoint: d.controlPoint,
+                yValues: this.tValues.map(t => d.bernsteinPolynomialFunction(t))
+            })
+        )
     }
 
     draw(): void {
-        if (this.demo.controlPoints.length > 1) {
-            this.evaluatedBernsteinPolynomials.forEach((polyYVals, bIndex) => {
-                const controlPtForBPoly = this.demo.controlPoints[bIndex];
-                const lineThickness = (controlPtForBPoly.hovering || controlPtForBPoly.dragging) ? 4 : 1.5;
-                const color = controlPtForBPoly.color;
-                polyYVals.forEach((y, i) => {
-                    if (i === this.evaluationSteps.length - 1) return;
-                    const t = this.evaluationSteps[i];
-                    const nextY = polyYVals[i + 1];
-                    const nextT = this.evaluationSteps[i + 1];
-                    const x1 = t * this.distFromZeroToOneXAxis + this.axisRulerOffsetFromBorder;
-                    const y1 = this.p5.height - this.axisRulerOffsetFromBorder - y * this.distFromZeroToOneYAxis;
-                    const x2 = nextT * this.distFromZeroToOneXAxis + this.axisRulerOffsetFromBorder;
-                    const y2 = this.p5.height - this.axisRulerOffsetFromBorder - nextY * this.distFromZeroToOneYAxis;
-                    drawLineXYCoords(this.p5, x1, y1, x2, y2, color, lineThickness);
-                });
-            });
-
+        if (this.bernsteinCurveDataPoints.length > 0) {
+            this.drawBernsteinCurves();
             this.drawAxisRulersAndLabels();
-
-            //draw vertical line at current value of t
-            const currT = this.demo.t;
-            const x = this.axisRulerOffsetFromBorder + currT * this.distFromZeroToOneXAxis;
-            drawLineXYCoords(this.p5, x, 0, x, this.p5.height, this.lineThroughTColor, 2);
-
-
-            //we also want to recompute the current values of each bernsteinPolynomial each frame, depending on t
-            this.recomputeBernsteinPolynomialValues();
+            this.drawLineAtT();
         }
 
-        else {
-            this.p5.push();
-            this.p5.textAlign(this.p5.CENTER);
-            this.p5.text('Add at least two control points to the canvas on the left!\nThe Bernstein polynomials will then show up here.', this.p5.width / 2, this.p5.height / 2);
-            this.p5.pop();
-        }
+        else this.renderInfoText();
+    }
+
+
+    private drawBernsteinCurves() {
+        this.bernsteinCurveDataPoints.forEach(d => {
+            const lineColor = d.controlPoint.color;
+            const lineThickness = (d.controlPoint.hovering || d.controlPoint.dragging) ? 4 : 1.5;
+
+            d.yValues.forEach((y, i, yVals) => {
+                if (i === yVals.length - 1) return;
+                const t = this.tValues[i];
+                const nextY = yVals[i + 1];
+                const nextT = this.tValues[i + 1];
+                const x1 = t * this.distFromZeroToOneXAxis + this.axisRulerOffsetFromBorder;
+                const y1 = this.p5.height - this.axisRulerOffsetFromBorder - y * this.distFromZeroToOneYAxis;
+                const x2 = nextT * this.distFromZeroToOneXAxis + this.axisRulerOffsetFromBorder;
+                const y2 = this.p5.height - this.axisRulerOffsetFromBorder - nextY * this.distFromZeroToOneYAxis;
+                drawLineXYCoords(this.p5, x1, y1, x2, y2, lineColor, lineThickness);
+            });
+        });
     }
 
     private drawAxisRulersAndLabels() {
@@ -190,9 +253,17 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
         this.p5.pop();
     }
 
-    private recomputeBernsteinPolynomialValues() {
-        const t = this.demo.t;
-        this._bernsteinPolynomialValues = this.bernSteinPolynomials.map(b => b(t));
+    private drawLineAtT() {
+        const currT = this.bernsteinVis.t;
+        const x = this.axisRulerOffsetFromBorder + currT * this.distFromZeroToOneXAxis;
+        drawLineXYCoords(this.p5, x, 0, x, this.p5.height, this.lineThroughTColor, 2);
+    }
+
+    private renderInfoText() {
+        this.p5.push();
+        this.p5.textAlign(this.p5.CENTER);
+        this.p5.text('Add at least two control points to the canvas on the left!\nThe Bernstein polynomials will then show up here.', this.p5.width / 2, this.p5.height / 2);
+        this.p5.pop();
     }
 }
 
@@ -200,12 +271,7 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
 
 
 
-
-
-
-
-
-class BernsteinPolynomials implements Drawable {
+class BernsteinCurveFormulas implements Drawable, MyObserver<BernsteinPolynomialChange> {
     private textBoxContainer: HTMLDivElement;
     private containersForBernsteinPolynomialValues: HTMLDivElement[] = [];
     private bezierCurveEquation: HTMLSpanElement;
@@ -213,10 +279,19 @@ class BernsteinPolynomials implements Drawable {
 
     private set visible(visible: boolean) {
         this.textBoxContainer.style.display = visible ? 'block' : 'none';
-        if (!visible) this.bezierCurveEquation.innerText = '';
+        if (visible) {
+            const n = this.bernsteinVis.bernsteinPolynomialDataPoints.length - 1;
+            const controlPoints = this.bernsteinVis.bernsteinPolynomialDataPoints.map(d => d.controlPoint);
+            this.bezierCurveEquation.innerHTML =
+                String.raw`<br>For the current set of control points the formula is: \[ C(t) = `
+                + controlPoints.map((c, i) => String.raw`${i == 0 ? '' : ' + '}b_{${i},${n}} \cdot ${c.label}`).join('')
+                + String.raw` \]`;
+            MathJax.typeset([`#${this.id}`, `#${this.bezierCurveEquation.id}`]);
+        }
+        else this.bezierCurveEquation.innerText = '';
     }
 
-    constructor(private demo: BezierDemo, private bernsteinVis: BernsteinPolynomialVisualization, demoContainerId: string) {
+    constructor(private bernsteinVis: BernsteinPolynomialVisualization, demoContainerId: string) {
         this.textBoxContainer = document.createElement('div');
         this.textBoxContainer.id = this.id;
         this.bezierCurveEquation = document.createElement('span');
@@ -225,40 +300,28 @@ class BernsteinPolynomials implements Drawable {
         descriptionParagraph?.appendChild(this.bezierCurveEquation);
         document.getElementById(demoContainerId)?.appendChild(this.textBoxContainer);
 
-        this.visible = false;
+        this.setupTextContainersForCurrBernsteinPolynomials();
 
-        //we want to get notified if the number of control vertices changes
-        this.demo.subscribe(this);
+        bernsteinVis.subscribe(this);
     }
 
     draw(): void {
-        if (this.demo.controlPoints.length < 2) return;
-        const bernsteinFormulas = this.bernsteinVis.bernSteinPolynomials;
-        this.containersForBernsteinPolynomialValues.forEach((c, i) => c.innerText = bernsteinFormulas[i](this.demo.t).toFixed(2));
+        this.bernsteinVis.bernsteinPolynomialDataPoints.forEach((d, i) =>
+            this.containersForBernsteinPolynomialValues[i].innerText = d.bernsteinPolynomialFunction(this.bernsteinVis.t).toFixed(2)
+        );
     }
 
-    update(change: BezierDemoChange) {
-        if (change === 'controlPointsChanged') {
-            this.createContainersForBernsteinFormulas();
-            const visible = this.textBoxContainer.innerHTML.length > 0;
-            this.visible = visible;
-            if (!visible) return;
-            const controlPoints = this.demo.controlPoints;
-            const n = controlPoints.length - 1;
-            this.bezierCurveEquation.innerHTML = String.raw`<br>For the current set of control points the formula is: \[ C(t) = ${controlPoints.map((v, i) => String.raw`${i == 0 ? '' : ' + '}b_{${i},${n}} \cdot ${v.label}`).join('')} \]`;
-            //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)
-            MathJax.typeset([`#${this.id}`, `#${this.bezierCurveEquation.id}`]);
+
+    public update(data: BernsteinPolynomialChange) {
+        if (data === 'bernsteinPolynomialsChanged') {
+            this.setupTextContainersForCurrBernsteinPolynomials();
         }
     }
 
-    private createContainersForBernsteinFormulas() {
-        const n = this.demo.controlPoints.length - 1;
-        if (n < 1) return '';
+    private setupTextContainersForCurrBernsteinPolynomials() {
+        this.textBoxContainer.innerHTML = '';//removes any previously existing child nodes
 
-        const zeroToN = [...Array(n + 1).keys()];
-        const bernSteinPolynomialLaTeXStrings = zeroToN.map(i => {
-            return String.raw`\( b_{${i},${n}} = \binom{${n}}{${i}} \cdot t^{${i}} \cdot (1-t)^{${n - i}} = \)`;
-        });
+        const zeroToN = [...Array(this.bernsteinVis.bernsteinPolynomialDataPoints.length).keys()];
 
         this.containersForBernsteinPolynomialValues = zeroToN.map(() => {
             const div = document.createElement('div');
@@ -266,14 +329,16 @@ class BernsteinPolynomials implements Drawable {
             return div;
         });
 
-        this.textBoxContainer.innerHTML = '';//removes child nodes
-        zeroToN.forEach((b, i) => {
+
+        this.bernsteinVis.bernsteinPolynomialDataPoints.forEach((d, i) => {
             const div = document.createElement('div');
             div.className = 'flex-row bernstein-polynomial-container center-cross-axis';
-            div.appendChild(document.createTextNode(bernSteinPolynomialLaTeXStrings[i]));
+            div.appendChild(document.createTextNode(d.bernsteinPolynomialFunctionAsLaTeXString));
             div.appendChild(this.containersForBernsteinPolynomialValues[i]);
             this.textBoxContainer.appendChild(div);
         });
+
+        this.visible = this.textBoxContainer.innerHTML.length > 0;
     }
 }
 
@@ -281,50 +346,124 @@ class BernsteinPolynomials implements Drawable {
 
 
 
-
-
-class ControlPointInfluenceBars implements Drawable {
+class ControlPointInfluenceVisualization implements Drawable, MyObserver<BernsteinPolynomialChange> {
     private barBorderColor: p5.Color;
     private barHeight = 60;
     private barWidth = 30;
     private borderThickness = 5;
 
-    constructor(private p5: p5, private bezierDemo: BezierDemo, private bernsteinVis: BernsteinPolynomialVisualization) {
+    private influenceBars: ControlPointInfluenceBar[] = [];
+
+    constructor(private p5: p5, private bernsteinVis: BernsteinPolynomialVisualization) {
+        this.updateInfluenceBars();
         this.barBorderColor = p5.color(120);
+        bernsteinVis.subscribe(this);
     }
+
+    update(data: BernsteinPolynomialChange): void {
+        if (data === 'bernsteinPolynomialsChanged') {
+            this.updateInfluenceBars();
+        }
+    }
+
+    private updateInfluenceBars() {
+        this.influenceBars = this.bernsteinVis.bernsteinPolynomialDataPoints.map(d => new ControlPointInfluenceBar(this.p5, d, this.bernsteinVis));
+    }
+
     draw(): void {
-        const controlPoints = this.bezierDemo.controlPoints;
-        if (controlPoints.length < 2) return;
-        const controlPtsInfluence = this.bernsteinVis.bernsteinPolynomialValues;
-
-        const fillHeights = controlPtsInfluence.map(i => i * (this.barHeight - this.borderThickness));
-
-        this.p5.push();
-        this.p5.noStroke();
-        this.p5.rectMode(this.p5.CENTER);
-        controlPoints.forEach((v, i) => {
-            const fillHeight = fillHeights[i];
-
-            //draw bar showing a control point's influence and position it next to the control point
-            this.p5.fill(this.barBorderColor);
-            this.p5.rect(v.x - this.barWidth * 1.25, v.y + this.barWidth / 2, this.barWidth, this.barHeight);
-            this.p5.fill(v.color);
-            this.p5.rect(v.x - this.barWidth * 1.25, (v.y + this.barWidth / 2) + (this.barHeight - fillHeight) / 2 - this.borderThickness / 2, this.barWidth - this.borderThickness, fillHeight);
-        });
+        this.influenceBars.forEach(b => b.draw());
 
         //draw summary bar
+        this.p5.push();
+        this.p5.noStroke();
         this.p5.rectMode(this.p5.CORNER);
         const summaryBarX = this.p5.width - this.barWidth - 2 * this.borderThickness;
         const summaryBarY = this.p5.height - this.barHeight - 2 * this.borderThickness;
         this.p5.fill(this.barBorderColor);
         this.p5.rect(summaryBarX, summaryBarY, this.barWidth + this.borderThickness, this.barHeight + this.borderThickness);
         let yOffset = 0;
-        controlPoints.forEach((v, i) => {
-            const fillHeight = fillHeights[i];
-            this.p5.fill(v.color);
+        this.bernsteinVis.bernsteinPolynomialDataPoints.forEach((d, i) => {
+            const fillHeight = d.bernsteinPolynomialFunction(this.bernsteinVis.t) * (this.barHeight - this.borderThickness);
+            this.p5.fill(d.controlPoint.color);
             this.p5.rect(summaryBarX + this.borderThickness, summaryBarY + this.borderThickness + yOffset, this.barWidth - this.borderThickness, fillHeight);
             yOffset += fillHeight;
         });
         this.p5.pop();
     }
+}
+
+
+
+
+
+/**
+ * data used for initial configuration of influence bar
+ */
+interface InfluenceBarConfig {
+    height: number;
+    width: number;
+    borderColor: p5.Color;
+    borderThickness: number;
+}
+
+class ControlPointInfluenceBar implements Drawable, Draggable, Touchable, Clickable {
+    public data: BernsteinPolynomialData;
+    private borderColor: p5.Color = this.p5.color(120);
+    private height: number = 60;
+    private width: number = 30;
+    private borderThickness: number = 5;
+
+    private offsetFromCtrlPtPosX: number;
+    private offsetFromCtrlPtPosY: number;
+
+    constructor(private p5: p5, data: BernsteinPolynomialData, private bernsteinVis: BernsteinPolynomialVisualization, config?: InfluenceBarConfig) {
+        this.data = data;
+
+        if (config) {
+            if (config.borderColor) this.borderColor = config.borderColor;
+            if (config.borderThickness) this.borderThickness = config.borderThickness;
+            if (config.height) this.height = config.height;
+            if (config.width) this.width = config.width;
+        }
+
+        this.offsetFromCtrlPtPosX = -this.width * 1.25;
+        this.offsetFromCtrlPtPosY = this.width / 2;
+    }
+
+    draw(): void {
+        const c = this.data.controlPoint;
+        const ctrlPtInfluence = this.data.bernsteinPolynomialFunction(this.bernsteinVis.t);
+        const fillHeight = ctrlPtInfluence * (this.height - this.borderThickness);
+
+        this.p5.push();
+        this.p5.noStroke();
+        this.p5.rectMode(this.p5.CENTER);
+        this.p5.fill(this.borderColor);
+        this.p5.rect(c.x + this.offsetFromCtrlPtPosX, c.y + this.offsetFromCtrlPtPosY, this.width, this.height);
+        this.p5.fill(c.color);
+        this.p5.rect(c.x + this.offsetFromCtrlPtPosX, (c.y + this.offsetFromCtrlPtPosY) + (this.height - fillHeight) / 2 - this.borderThickness / 2, this.width - this.borderThickness, fillHeight);
+        this.p5.pop();
+    }
+
+    get hovering(): boolean {
+        return false;
+    };
+
+    get dragging(): boolean {
+        return false;
+    };
+
+    handleTouchStarted(): void {
+        throw new Error('Method not implemented.');
+    }
+    handleTouchReleased(): void {
+        throw new Error('Method not implemented.');
+    }
+    handleMousePressed(): void {
+        throw new Error('Method not implemented.');
+    }
+    handleMouseReleased(): void {
+        throw new Error('Method not implemented.');
+    }
+
 }
