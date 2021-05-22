@@ -3,7 +3,7 @@ import p5 from "p5";
 import { BezierDemo, BezierDemoChange } from "../../ts/bezier-curve";
 import { Sketch } from '../../ts/sketch';
 import { Clickable, Draggable, Drawable, MyObservable, MyObserver, Touchable } from '../../ts/ui-interfaces';
-import { binomial, drawLineXYCoords, renderTextWithSubscript } from '../../ts/util';
+import { binomial, drawLineXYCoords, lightenDarkenP5Color, p5TouchPoint, renderTextWithSubscript } from '../../ts/util';
 import colors from '../../../global-styles/color_exports.scss';
 import { DragVertex } from '../../ts/vertex';
 
@@ -346,7 +346,7 @@ class BernsteinCurveFormulas implements Drawable, MyObserver<BernsteinPolynomial
 
 
 
-class ControlPointInfluenceVisualization implements Drawable, MyObserver<BernsteinPolynomialChange> {
+class ControlPointInfluenceVisualization implements Drawable, MyObserver<BernsteinPolynomialChange>, Draggable, Touchable, Clickable {
     private barBorderColor: p5.Color;
     private barHeight = 60;
     private barWidth = 30;
@@ -390,6 +390,45 @@ class ControlPointInfluenceVisualization implements Drawable, MyObserver<Bernste
         });
         this.p5.pop();
     }
+
+    get hovering(): boolean {
+        return this.influenceBars.some(b => b.hovering);
+    };
+
+    get dragging(): boolean {
+        console.log(this.influenceBars.some(b => b.dragging))
+        return this.influenceBars.some(b => b.dragging);
+    };
+
+    handleTouchStarted(): void {
+        const bars = this.influenceBars.slice();
+        for (let i = 0; i < bars.length; i++) {
+            const b = bars[i];
+            b.handleTouchStarted();//after this call v.dragging might be true!
+
+            //dragging several things at once is not desired behavior, break out of the loop
+            if (b.dragging) break;
+        }
+    }
+
+    handleTouchReleased(): void {
+        this.influenceBars.forEach(b => b.handleTouchReleased())
+    }
+
+    handleMousePressed(): void {
+        const bars = this.influenceBars.slice();
+        for (let i = 0; i < bars.length; i++) {
+            const b = bars[i];
+            b.handleMousePressed();//after this call v.dragging might be true!
+
+            //dragging several things at once is not desired behavior, break out of the loop
+            if (b.dragging) break;
+        }
+    }
+
+    handleMouseReleased(): void {
+        this.influenceBars.forEach(b => b.handleMouseReleased());
+    }
 }
 
 
@@ -412,9 +451,23 @@ class ControlPointInfluenceBar implements Drawable, Draggable, Touchable, Clicka
     private height: number = 60;
     private width: number = 30;
     private borderThickness: number = 5;
+    private fillBackgroundColor: p5.Color;
 
     private offsetFromCtrlPtPosX: number;
     private offsetFromCtrlPtPosY: number;
+
+    private get x(): number {
+        return this.data.controlPoint.x + this.offsetFromCtrlPtPosX
+    }
+
+    private get y(): number {
+        return this.data.controlPoint.y + this.offsetFromCtrlPtPosY
+    }
+
+    /**
+     * defined if user is dragging bar on touch screen
+     */
+    private touchPointID?: number;
 
     constructor(private p5: p5, data: BernsteinPolynomialData, private bernsteinVis: BernsteinPolynomialVisualization, config?: InfluenceBarConfig) {
         this.data = data;
@@ -426,44 +479,108 @@ class ControlPointInfluenceBar implements Drawable, Draggable, Touchable, Clicka
             if (config.width) this.width = config.width;
         }
 
+        this.fillBackgroundColor = p5.color(lightenDarkenP5Color(this.p5, this.borderColor, 20));
+
         this.offsetFromCtrlPtPosX = -this.width * 1.25;
         this.offsetFromCtrlPtPosY = this.width / 2;
     }
 
     draw(): void {
+        if (this.dragging) {
+            this.updatePos();
+            drawLineXYCoords(this.p5, this.x, this.y, this.data.controlPoint.x, this.data.controlPoint.y, this.data.controlPoint.color, 1);
+        }
+
         const c = this.data.controlPoint;
         const ctrlPtInfluence = this.data.bernsteinPolynomialFunction(this.bernsteinVis.t);
-        const fillHeight = ctrlPtInfluence * (this.height - this.borderThickness);
+        const maxFillHeight = this.height - this.borderThickness;
+        const fillHeight = ctrlPtInfluence * maxFillHeight;
 
         this.p5.push();
         this.p5.noStroke();
         this.p5.rectMode(this.p5.CENTER);
         this.p5.fill(this.borderColor);
-        this.p5.rect(c.x + this.offsetFromCtrlPtPosX, c.y + this.offsetFromCtrlPtPosY, this.width, this.height);
+        this.p5.rect(this.x, this.y, this.width, this.height);
+        this.p5.fill(this.fillBackgroundColor);
+        this.p5.rect(this.x, this.y + (this.height - maxFillHeight) / 2 - this.borderThickness / 2, this.width - this.borderThickness, maxFillHeight);
         this.p5.fill(c.color);
-        this.p5.rect(c.x + this.offsetFromCtrlPtPosX, (c.y + this.offsetFromCtrlPtPosY) + (this.height - fillHeight) / 2 - this.borderThickness / 2, this.width - this.borderThickness, fillHeight);
+        this.p5.rect(this.x, this.y + (this.height - fillHeight) / 2 - this.borderThickness / 2, this.width - this.borderThickness, fillHeight);
         this.p5.pop();
     }
 
     get hovering(): boolean {
-        return false;
+        return this.dragging || this.checkPtInsideRect(this.p5.mouseX, this.p5.mouseY);
     };
 
+    private _dragging = false;
     get dragging(): boolean {
-        return false;
+        return this._dragging;
     };
+
+    private updatePos() {
+        const ctrlPt = this.data.controlPoint;
+        if (this.touchPointID) {
+            const touchPoint = (this.p5.touches as p5TouchPoint[]).find(t => t.id === this.touchPointID);
+            if (touchPoint) {
+                this.offsetFromCtrlPtPosX = touchPoint.x - this.dragPtOffsetX - ctrlPt.x;
+                this.offsetFromCtrlPtPosY = touchPoint.y - this.dragPtOffsetY - ctrlPt.y;
+            }
+            else console.warn(`touchPoint with ID ${this.touchPointID} not found!`);
+        }
+        else {
+            this.offsetFromCtrlPtPosX = this.p5.mouseX - this.dragPtOffsetX - ctrlPt.x;
+            this.offsetFromCtrlPtPosY = this.p5.mouseY - this.dragPtOffsetY - ctrlPt.y;
+        }
+    }
 
     handleTouchStarted(): void {
-        throw new Error('Method not implemented.');
+        const touches = this.p5.touches as p5TouchPoint[]; // return type of p5.touches is certainly not just object[] - is this a mistake in @types/p5, again?
+        if (touches.length === 0) {
+            console.warn('touches was unexpectedly empty');
+            return;
+        }
+        const ptInsideRect = touches.find(pt => this.checkPtInsideRect(pt.x, pt.y));
+        if (ptInsideRect) {
+            this.dragPtOffsetX = ptInsideRect.x - this.x;
+            this.dragPtOffsetY = ptInsideRect.y - this.y;
+            this._dragging = true;
+        }
     }
+
     handleTouchReleased(): void {
-        throw new Error('Method not implemented.');
+        this._dragging = false;
     }
+
     handleMousePressed(): void {
-        throw new Error('Method not implemented.');
+        const x = this.p5.mouseX;
+        const y = this.p5.mouseY;
+
+        const cursorInsideRect = this.checkPtInsideRect(x, y);
+        if (cursorInsideRect) {
+            this.dragPtOffsetX = x - this.x;
+            this.dragPtOffsetY = y - this.y;
+            this._dragging = true;
+        }
     }
+
     handleMouseReleased(): void {
-        throw new Error('Method not implemented.');
+        this._dragging = false;
     }
+
+    private checkPtInsideRect(x: number, y: number): boolean {
+        const rectLeft = this.x - this.width / 2
+        const rectRight = this.x + this.width / 2;
+        const rectTop = this.y - this.height / 2;
+        const rectBottom = this.y + this.height / 2;
+
+        const inside = x >= rectLeft
+            && x <= rectRight
+            && y >= rectTop
+            && y <= rectBottom;
+        return inside;
+    }
+
+    private dragPtOffsetX = 0;
+    private dragPtOffsetY = 0;
 
 }

@@ -42,7 +42,8 @@ export class Sketch {
     
                     canvas.mousePressed(() => {
                         this.clickables.forEach(c => c.handleMousePressed());
-                        this.updateCursor(p5Instance);
+                        //the following line somehow fixed the issue that grabbing cursor was not applied correctly, some weird timing issues behind the scenes lol
+                        setTimeout(() => this.updateCursor(p5Instance), 0);
                         return false; // prevent any browser defaults
                     });
     
