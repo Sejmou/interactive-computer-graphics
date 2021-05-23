@@ -1,6 +1,7 @@
 import p5 from 'p5';
+import { MyObserver } from '../ui-interfaces';
 import { drawCircle, drawLineVector } from '../util';
-import { Curve, CurveDemo, CurveDrawingVisualization } from './base-curve';
+import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 
 
@@ -42,9 +43,24 @@ class BezierCurve extends Curve {
 
 
 
-class DeCasteljauVisualization extends CurveDrawingVisualization {
+class DeCasteljauVisualization extends CurveDrawingVisualization implements MyObserver<DemoChange> {
+    private visible: boolean = false;
+
+    constructor(p5: p5, demo: BezierDemo, color?: p5.Color, colorOfPointOnCurve?: p5.Color) {
+        super(p5, demo, color, colorOfPointOnCurve);
+        demo.subscribe(this);
+    }
+
+    update(data: DemoChange): void {
+        if (data === 'controlPointsChanged') this.updateVisibility();
+    }
+
+    private updateVisibility() {
+        this.visible = this.demo.controlPoints.length >= 3;
+    }
+
     public draw() {
-        this.recursiveDraw(this.demo.controlPoints.map(v => v.position));
+        if (this.visible) this.recursiveDraw(this.demo.controlPoints.map(v => v.position));
     }
 
     private recursiveDraw(ctrlPtPositions: p5.Vector[]) {
