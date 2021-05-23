@@ -244,12 +244,16 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this.handleCurveDegreeChange();
     }
 
-    handleCurveDegreeChange() {
+    private handleCurveDegreeChange() {
         const numOfVertices = this.controlPoints.length;
         this._controlPoints.forEach((v, i) => v.label = `P_{${i}}`);
         this.controlsForT.visible = numOfVertices > 1;
+        this.additionalCurveDegreeChangeHandling();
         this.notifyObservers('controlPointsChanged');
     }
+
+    //overriden by subclasses, if necessary
+    protected additionalCurveDegreeChangeHandling() {}
 
 
     //Control point color picking

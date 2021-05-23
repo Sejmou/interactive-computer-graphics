@@ -7,7 +7,11 @@ import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-
 
 export class BezierDemo extends CurveDemo {
     constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
-        super(p5, 0, 1, parentContainerId, baseAnimationSpeedMultiplier);
+        const tMin = 0;
+        const tMax = 1;
+        super(p5, tMin, tMax, parentContainerId, baseAnimationSpeedMultiplier);
+        //after super() call this.tMin and this.tMax are defined and accessible from this subclass too
+        //unfortunately, this.tMin and this.tMax can't be set directly before super() call
     }
 
     protected addCurve(): Curve {
