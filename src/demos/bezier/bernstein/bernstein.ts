@@ -1,11 +1,12 @@
 import './bernstein.scss';
 import p5 from "p5";
-import { BezierDemo, BezierDemoChange } from "../../ts/bezier-curve";
+import { BezierDemo } from "../../ts/curves/bezier-curve";
 import { Sketch } from '../../ts/sketch';
 import { Clickable, Draggable, Drawable, MyObservable, MyObserver, Touchable } from '../../ts/ui-interfaces';
 import { binomial, drawLineXYCoords, lightenDarkenP5Color, p5TouchPoint, renderTextWithSubscript } from '../../ts/util';
 import colors from '../../../global-styles/color_exports.scss';
 import { DragVertex } from '../../ts/vertex';
+import { DemoChange } from '../../ts/curves/base-curve';
 
 
 const demoContainerId = 'demo';
@@ -63,7 +64,7 @@ interface BernsteinPolynomialData {
 
 type BernsteinPolynomialChange = 'bernsteinPolynomialsChanged';
 
-export class BernsteinPolynomialVisualization implements Drawable, MyObserver<BezierDemoChange>, MyObservable<BernsteinPolynomialChange> {
+export class BernsteinPolynomialVisualization implements Drawable, MyObserver<DemoChange>, MyObservable<BernsteinPolynomialChange> {
     public bernsteinPolynomialDataPoints: BernsteinPolynomialData[] = [];
 
     private bernsteinGraphPlotter: BernsteinGraphPlotter;
@@ -85,7 +86,7 @@ export class BernsteinPolynomialVisualization implements Drawable, MyObserver<Be
         this.bernsteinGraphPlotter.draw();
     }
 
-    update(change: BezierDemoChange): void {
+    update(change: DemoChange): void {
         if (change === 'controlPointsChanged') {
             this.bernsteinPolynomialDataPoints = this.getUpdatedDataPoints();
             this.notifyObservers('bernsteinPolynomialsChanged');
@@ -396,7 +397,6 @@ class ControlPointInfluenceVisualization implements Drawable, MyObserver<Bernste
     };
 
     get dragging(): boolean {
-        console.log(this.influenceBars.some(b => b.dragging))
         return this.influenceBars.some(b => b.dragging);
     };
 

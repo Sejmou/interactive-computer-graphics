@@ -1,22 +1,45 @@
-import p5 from 'p5';
-import { Touchable, Draggable, Drawable, Container, Clickable, MyObservable, MyObserver, PositionDisplayMode } from './ui-interfaces';
-import { DragVertex } from './vertex';
-import { colorsTooSimilar, drawCircle, drawLineVector, extractColorChannelsFromRGBAString, indexToLowercaseLetter, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from './util';
-import colors from '../../global-styles/color_exports.scss';
+import colors from "../../../global-styles/color_exports.scss";
+import p5 from "p5";
+import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "../ui-interfaces";
+import { colorsTooSimilar, lightenDarkenColor, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from "../util";
+import { DragVertex } from "../vertex";
 
-export type BezierDemoChange = 'controlPointsChanged';
-
-//TODO: add curveDegreeTextContainer back
-// this.curveDegreeTextContainer.html(`Number of control vertices: ${numOfVertices}`);
+export type DemoChange = 'controlPointsChanged';
 
 interface ControlPointColor {
     color: p5.Color,
     taken: boolean
 }
 
-export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<BezierDemoChange> {
-    private _basePointDiameter: number;
+export abstract class CurveDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<DemoChange> {
+    private curve: Curve;
+    private curveDrawingVisualization: CurveDrawingVisualization;
 
+    public readonly tMin: number;
+    public readonly tMax: number;
+    public set t(newVal: number) {
+        this._t = newVal;
+        if (this._t > this.tMax) this._t = this.tMax;
+        if (this.t < this.tMin) this._t = this.tMin;
+        this.controlsForT.updateSlider();
+    };
+    public get t(): number {
+        return this._t;
+    }
+    private _t: number = 0;
+    private controlsForT: ControlsForParameterT;
+
+    private _controlPoints: DragVertex[] = [];
+    /**
+     * The control points of the curve.
+     * Others should only be able to read data from the control points, but not change them directly.
+     * Also, mutations of the array should not be allowed.
+     */
+    public get controlPoints(): readonly DragVertex[] {
+        return this._controlPoints;
+    }
+
+    private _basePointDiameter: number;
     public get basePointDiameter(): number {
         return this._basePointDiameter;
     }
@@ -26,24 +49,9 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         return this._baseLineWidth;
     }
 
-    private _controlPoints: DragVertex[] = [];
-
-    //others should only be able to read data from vertices, but not change them directly
-    //also, mutations of the array should not be allowed
-    public get controlPoints(): readonly DragVertex[] {
-        return this._controlPoints;
-    }
-
-    /**
-     * defines whether the labels of the control points and point on the bezier curve should be displayed
-     */
-    /**
-     * defines whether the labels of the control points and point on the bezier curve should be displayed
-     */
-
     private _showPointLabels: boolean = false;
     /**
-     * defines whether the labels of the control points and point on the bezier curve should be displayed
+     * defines whether the labels of the control points should be displayed
      */
     public get showPointLabels(): boolean {
         return this._showPointLabels;
@@ -54,6 +62,9 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     }
 
     private _showPointPositions: boolean = false;
+    /**
+     * defines whether the positions of the control points should be displayed
+     */
     public get showPointPositions(): boolean {
         return this._showPointPositions;
     }
@@ -61,6 +72,8 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         this._showPointPositions = value;
         this._controlPoints.forEach(v => v.showPosition = value);
     }
+
+    showCurveDrawingVisualization: boolean = true;
 
     private _positionDisplayMode: PositionDisplayMode = "absolute";
     public get positionDisplayMode(): PositionDisplayMode {
@@ -71,27 +84,11 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         this._controlPoints.forEach(v => v.positionDisplayMode = value);
     }
 
-    private controlPointColors: ControlPointColor[];
 
+    protected constructor(protected p5: p5, tMin: number, tMax: number, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
+        this.tMin = tMin;
+        this.tMax = tMax;
 
-    private bezierCurve: BezierCurve;
-    private deCasteljauVis: DeCasteljauVisualization;
-    private controlsForT: ControlsForParameterT;
-
-    public set t(newVal: number) {
-        this._t = newVal;
-        if (this._t > 1) this._t = 0;
-        if (this.t < 0) this._t = 1;
-        this.controlsForT.updateSlider();
-    };
-
-    public get t(): number {
-        return this._t;
-    }
-
-    private _t: number = 0;
-
-    constructor(private p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         this._basePointDiameter = p5.width * 0.015;
         this._baseLineWidth = p5.width * 0.0025;
         this.controlPointColors = this.initControlPointColors();
@@ -99,26 +96,13 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         this.showPointPositions = false;
         this.positionDisplayMode = 'relative to canvas';
 
-        this.bezierCurve = new BezierCurve(p5, this);
-        this.deCasteljauVis = new DeCasteljauVisualization(p5, this);
         this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId, baseAnimationSpeedMultiplier);
+        this.curve = this.addCurve();
+        this.curveDrawingVisualization = this.addCurveDrawingVisualization();
     }
 
-    private initControlPointColors(): ControlPointColor[] {
-        const colorArr = [
-            this.p5.color(colors.primaryColor),
-            this.p5.color(lightenDarkenColor(colors.successColor, 15)),
-            this.p5.color('#6727e2'),
-            this.p5.color('#ff6600'),
-            this.p5.color('#c85d84'),
-            this.p5.color('#11e8db'),
-            this.p5.color('#62421c'),
-            this.p5.color('#4e7165'),
-            this.p5.color('#1c087b')
-        ];
-
-        return colorArr.map(color => ({ color, taken: false }));
-    }
+    protected abstract addCurve(): Curve;
+    protected abstract addCurveDrawingVisualization(): CurveDrawingVisualization;
 
     handleMousePressed(): void {
         if (this.controlPoints.length === 0) {
@@ -141,54 +125,6 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
             //this causes buggy behavior (we can't separate vertices anymore if they are stacked on top of each other)
             //therefore we break out of this loop as soon as one control point is being dragged
             if (v.dragging) break;
-        }
-    }
-
-    private getColorForCtrlPtAtIndex(i: number): p5.Color {
-        //colors should assigned from this.controlPointColors as long as a color is still not taken yet, in the order defined in this.controlPointColors
-        //the order defined in this.controlPointColors should be preserved, so:
-        //  for example: if we already have two control points A and B a new point C gets added between them, it should NOT get the next available color
-        //  from this.controlPointColors, but a random one which is neither too bright nor too similar to A or B
-        //  if another control point is added after C, it should also get a new random color with the same conditions stated above
-
-        const idxOfNextAvailableCol = this.controlPointColors.findIndex(c => !c.taken);
-        const predefinedColAvailable = idxOfNextAvailableCol !== -1;
-        const nextPtColor = this.controlPoints[i + 1]?.color;
-
-        //sorry, this is a bit ugly... :/
-        if (
-            predefinedColAvailable &&
-            (
-                !nextPtColor ||
-                !this.controlPointColors.map(c => c.color).includes(nextPtColor) //if there is a following control point, its color must not be one of the predefined ones
-            )
-        ) {
-            const selectedColor = this.controlPointColors[idxOfNextAvailableCol];
-            selectedColor.taken = true;
-
-            return selectedColor.color;
-        }
-        else {
-            let color = this.p5.color(randomColorHexString());
-
-            //check that whatever color we got, it is not too similar to its neighbours and also not too bright
-            //this could probably be written cleaner, sry lol
-            let prevColor: p5.Color | null = null;
-            let nextColor: p5.Color | null = null;
-
-            if (i > 0) prevColor = this.controlPoints[i - 1].color;
-            if (i < this.controlPoints.length - 1) nextColor = this.controlPoints[i + 1].color;
-
-            while ((prevColor && colorsTooSimilar(color, prevColor)) || (nextColor && colorsTooSimilar(color, nextColor) || luminanceFromP5Color(color) > 180)) {
-                if (prevColor) console.log(`color of previous control point: ${prevColor.toString()}`);
-                if (nextColor) console.log(`color of next control point: ${nextColor.toString()}`);
-                console.log(`current control point's color ${color.toString()} with luminance ${luminanceFromP5Color(color)} was too bright or too similar, finding better fit...`);
-
-                color = this.p5.color(randomColorHexString());
-                console.log(`new color: ${color.toString()} (luminance: ${luminanceFromP5Color(color)})`);
-            }
-
-            return color;
         }
     }
 
@@ -241,9 +177,8 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
         if (this.controlPoints.length > 0) {
             this.controlsForT.updateT();
 
-            //we don't really need the bezier line or De Casteljau visualization if we have a single point
-            if (this.controlPoints.length > 1) this.bezierCurve.draw();
-            if (this.controlPoints.length > 1) this.deCasteljauVis.draw();
+            if (this.controlPoints.length >= 2) this.curve.draw();
+            if (this.showCurveDrawingVisualization) this.curveDrawingVisualization.draw();
 
             this.drawControlPoints();
         } else {
@@ -312,126 +247,98 @@ export class BezierDemo implements Drawable, Touchable, Draggable, Clickable, Co
     handleCurveDegreeChange() {
         const numOfVertices = this.controlPoints.length;
         this._controlPoints.forEach((v, i) => v.label = `P_{${i}}`);
-        this.deCasteljauVis.onlyDrawPointOnBezier = numOfVertices < 3;
         this.controlsForT.visible = numOfVertices > 1;
         this.notifyObservers('controlPointsChanged');
     }
 
-    private observers: MyObserver<BezierDemoChange>[] = [];
 
-    subscribe(observer: MyObserver<BezierDemoChange>): void {
+    //Control point color picking
+    private controlPointColors: ControlPointColor[];
+    private initControlPointColors(): ControlPointColor[] {
+        const colorArr = [
+            this.p5.color(colors.primaryColor),
+            this.p5.color(lightenDarkenColor(colors.successColor, 15)),
+            this.p5.color('#6727e2'),
+            this.p5.color('#ff6600'),
+            this.p5.color('#c85d84'),
+            this.p5.color('#11e8db'),
+            this.p5.color('#62421c'),
+            this.p5.color('#4e7165'),
+            this.p5.color('#1c087b')
+        ];
+
+        return colorArr.map(color => ({ color, taken: false }));
+    }
+
+    private getColorForCtrlPtAtIndex(i: number): p5.Color {
+        //colors should assigned from this.controlPointColors as long as a color is still not taken yet, in the order defined in this.controlPointColors
+        //the order defined in this.controlPointColors should be preserved, so:
+        //  for example: if we already have two control points A and B a new point C gets added between them, it should NOT get the next available color
+        //  from this.controlPointColors, but a random one which is neither too bright nor too similar to A or B
+        //  if another control point is added after C, it should also get a new random color with the same conditions stated above
+
+        const idxOfNextAvailableCol = this.controlPointColors.findIndex(c => !c.taken);
+        const predefinedColAvailable = idxOfNextAvailableCol !== -1;
+        const nextPtColor = this.controlPoints[i + 1]?.color;
+
+        //sorry, this is a bit ugly... :/
+        if (
+            predefinedColAvailable &&
+            (
+                !nextPtColor ||
+                !this.controlPointColors.map(c => c.color).includes(nextPtColor) //if there is a following control point, its color must not be one of the predefined ones
+            )
+        ) {
+            const selectedColor = this.controlPointColors[idxOfNextAvailableCol];
+            selectedColor.taken = true;
+
+            return selectedColor.color;
+        }
+        else {
+            let color = this.p5.color(randomColorHexString());
+
+            //check that whatever color we got, it is not too similar to its neighbours and also not too bright
+            //this could probably be written cleaner, sry lol
+            let prevColor: p5.Color | null = null;
+            let nextColor: p5.Color | null = null;
+
+            if (i > 0) prevColor = this.controlPoints[i - 1].color;
+            if (i < this.controlPoints.length - 1) nextColor = this.controlPoints[i + 1].color;
+
+            while ((prevColor && colorsTooSimilar(color, prevColor)) || (nextColor && colorsTooSimilar(color, nextColor) || luminanceFromP5Color(color) > 180)) {
+                if (prevColor) console.log(`color of previous control point: ${prevColor.toString()}`);
+                if (nextColor) console.log(`color of next control point: ${nextColor.toString()}`);
+                console.log(`current control point's color ${color.toString()} with luminance ${luminanceFromP5Color(color)} was too bright or too similar, finding better fit...`);
+
+                color = this.p5.color(randomColorHexString());
+                console.log(`new color: ${color.toString()} (luminance: ${luminanceFromP5Color(color)})`);
+            }
+
+            return color;
+        }
+    }
+
+
+    private observers: MyObserver<DemoChange>[] = [];
+
+    subscribe(observer: MyObserver<DemoChange>): void {
         this.observers.push(observer);
     }
 
-    unsubscribe(observer: MyObserver<BezierDemoChange>): void {
+    unsubscribe(observer: MyObserver<DemoChange>): void {
         this.observers = this.observers.filter(o => o !== observer);
     }
 
-    notifyObservers(change: BezierDemoChange): void {
+    notifyObservers(change: DemoChange): void {
         this.observers.forEach(o => o.update(change));
     }
 }
 
 
 
-class BezierCurve implements Drawable {
-    //TODO: maybe make this settable from outside so that users can see how changes in evaluationSteps change smoothness of bezier curve?
-    /**
-     * Signifies on how many steps of t between 0 and 1 (inclusive) the bezier curve will be evaluated
-     * The less steps the less smooth the curve becomes
-     */
-    private evaluationSteps: number;
 
 
-    /**
-     * range of numbers from 0 to 1 (inclusive) in steps of size 1/evaluationSteps https://stackoverflow.com/a/10050831
-     */
-    private zeroToOne: number[];
-
-    private color: p5.Color;
-
-    constructor(private p5: p5, private demo: BezierDemo) {
-        this.evaluationSteps = 100;
-        this.zeroToOne = [...Array(this.evaluationSteps + 1).keys()].map(num => num / this.evaluationSteps);
-        this.color = p5.color(30);
-    }
-
-    public draw() {
-        if (this.demo.controlPoints.length === 0 || this.demo.controlPoints.length === 1) return;
-        const points = this.zeroToOne.map(t => this.findPointOnCurveWithDeCasteljau(this.demo.controlPoints.map(v => v.position), t));
-        points.forEach((p, i) => {
-            if (i === points.length - 1) return;
-            drawLineVector(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2);
-        });
-    }
-
-    private findPointOnCurveWithDeCasteljau(ctrlPtPositions: p5.Vector[], t: number): p5.Vector {
-        if (ctrlPtPositions.length === 1) return ctrlPtPositions[0]
-        let ctrlPtsForNextIter = ctrlPtPositions.slice(0, -1).map((v, i) => {
-            const lerpCurrAndNextAtT = p5.Vector.lerp(v, ctrlPtPositions[i + 1], t) as unknown as p5.Vector;//again, fail in @types/p5???
-            return lerpCurrAndNextAtT;
-        });
-        return this.findPointOnCurveWithDeCasteljau(ctrlPtsForNextIter, t);
-    }
-}
-
-
-
-class DeCasteljauVisualization implements Drawable {
-    //config for lines between control points and current point between them (dependent on current value of t) rendered onto them for visualization
-    private color: p5.Color;
-    private colorOfPointOnBezier: p5.Color;
-    public onlyDrawPointOnBezier = false;
-
-    constructor(private p5: p5, private bezierCurve: BezierDemo) {
-        this.color = p5.color('#E1B000');
-        this.colorOfPointOnBezier = p5.color(colors.errorColor);
-    }
-
-    public draw() {
-        this.recursiveDraw(this.bezierCurve.controlPoints.map(v => v.position));
-    }
-
-    private recursiveDraw(ctrlPtPositions: p5.Vector[]) {
-        if (ctrlPtPositions.length <= 1) {
-            //this shouldn't normally be reached
-            return;
-        }
-
-        const interpolatedPositionsOfAdjacentCtrlPts = ctrlPtPositions.slice(0, -1).map((v, i) => p5.Vector.lerp(v, ctrlPtPositions[i + 1], this.bezierCurve.t) as unknown as p5.Vector);//again, fail in @types/p5???
-
-        interpolatedPositionsOfAdjacentCtrlPts.forEach((pos, i) => {
-            if (!this.onlyDrawPointOnBezier) drawLineVector(this.p5, ctrlPtPositions[i], ctrlPtPositions[i + 1], this.color, this.bezierCurve.baseLineWidth);
-            if (interpolatedPositionsOfAdjacentCtrlPts.length === 1) this.drawPointOnBezierCurve(interpolatedPositionsOfAdjacentCtrlPts[0]);
-            else drawCircle(this.p5, pos, this.color, this.bezierCurve.basePointDiameter);
-        });
-
-        this.recursiveDraw(interpolatedPositionsOfAdjacentCtrlPts);
-    }
-
-    private drawPointOnBezierCurve(pos: p5.Vector) {
-        const posX = pos.x;
-        const posY = pos.y;
-
-        drawCircle(this.p5, pos, this.colorOfPointOnBezier, this.bezierCurve.basePointDiameter * 1.5);
-        const showLabel = this.bezierCurve.showPointLabels;
-        const showPosition = this.bezierCurve.showPointPositions;
-        const positionDisplayMode = this.bezierCurve.positionDisplayMode;
-        if (showLabel || showPosition) {
-            const label = `${showLabel ? 'C(t) ' : ''}${showPosition ? `${positionDisplayMode === 'absolute' ? `(${posX}, ${posY})` : `(${(posX / this.p5.width).toFixed(2)}, ${(posY / this.p5.height).toFixed(2)})`
-                }` : ''}`;
-            const labelPosX = posX + 10;
-            const labelPosY = posY - 10;
-            this.p5.push();
-            this.p5.text(label, labelPosX, labelPosY);
-            this.p5.pop();
-        }
-    }
-}
-
-
-
-class ControlsForParameterT {
+class ControlsForParameterT implements MyObserver<DemoChange> {
     private baseAnimationSpeedPerFrame = 0.005;
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
     private currAnimationSpeedMultiplierIndex = ControlsForParameterT.animationSpeedMultipliers.findIndex(_ => _ === 1);
@@ -459,7 +366,7 @@ class ControlsForParameterT {
     private _animationRunning: boolean = false;
 
 
-    constructor(p5: p5, private demo: BezierDemo, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
+    constructor(p5: p5, private demo: CurveDemo, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         this.controlsContainer = p5.createDiv();
 
         if (parentContainerId) this.controlsContainer.parent(parentContainerId);
@@ -482,7 +389,8 @@ class ControlsForParameterT {
         this.playPauseButton.parent(this.controlsContainer);
         this.playPauseButton.mouseClicked(() => this.animationRunning = !this.animationRunning);
 
-        this.visible = false;
+        demo.subscribe(this);
+        this.updateVisibility();
 
 
         this.fasterButton = p5.createButton('<span class="material-icons">fast_forward</span>');
@@ -490,6 +398,13 @@ class ControlsForParameterT {
         this.fasterButton.mouseClicked(() => this.fastForwardClicked());
 
         if (baseAnimationSpeedMultiplier) this.baseAnimationSpeedPerFrame *= baseAnimationSpeedMultiplier;
+    }
+
+    update(data: DemoChange): void {
+        if (data === 'controlPointsChanged') this.updateVisibility();
+    }
+    private updateVisibility() {
+        this.visible = this.demo.controlPoints.length >= 2;
     }
 
     public updateT() {
@@ -511,4 +426,49 @@ class ControlsForParameterT {
         this.animationRunning = true;
         if (this.currAnimationSpeedMultiplierIndex > 0) this.currAnimationSpeedMultiplierIndex--;
     }
+}
+
+
+
+
+
+export abstract class Curve implements Drawable {
+    /**
+     * Signifies on how many steps of t the bezier curve will be evaluated.
+     * The less steps the less smooth the curve becomes.
+     */
+    private noOfEvaluationSteps: number;
+
+
+    /**
+     * ascending range of numbers in the interval for t in steps of size 1/noOfEvaluationSteps. https://stackoverflow.com/a/10050831
+     */
+    protected evaluationSteps: number[];
+
+    protected color: p5.Color;
+
+    constructor(protected p5: p5, protected demo: CurveDemo, evaluationSteps?: number, color?: p5.Color) {
+        this.noOfEvaluationSteps = evaluationSteps ?? 100;
+        this.evaluationSteps = [...Array(this.noOfEvaluationSteps + 1).keys()].slice(0, -1).map(i => (i / this.noOfEvaluationSteps) * (demo.tMax - demo.tMin));
+        this.color = color ?? p5.color(30);
+    }
+
+    public abstract draw(): void;
+}
+
+
+
+
+
+export abstract class CurveDrawingVisualization implements Drawable {
+    protected color: p5.Color;
+    protected colorOfPointOnCurve: p5.Color;
+    public onlyDrawPointOnCurve: boolean = false;
+
+    constructor(protected p5: p5, protected demo: CurveDemo, color?: p5.Color, colorOfPointOnCurve?: p5.Color) {
+        this.color = color ?? p5.color('#E1B000');
+        this.colorOfPointOnCurve = colorOfPointOnCurve ?? p5.color(colors.errorColor);
+    }
+
+    public abstract draw(): void;
 }

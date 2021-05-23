@@ -1,7 +1,8 @@
 import './basic.scss';
-import { BezierDemo, BezierDemoChange } from "../../ts/bezier-curve";
+import { BezierDemo } from "../../ts/curves/bezier-curve";
 import { Sketch } from '../../ts/sketch';
 import { MyObserver } from '../../ts/ui-interfaces';
+import { DemoChange } from '../../ts/curves/base-curve';
 
 
 
@@ -25,7 +26,7 @@ createDemo();
 
 
 
-class BezierDemoGuide implements MyObserver<BezierDemoChange> {
+class BezierDemoGuide implements MyObserver<DemoChange> {
     private textBoxContainer: HTMLDivElement;
     private id: string = 'demo-guide';
 
@@ -44,7 +45,7 @@ class BezierDemoGuide implements MyObserver<BezierDemoChange> {
         this.demo.subscribe(this);
     }
 
-    update(change: BezierDemoChange) {
+    update(change: DemoChange) {
         if (change === 'controlPointsChanged') {
             const numOfControlPoints = this.demo.controlPoints.length;
             this.visible = numOfControlPoints > 0;
