@@ -6,6 +6,7 @@ import colors from '../../global-styles/color_exports.scss';
 import p5 from 'p5';
 import { createArrayOfEquidistantAscendingNumbersInRange, drawLineXYCoords, renderTextWithSubscript } from '../ts/util';
 import { Drawable, MyObserver } from '../ts/ui-interfaces';
+import { DragVertex } from '../ts/vertex';
 
 const demoContainerId = 'demo';
 
@@ -38,7 +39,7 @@ createDemo();
 
 interface CurveData {
     yValues: number[],
-    color?: p5.Color
+    controlPoint: DragVertex
 }
 
 class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
@@ -85,7 +86,7 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
 
         this.dataPoints = ctrlPts.map((pt, i) => ({
             yValues: this.xValues.map(x => basisFunctions[i][k](x)),
-            color: pt.color
+            controlPoint: pt
         }));
         this.dataPoints.forEach((d, i) => {
             console.log(`N_{${i},${k}}`);
@@ -107,8 +108,8 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
 
     private drawBSplineCurves() {
         this.dataPoints.forEach(d => {
-            const lineColor = d.color;
-            const lineThickness = 1.5;
+            const lineColor = d.controlPoint.color;
+            const lineThickness = (d.controlPoint.hovering || d.controlPoint.dragging) ? 4 : 1.5;
 
             d.yValues.forEach((y, i, yVals) => {
                 if (i === yVals.length - 1) return;
