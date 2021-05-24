@@ -455,6 +455,7 @@ export abstract class Curve implements Drawable {
 
     /**
      * ascending range of numbers in the interval for t in steps of size 1/noOfEvaluationSteps. https://stackoverflow.com/a/10050831
+     * Might be modified during runtime of for certain types of curves
      */
     protected evaluationSteps: number[];
 
@@ -462,8 +463,12 @@ export abstract class Curve implements Drawable {
 
     constructor(protected p5: p5, protected demo: CurveDemo, evaluationSteps?: number, color?: p5.Color) {
         this.noOfEvaluationSteps = evaluationSteps ?? 100;
-        this.evaluationSteps = [...Array(this.noOfEvaluationSteps + 1).keys()].slice(0, -1).map(i => (i / this.noOfEvaluationSteps) * (demo.tMax - demo.tMin));
+        this.evaluationSteps = this.calculateEvaluationSteps();
         this.color = color ?? p5.color(30);
+    }
+
+    protected calculateEvaluationSteps(): number[] {
+        return [...Array(this.noOfEvaluationSteps + 1).keys()].slice(0, -1).map(i => (i / this.noOfEvaluationSteps) * (this.demo.tMax - this.demo.tMin))
     }
 
     public abstract draw(): void;
