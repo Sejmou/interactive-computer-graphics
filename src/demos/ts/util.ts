@@ -256,6 +256,17 @@ export function renderTextWithSubscript(p5: p5, text: string, x: number, y: numb
     p5.pop();
 }
 
+/**
+ * 
+ * @param noOfValues the desired length of the array
+ * @param begin first desired value in array (inclusive)
+ * @param end last desired value in array (inclusive)
+ * @returns 
+ */
+export function createArrayOfEquidistantAscendingNumbersInRange(noOfValues: number, begin: number, end: number): number[] {
+    return [...Array(noOfValues).keys()].map(i => (i / (noOfValues - 1)) * (end - begin));
+}
+
 export function colorsTooSimilar(colorA: p5.Color, colorB: p5.Color) {
     let colAAsRGBAObj = extractColorChannelsFromRGBAString(colorA.toString());
     let colBAsRGBAObj = extractColorChannelsFromRGBAString(colorB.toString());

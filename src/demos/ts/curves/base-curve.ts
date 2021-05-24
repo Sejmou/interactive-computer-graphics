@@ -1,7 +1,7 @@
 import colors from "../../../global-styles/color_exports.scss";
 import p5 from "p5";
 import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "../ui-interfaces";
-import { colorsTooSimilar, lightenDarkenColor, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from "../util";
+import { colorsTooSimilar, createArrayOfEquidistantAscendingNumbersInRange, lightenDarkenColor, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from "../util";
 import { DragVertex } from "../vertex";
 
 export type DemoChange = 'controlPointsChanged';
@@ -475,7 +475,7 @@ export abstract class Curve implements Drawable {
     }
 
     protected calculateEvaluationSteps(): number[] {
-        return [...Array(this.noOfEvaluationSteps + 1).keys()].slice(0, -1).map(i => (i / this.noOfEvaluationSteps) * (this.demo.tMax - this.demo.tMin))
+        return createArrayOfEquidistantAscendingNumbersInRange(this.noOfEvaluationSteps, this.demo.tMin, this.demo.tMax);
     }
 
     public abstract draw(): void;

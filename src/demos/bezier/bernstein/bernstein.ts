@@ -154,7 +154,7 @@ class BernsteinGraphPlotter implements Drawable, MyObserver<BernsteinPolynomialC
     private bernsteinCurveDataPoints: BernsteinCurveData[] = [];
 
     constructor(private p5: p5, private bernsteinVis: BernsteinPolynomialVisualization) {
-        this.tValues = [...Array(this.noOfStepsForT + 1).keys()].map(num => num / this.noOfStepsForT);
+        this.tValues = [...Array(this.noOfStepsForT).keys()].map(num => num / (this.noOfStepsForT - 1));
 
         this.lineThroughTColor = this.p5.color(colors.errorColor);
 

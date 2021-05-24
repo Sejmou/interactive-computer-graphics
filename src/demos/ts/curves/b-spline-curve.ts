@@ -1,6 +1,6 @@
 import p5, { Vector } from 'p5';
 import { MyObserver } from '../ui-interfaces';
-import { drawLineVector } from '../util';
+import { createArrayOfEquidistantAscendingNumbersInRange, drawLineVector } from '../util';
 import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 
@@ -72,7 +72,7 @@ export class BSplineDemo extends CurveDemo {
 
         //knots in knot vector equidistant, in other words: m + 1 values in range [0, m], distributed uniformly (same step size between them)
         //that's why this is called a *uniform* B-spline, btw
-        this._knotVector = [...Array(m + 1).keys()].map(i => (i / m) * (this.tMax - this.tMin));
+        this._knotVector = createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
     }
 
     private updateBasisFunctions() {
