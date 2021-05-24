@@ -43,17 +43,17 @@ export class BSplineDemo extends CurveDemo {
         this._order = 3;
         this._knotVector = [];
         this._basisFunctions = [];
-        this.updateKnotVector();
+        this.updateTMinTMaxAndKnotVector();
         this.updateBasisFunctions();
     }
 
     //called every time the curve degree changes
     protected additionalCurveDegreeChangeHandling() {
-        this.updateKnotVector();
+        this.updateTMinTMaxAndKnotVector();
         this.updateBasisFunctions();
     }
 
-    updateKnotVector() {
+    updateTMinTMaxAndKnotVector() {
         // m := (# of knots in knotVector T) - 1
         // n := (# of control points) - 1
         // k := order of curve (degree = k - 1)
@@ -69,6 +69,7 @@ export class BSplineDemo extends CurveDemo {
         const m = k + n;
         this._tMax = m;
         this._tMin = 0;
+        this.notifyObservers('rangeOfTChanged');
 
         //knots in knot vector equidistant, in other words: m + 1 values in range [0, m], distributed uniformly (same step size between them)
         //that's why this is called a *uniform* B-spline, btw

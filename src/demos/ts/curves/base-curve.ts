@@ -4,7 +4,7 @@ import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, Po
 import { colorsTooSimilar, createArrayOfEquidistantAscendingNumbersInRange, lightenDarkenColor, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from "../util";
 import { DragVertex } from "../vertex";
 
-export type DemoChange = 'controlPointsChanged';
+export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged';
 
 interface ControlPointColor {
     color: p5.Color,
@@ -24,12 +24,12 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         return this._tMax;
     }
     protected _tMax: number;
-    
+
 
     public set t(newVal: number) {
         this._t = newVal;
-        if (this._t > this.tMax) this._t = this.tMax;
-        if (this.t < this.tMin) this._t = this.tMin;
+        if (this._t > this.tMax) this._t = this.tMin;
+        if (this.t < this.tMin) this._t = this.tMax;
         this.controlsForT.updateSlider();
     };
     public get t(): number {
@@ -262,7 +262,7 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     }
 
     //overriden by subclasses, if necessary
-    protected additionalCurveDegreeChangeHandling() {}
+    protected additionalCurveDegreeChangeHandling() { }
 
 
     //Control point color picking
@@ -353,6 +353,11 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
 
 class ControlsForParameterT implements MyObserver<DemoChange> {
     private baseAnimationSpeedPerFrame = 0.005;
+
+    /**
+     * needed so that animation keeps same speed, even if interval for t becomes larger or smaller
+     */
+    private speedCompensationForSizeOfTInterval: number;
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
     private currAnimationSpeedMultiplierIndex = ControlsForParameterT.animationSpeedMultipliers.findIndex(_ => _ === 1);
 
@@ -379,7 +384,9 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
     private _animationRunning: boolean = false;
 
 
-    constructor(p5: p5, private demo: CurveDemo, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
+    constructor(private p5: p5, private demo: CurveDemo, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
+        this.speedCompensationForSizeOfTInterval = this.demo.tMax - this.demo.tMin;
+
         this.controlsContainer = p5.createDiv();
 
         if (parentContainerId) this.controlsContainer.parent(parentContainerId);
@@ -389,10 +396,7 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
         this.sliderLabel = p5.createSpan(`t: ${this.demo.t.toFixed(2)}`);
         this.sliderLabel.parent(this.controlsContainer);
 
-        this.slider = p5.createSlider(0, 1, 0, 0.00125);
-        this.slider.parent(this.controlsContainer);
-        this.slider.style('flex-grow', '2');
-        this.slider.mousePressed(() => this.animationRunning = false);
+        this.slider = this.createSlider();
 
         this.slowerButton = p5.createButton('<span class="material-icons">fast_rewind</span>');
         this.slowerButton.parent(this.controlsContainer);
@@ -413,15 +417,39 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
         if (baseAnimationSpeedMultiplier) this.baseAnimationSpeedPerFrame *= baseAnimationSpeedMultiplier;
     }
 
+    private createSlider(): p5.Element {
+        const slider = this.p5.createSlider(this.demo.tMin, this.demo.tMax, this.demo.t, 0);
+        slider.style('flex-grow', '2');
+        slider.mousePressed(() => this.animationRunning = false);
+        slider.parent(this.controlsContainer);
+        return slider;
+    }
+
     update(data: DemoChange): void {
         if (data === 'controlPointsChanged') this.updateVisibility();
+        if (data === 'rangeOfTChanged') {
+            this.speedCompensationForSizeOfTInterval = this.demo.tMax - this.demo.tMin;
+            this.updateSliderRange();
+        }
     }
     private updateVisibility() {
         this.visible = this.demo.controlPoints.length >= 2;
     }
 
+    private updateSliderRange() {
+        this.slider.remove();
+        this.slider = this.createSlider();
+
+        //this is necessary to preserve the order of elements in the controlsContainer
+        this.slowerButton.parent(this.controlsContainer);
+        this.playPauseButton.parent(this.controlsContainer);
+        this.fasterButton.parent(this.controlsContainer);
+    }
+
     public updateT() {
-        if (this.animationRunning) this.demo.t += (this.baseAnimationSpeedPerFrame * ControlsForParameterT.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
+        if (this.animationRunning) {
+            this.demo.t += (this.baseAnimationSpeedPerFrame * this.speedCompensationForSizeOfTInterval * ControlsForParameterT.animationSpeedMultipliers[this.currAnimationSpeedMultiplierIndex]);
+        }
         else this.demo.t = +this.slider.value();
     }
 

@@ -60,7 +60,7 @@ class DeCasteljauVisualization extends CurveDrawingVisualization implements MyOb
     }
 
     private updateVisibility() {
-        this.visible = this.demo.controlPoints.length >= 3;
+        this.visible = this.demo.controlPoints.length >= 2;
     }
 
     public draw() {
@@ -76,7 +76,7 @@ class DeCasteljauVisualization extends CurveDrawingVisualization implements MyOb
         const interpolatedPositionsOfAdjacentCtrlPts = ctrlPtPositions.slice(0, -1).map((v, i) => p5.Vector.lerp(v, ctrlPtPositions[i + 1], this.demo.t) as unknown as p5.Vector);//again, fail in @types/p5???
 
         interpolatedPositionsOfAdjacentCtrlPts.forEach((pos, i) => {
-            if (!this.onlyDrawPointOnCurve) drawLineVector(this.p5, ctrlPtPositions[i], ctrlPtPositions[i + 1], this.color, this.demo.baseLineWidth);
+            if (!this.onlyDrawPointOnCurve && this.demo.controlPoints.length >= 3) drawLineVector(this.p5, ctrlPtPositions[i], ctrlPtPositions[i + 1], this.color, this.demo.baseLineWidth);
             if (interpolatedPositionsOfAdjacentCtrlPts.length === 1) this.drawPointOnBezierCurve(interpolatedPositionsOfAdjacentCtrlPts[0]);
             else drawCircle(this.p5, pos, this.color, this.demo.basePointDiameter);
         });
