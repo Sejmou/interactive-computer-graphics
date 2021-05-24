@@ -383,7 +383,7 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
         this.controlsContainer = p5.createDiv();
 
         if (parentContainerId) this.controlsContainer.parent(parentContainerId);
-        this.controlsContainer.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
+        this.controlsContainer.class('controls-for-t flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
 
 
         this.sliderLabel = p5.createSpan(`t: ${this.demo.t.toFixed(2)}`);

@@ -1,19 +1,5 @@
 @import '../../demo.scss';
 
-#demo {
-    .flex-row {
-        margin-bottom: 5px;
-
-        span {
-            white-space: nowrap;
-        }
-
-        input[type="range"] {
-            margin: 0 10px;
-        }
-    }
-}
-
 #demo-guide {
     max-width: 450px;
 }

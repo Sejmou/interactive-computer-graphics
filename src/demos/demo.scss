@@ -1,5 +1,19 @@
 @import '../global-styles/styles.scss';
 
+#demo {
+    .controls-for-t {
+        margin-bottom: 5px;
+
+        span {
+            white-space: nowrap;
+        }
+
+        input[type="range"] {
+            margin: 0 10px;
+        }
+    }
+}
+
 #demo-description {
     text-align: center;
 }
