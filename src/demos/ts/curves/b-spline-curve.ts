@@ -134,6 +134,7 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
     //if anyone reads my comments and knows a better solution: let me know about it (there probably is a better way to do what I want lol)
     constructor(p5: p5, private bSplineDemo: BSplineDemo) {
         super(p5, bSplineDemo);
+        this.noOfEvaluationSteps = 200;
         this.bSplineDemo.subscribe(this);
     }
 

@@ -450,19 +450,26 @@ export abstract class Curve implements Drawable {
      * Signifies on how many steps of t the bezier curve will be evaluated.
      * The less steps the less smooth the curve becomes.
      */
-    private noOfEvaluationSteps: number;
+    public get noOfEvaluationSteps(): number {
+        return this._noOfEvaluationSteps;
+    };
+    public set noOfEvaluationSteps(newVal: number) {
+        this._noOfEvaluationSteps = newVal;
+        this.calculateEvaluationSteps();
+    }
+    private _noOfEvaluationSteps: number;
 
 
     /**
      * ascending range of numbers in the interval for t in steps of size 1/noOfEvaluationSteps. https://stackoverflow.com/a/10050831
-     * Might be modified during runtime of for certain types of curves
+     * Might be modified during runtime for certain types of curves
      */
     protected evaluationSteps: number[];
 
     protected color: p5.Color;
 
     constructor(protected p5: p5, protected demo: CurveDemo, evaluationSteps?: number, color?: p5.Color) {
-        this.noOfEvaluationSteps = evaluationSteps ?? 100;
+        this._noOfEvaluationSteps = evaluationSteps ?? 100;
         this.evaluationSteps = this.calculateEvaluationSteps();
         this.color = color ?? p5.color(30);
     }
