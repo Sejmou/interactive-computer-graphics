@@ -15,8 +15,17 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     private curve: Curve;
     private curveDrawingVisualization: CurveDrawingVisualization;
 
-    public readonly tMin: number;
-    public readonly tMax: number;
+    get tMin(): number {
+        return this._tMin;
+    };
+    protected _tMin: number;
+
+    get tMax(): number {
+        return this._tMax;
+    }
+    protected _tMax: number;
+    
+
     public set t(newVal: number) {
         this._t = newVal;
         if (this._t > this.tMax) this._t = this.tMax;
@@ -86,8 +95,8 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
 
 
     protected constructor(protected p5: p5, tMin: number, tMax: number, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
-        this.tMin = tMin;
-        this.tMax = tMax;
+        this._tMin = tMin;
+        this._tMax = tMax;
 
         this._basePointDiameter = p5.width * 0.015;
         this._baseLineWidth = p5.width * 0.0025;
