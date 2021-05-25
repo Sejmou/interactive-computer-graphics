@@ -7,15 +7,30 @@ import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-
 
 export class BSplineDemo extends CurveDemo {
     /**
-     * The *order* of a B-Spline curve is also known as k in math literature. By convention this means (degree of Bèzier curve segments which the BSpline is built upon) + 1.
-     * So, the degree of the BSplineCurve is actually k - 1.
-     * E.g. if k is 3, quadratic Bèzier curves are used for "building" the B-Spline curve. The term "order" refers to the number of control points needed to build a segment?
-     * Why is this sh*t so f*cking confusing, really... https://math.stackexchange.com/a/3323304
+     * The *degree* of a B-Spline curve is "the degree of its piecewise polynomial function in a variable x". In other words, it is the degree of the subsequent segments that the curve is built with.
+     * E. g. if the degree is 2, the curve is built with "segments of quadratic Bézier curves". 
+     * 
+     * Side note: The *order* of a B-Spline curve is also known as k in math literature. It can be interpreted as the minimum number of control points needed to draw the curve.
+     * This is always the curve's degree + 1. For example, if we have a quadratic B-spline curve, we need at least 3 vertices to draw a single segment, therefore the order k is 3.
+     * degree = k - 1
      */
-    public get order() {
-        return this._order;
+    public get degree() {
+        return this._degree;
     }
-    private _order: number;
+    private _degree: number;
+
+    /**
+     * a B-spline curve cannot have a degree of n (number of controlPoints), as always n + 1 control points are needed for a curve segment of degree n
+     * For example, a quadratic Bèzier curve also needs 3 controlPoints!
+     */
+    private get maxDegree() {
+        return this.controlPoints.length - 1;
+    }
+    private minDegree;
+    public degreeValid() {
+        return this.degree >= this.minDegree && this.degree <= this.maxDegree;
+    }
+
 
     private _knotVector: number[];
     public get knotVector() {
@@ -40,7 +55,12 @@ export class BSplineDemo extends CurveDemo {
         //unfortunately, this.tMin and this.tMax can't be set directly before super() call
         //they have to be set in constructor, setting them in subclass constructor is too late...
 
-        this._order = 3;
+        //degree < 0 doesn't make sense
+        //degree 0 would mean we simply switch from one control point to the other, depending on value of t
+        //degree 1 would mean linear interpolation between adjacent control points
+        //degree 2 would create segments of quadratic b-splines?
+        this.minDegree = 0;
+        this._degree = 3;
         this._knotVector = [];
         this._basisFunctions = [];
         this.updateTMinTMaxAndKnotVector();
@@ -60,13 +80,13 @@ export class BSplineDemo extends CurveDemo {
         // m = k + n
         // e. g. for a cubic B-spline w/ 5 control points m = 3 + 4 = 7 (which means that there are 8 entries in the knot vector)
 
-        const k = this.order;
+        const k = this.degree;
         const n = this.controlPoints.length - 1;
         if (n <= 0) {
             this._knotVector = [];
             return;
         }
-        const m = k + n;
+        const m = n + k;
         this._tMax = m;
         this._tMin = 0;
         this.notifyObservers('rangeOfTChanged');
@@ -84,36 +104,37 @@ export class BSplineDemo extends CurveDemo {
         //base case: N_{i,0}(x) = 1 if t_0 <= t < t_1, else 0
 
         const n = this.controlPoints.length - 1;
-        const k = this.order;
+        const k = this.degree;
         const t = this.knotVector;
-        const m = k + n + 1;
+        const m = n + k;
 
         if (n <= 0) {
             this._basisFunctions = [];
             return;
         }
 
-        let basisFunctions: { (x: number): number }[][] = [];//also known as N_{i,k}
+        let basisFunctions: { (x: number): number }[][] = [[]];//also known as N_{i,k}
 
-        for (let i = 0; i <= n; i++) basisFunctions[i] = [
-            (x: number) => {
-                if (t[i] <= x && x < t[i + 1]) return 1;
-                else return 0;
-            }
-        ];
+        //e. g. if there are 4 knots, there are 3 N_{i,0} functions
+        for (let j = 0; j < m; j++) {
+            basisFunctions[0][j] =
+                (x: number) => {
+                    if (t[j] <= x && x < t[j + 1]) return 1;
+                    else return 0;
+                };
+        }
 
-        for (let i = 0; i <= n; i++) {
-            for (let j = 1; j <= k; j++) {
-                basisFunctions[i][j] = (x: number) => {
-                    const a = (x - t[i]) / (t[i + j] - t[i]) * basisFunctions[i][j - 1](x);
-                    if (i != n) {
-                        const b = (t[i + j + 1] - x) / (t[i + j + 1] - t[i + 1]) * basisFunctions[i + 1][j - 1](x);
+        for (let j = 1; j <= k; j++) {
+            basisFunctions[j] = [];
+            for (let i = 0; i < m; i++) {
+                basisFunctions[j][i] = (x: number) => {
+                    const a = (x - t[i]) / (t[i + j] - t[i]) * basisFunctions[j - 1][i](x);
+                    if (i !== m - 1) {
+                        const b = (t[i + j + 1] - x) / (t[i + j + 1] - t[i + 1]) * basisFunctions[j - 1][i + 1](x);
                         return a + b;
                     }
-                    //if i == n, basisFunctions[i + 1] is not defined, so we interpret b as simply being equal to 0
-                    return a;
+                    else return a;
                 }
-
             }
         }
 
@@ -146,9 +167,9 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
     }
 
     private evaluateBasisFunctions(t: number): p5.Vector {
-        const k = this.bSplineDemo.order - 1;
+        const k = this.bSplineDemo.degree;
         const basisFunctions = this.bSplineDemo.basisFunctions;
-        return this.bSplineDemo.controlPoints.map(pt => pt.position).reduce((prev, curr, i) => Vector.add(prev, Vector.mult(curr, basisFunctions[i][k](t))), this.p5.createVector(0, 0));
+        return this.bSplineDemo.controlPoints.map(pt => pt.position).reduce((prev, curr, i) => Vector.add(prev, Vector.mult(curr, basisFunctions[k - 1][i](t))), this.p5.createVector(0, 0));
     }
 
     update(data: DemoChange): void {
@@ -167,7 +188,7 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
 
     public draw(): void {
         const points = this.bSplineDemo.controlPoints;
-        points.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt.position, points[i +1].position, this.color, this.bSplineDemo.baseLineWidth));
+        points.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt.position, points[i + 1].position, this.color, this.bSplineDemo.baseLineWidth));
     }
 
     update(data: DemoChange): void {

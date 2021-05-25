@@ -83,16 +83,16 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
             return;
         }
         const basisFunctions = this.bSplineDemo.basisFunctions;
-        const k = this.bSplineDemo.order - 1;
+        const degree = this.bSplineDemo.degree;
 
         this.xValues = createArrayOfEquidistantAscendingNumbersInRange(this.noOfStepsXAxis, this.bSplineDemo.tMin, this.bSplineDemo.tMax);
 
         this.dataPoints = ctrlPts.map((pt, i) => ({
-            yValues: this.xValues.map(x => basisFunctions[i][k](x)),
+            yValues: this.xValues.map(x => basisFunctions[degree][i](x)),
             controlPoint: pt
         }));
         this.dataPoints.forEach((d, i) => {
-            console.log(`N_{${i},${k}}`);
+            console.log(`N_{${i},${degree}}`);
             console.log(d.yValues.map((y, i) => ({x: this.xValues[i], y: y})));
             console.log('');
         });
