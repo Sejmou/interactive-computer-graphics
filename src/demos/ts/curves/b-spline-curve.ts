@@ -146,7 +146,7 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
     }
 
     private evaluateBasisFunctions(t: number): p5.Vector {
-        const k = this.bSplineDemo.order;
+        const k = this.bSplineDemo.order - 1;
         const basisFunctions = this.bSplineDemo.basisFunctions;
         return this.bSplineDemo.controlPoints.map(pt => pt.position).reduce((prev, curr, i) => Vector.add(prev, Vector.mult(curr, basisFunctions[i][k](t))), this.p5.createVector(0, 0));
     }

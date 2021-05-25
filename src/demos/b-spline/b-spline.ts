@@ -45,22 +45,25 @@ interface CurveData {
 class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
     private noOfStepsXAxis: number = 200;
     private xValues: number[] = [];
+    private distMinToMaxXAxis: number;
+    private distMinToMaxYAxis: number;
 
     private lineThroughTColor: p5.Color;
     private axisRulerOffsetFromBorder: number;
     private axisRulerAndLabelColor: p5.Color;
-    private distMinToMaxXAxis: number;
-    private distMinToMaxYAxis: number;
+    private rulerMarkerSize: number;
 
     private dataPoints: CurveData[] = [];
 
     constructor(private p5: p5, private bSplineDemo: BSplineDemo) {
-        this.lineThroughTColor = this.p5.color(colors.errorColor);
-
         this.axisRulerOffsetFromBorder = this.p5.width / 15;
-        this.axisRulerAndLabelColor = p5.color(30);
+        this.rulerMarkerSize = this.axisRulerOffsetFromBorder * 0.075;
+
         this.distMinToMaxXAxis = this.p5.width - this.axisRulerOffsetFromBorder * 1.5;
         this.distMinToMaxYAxis = this.p5.height - this.axisRulerOffsetFromBorder * 1.5;
+
+        this.lineThroughTColor = this.p5.color(colors.errorColor);
+        this.axisRulerAndLabelColor = p5.color(30);
 
         this.computeBSplineCurves();
         bSplineDemo.subscribe(this);
@@ -80,7 +83,7 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
             return;
         }
         const basisFunctions = this.bSplineDemo.basisFunctions;
-        const k = this.bSplineDemo.order;
+        const k = this.bSplineDemo.order - 1;
 
         this.xValues = createArrayOfEquidistantAscendingNumbersInRange(this.noOfStepsXAxis, this.bSplineDemo.tMin, this.bSplineDemo.tMax);
 
@@ -90,9 +93,17 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
         }));
         this.dataPoints.forEach((d, i) => {
             console.log(`N_{${i},${k}}`);
-            d.yValues.forEach((y, i) => console.log(`x: ${this.xValues[i]}, y: ${y}`));
+            console.log(d.yValues.map((y, i) => ({x: this.xValues[i], y: y})));
             console.log('');
         });
+        const sumOfN_ik_overRangeOfX: number[] = this.xValues.map(x => 0);
+        const yValues = this.dataPoints.map(d => d.yValues);
+        for (let i = 0; i < this.xValues.length; i++) {
+            for (let j = 0; j < yValues.length; j++) {
+                sumOfN_ik_overRangeOfX[i] += yValues[j][i];
+            }
+        }
+        console.log(sumOfN_ik_overRangeOfX.map((y, i) => ({x: this.xValues[i], y: y})));
     }
 
     draw(): void {
@@ -133,21 +144,32 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
         drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder, this.p5.height - this.axisRulerOffsetFromBorder,
             this.axisRulerOffsetFromBorder, 0, this.axisRulerAndLabelColor, 1);
 
+        this.drawRulerMarkersAndLabelsXAxis();
+        this.drawRulerMarkersAndLabelsYAxis();
+    }
 
-        //ruler markers
-        const steps = 10;
-        const rulerMarkerSize = this.axisRulerOffsetFromBorder * 0.075;
-
-        const rulerMarkerIncrementX = this.distMinToMaxXAxis / steps;
-        for (let i = 1; i <= steps; i++) {
-            drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder + i * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder,
-                this.axisRulerOffsetFromBorder + i * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder + (i === steps / 2 || i === steps ? rulerMarkerSize * 2 : rulerMarkerSize),
+    private drawRulerMarkersAndLabelsXAxis() {
+        const knotVector = this.bSplineDemo.knotVector;
+        const knotVectorPositionsXAxis = knotVector.map(t_i => (t_i / (this.bSplineDemo.tMax - this.bSplineDemo.tMin)) * this.distMinToMaxXAxis);
+        for (let i = 0; i < knotVectorPositionsXAxis.length; i++) {
+            drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder + knotVectorPositionsXAxis[i], this.p5.height - this.axisRulerOffsetFromBorder,
+                this.axisRulerOffsetFromBorder + knotVectorPositionsXAxis[i], this.p5.height - this.axisRulerOffsetFromBorder + this.rulerMarkerSize,
                 this.axisRulerAndLabelColor, 1);
-        }
 
+            //label
+            this.p5.push();
+            this.p5.textAlign(this.p5.CENTER);
+            renderTextWithSubscript(this.p5, `t_{${i}}`, this.axisRulerOffsetFromBorder + knotVectorPositionsXAxis[i], this.p5.height - this.axisRulerOffsetFromBorder / 3);
+            this.p5.text(knotVector[i], this.axisRulerOffsetFromBorder + knotVectorPositionsXAxis[i], this.p5.height - this.axisRulerOffsetFromBorder / 1.5);
+            this.p5.pop();
+        }
+    }
+
+    private drawRulerMarkersAndLabelsYAxis() {
+        const steps = 10;
         const rulerMarkerIncrementY = this.distMinToMaxYAxis / steps;
         for (let i = 1; i <= steps; i++) {
-            drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder - (i === steps / 2 || i === steps ? rulerMarkerSize * 2 : rulerMarkerSize), this.p5.height - this.axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
+            drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder - (i === steps / 2 || i === steps ? this.rulerMarkerSize * 2 : this.rulerMarkerSize), this.p5.height - this.axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
                 this.axisRulerOffsetFromBorder, this.p5.height - this.axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
                 this.axisRulerAndLabelColor, 1);
         }
@@ -157,16 +179,11 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
         this.p5.push();
         this.p5.textAlign(this.p5.CENTER);
 
-        //x-axis
-        this.p5.text('t', this.axisRulerOffsetFromBorder + steps / 2 * rulerMarkerIncrementX, this.p5.height);
-        //this.p5.text('0.5', this.axisRulerOffsetFromBorder + steps / 2 * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder / 2);
-        this.p5.text(this.bSplineDemo.tMax, this.axisRulerOffsetFromBorder + steps * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder / 2);
-
-        //y-axis
         this.p5.text('0.5', this.axisRulerOffsetFromBorder / 2, this.p5.height - this.axisRulerOffsetFromBorder - steps / 2 * rulerMarkerIncrementY);
         this.p5.text('1', this.axisRulerOffsetFromBorder / 2, this.p5.height - this.axisRulerOffsetFromBorder - steps * rulerMarkerIncrementY);
         this.p5.textAlign(this.p5.LEFT, this.p5.CENTER);
         renderTextWithSubscript(this.p5, 'c_{i,n}', this.axisRulerOffsetFromBorder / 10, this.axisRulerOffsetFromBorder * 1.5 + this.distMinToMaxYAxis / 2);
+
         this.p5.pop();
     }
 
