@@ -242,17 +242,34 @@ export function randomColorHexString() {
 export function renderTextWithSubscript(p5: p5, text: string, x: number, y: number) {
     p5.push();
     p5.textAlign(p5.LEFT, p5.CENTER);
-    const textBeforeSubscript = text.substring(0, text.indexOf('_{'));
-    const textAfterSubscript = text.substr(text.indexOf('_{') + 2);
-    const xOffsetForSubscript = p5.textWidth(textBeforeSubscript);
-    p5.text(textBeforeSubscript, x, y);
-    
-    const textInSubscript = textAfterSubscript.substring(0, textAfterSubscript.indexOf('}'));
-    p5.text(textInSubscript, x + xOffsetForSubscript, y + p5.textDescent());
-    
-    const textAfterClosingParentheses = textAfterSubscript.substr(textInSubscript.length + 1);
-    const xOffsetForTextAfterClosingParentheses = xOffsetForSubscript + p5.textWidth(textInSubscript);
-    p5.text(textAfterClosingParentheses, x + xOffsetForTextAfterClosingParentheses, y);
+
+    let xOffset = 0;
+    let currCharIndex = 0;
+    let openingBracesIndex = text.indexOf('_{');
+    while (openingBracesIndex !== -1 && currCharIndex < text.length) {
+        const textBeforeSubscript = text.substring(currCharIndex, currCharIndex + openingBracesIndex);
+        p5.text(textBeforeSubscript, x + xOffset, y);
+        
+        currCharIndex += (openingBracesIndex + '_{'.length);
+        xOffset += p5.textWidth(textBeforeSubscript);
+
+        const closingBracesIndex = text.substring(currCharIndex).indexOf('}');
+        if (closingBracesIndex === -1) {
+            console.warn('invalid text with subscript:', text);
+            return;
+        }
+
+        const textInSubscript = text.substring(currCharIndex, currCharIndex + closingBracesIndex);
+        currCharIndex += closingBracesIndex + 1;
+
+        p5.text(textInSubscript, x + xOffset, y + p5.textDescent());
+        xOffset += p5.textWidth(textInSubscript);
+
+        openingBracesIndex = text.substring(currCharIndex).indexOf('_{');
+    }
+
+    p5.text(text.substring(currCharIndex), x + xOffset, y);
+
     p5.pop();
 }
 

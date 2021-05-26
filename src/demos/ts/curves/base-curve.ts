@@ -201,23 +201,38 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     };
 
     draw(): void {
-        if (this.controlPoints.length > 0) {
-            this.controlsForT.updateT();
-
-            if (this.controlPoints.length >= 2) this.curve?.draw();
-            if (this.showCurveDrawingVisualization) this.curveDrawingVisualization?.draw();
-
-            this.drawControlPoints();
-        } else {
-            this.p5.push();
-            this.p5.textAlign(this.p5.CENTER);
-            this.p5.text('Click or touch anywhere on the canvas to add a point', this.p5.width / 2, this.p5.height / 2);
-            this.p5.pop();
+        this.controlsForT.updateT();
+        if (this.controlPoints.length === 0) {
+            this.displayMessage(this.noControlPointsMessage);
+            return;
         }
+        
+        if (this.valid) {
+            this.curve?.draw();
+            if (this.showCurveDrawingVisualization) this.curveDrawingVisualization?.draw();
+        }
+        else this.displayMessage(this.curveInvalidMessage);
+
+        this.drawControlPoints();
     }
 
     private drawControlPoints() {
         this.controlPoints.forEach(v => v.draw());
+    }
+
+    /**
+     * shown in the middle of the canvas when the this.valid is false
+     */
+    protected get curveInvalidMessage() {
+        return 'The curve is invalid/undefined';
+    }
+    private noControlPointsMessage = 'Click or touch anywhere on the canvas to add a point';
+
+    private displayMessage(message: string) {
+        this.p5.push();
+        this.p5.textAlign(this.p5.CENTER);
+        this.p5.text(message, this.p5.width / 2, this.p5.height / 2);
+        this.p5.pop();
     }
 
     addElementAfter(element: DragVertex): void {

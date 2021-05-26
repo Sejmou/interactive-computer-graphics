@@ -1,6 +1,6 @@
 import p5, { Vector } from 'p5';
 import { MyObserver } from '../ui-interfaces';
-import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector } from '../util';
+import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, renderTextWithSubscript } from '../util';
 import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 
@@ -26,6 +26,10 @@ export class BSplineDemo extends CurveDemo {
     private get maxDegree() {
         return this.controlPoints.length - 1;
     }
+    /**
+     * degree < 0 doesn't make sense. Degree 0 would mean we simply switch from one control point to the other, depending on value of t.
+     * Degree 1 would mean linear interpolation between adjacent control points. Degree 2 would create segments of quadratic b-splines.
+     */
     private minDegree;
     public get degreeValid() {
         return this.degree >= this.minDegree && this.degree <= this.maxDegree;
@@ -44,6 +48,14 @@ export class BSplineDemo extends CurveDemo {
     public get valid() {
         return this.controlPoints.length > 0 && this.degreeValid && this.knotVectorValid;
     }
+
+    protected get curveInvalidMessage(): string {
+        let errors: string[] = [];
+        if (this.degree > this.maxDegree) errors.push(`At least ${this.degree + 1} control points are needed for a B-Spline of degree ${this.degree}
+        Add ${this.degree - this.maxDegree} more control point${this.degree - this.maxDegree == 1 ? '' : 's'}`);
+        if (this.degree < this.minDegree) errors.push(`A curve cannot have negative degree`);
+        return `${errors.join('\n')}`;
+    };
 
     private _basisFunctions: { (x: number): number }[][];
     /**
@@ -113,10 +125,6 @@ export class BSplineDemo extends CurveDemo {
         //unfortunately, this.tMin and this.tMax can't be set directly before super() call
         //they have to be set in constructor, setting them in subclass constructor is too late...
 
-        //degree < 0 doesn't make sense
-        //degree 0 would mean we simply switch from one control point to the other, depending on value of t
-        //degree 1 would mean linear interpolation between adjacent control points
-        //degree 2 would create segments of quadratic b-splines?
         this.minDegree = 0;
         this._degree = 2;
         this._knotVector = this.createKnotVector();
@@ -240,10 +248,21 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
         const points = this.bSplineDemo.controlPoints;
         points.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt.position, points[i + 1].position, this.color, this.bSplineDemo.baseLineWidth));
 
-        if (!this.demo.valid || !this.bSplineDemo.curveDefinedAtCurrentT) return;
-        drawCircle(
-            this.p5, this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, this.bSplineDemo.t), this.colorOfPointOnCurve, this.bSplineDemo.basePointDiameter * 1.5
-        );
+        if (!this.demo.valid) return;
+        if (this.bSplineDemo.curveDefinedAtCurrentT) {
+            drawCircle(
+                this.p5,
+                this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, this.bSplineDemo.t),
+                this.colorOfPointOnCurve,
+                this.bSplineDemo.basePointDiameter * 1.5
+            );
+        } else {
+            renderTextWithSubscript(
+                this.p5,
+                `This open B-Spline curve is only defined in the interval [t_{${this.bSplineDemo.firstKnotIndexWhereCurveDefined}}, t_{${this.bSplineDemo.lastKnotIndexWhereCurveDefined}})`,
+                10, this.p5.height - 20
+            );
+        }
     }
 
     update(data: DemoChange): void {
