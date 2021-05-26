@@ -1,6 +1,6 @@
 import p5, { Vector } from 'p5';
 import { MyObserver } from '../ui-interfaces';
-import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, renderTextWithSubscript } from '../util';
+import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawPointVector, renderTextWithSubscript } from '../util';
 import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 
@@ -122,10 +122,10 @@ export class BSplineDemo extends CurveDemo {
     public get lastTValueWhereCurveDefined(): number {
         const p = this.degree;
         const m = this.knotVector.length - 1;
-        return this.knotVector[m - p];
+        return this.knotVector[m - p] - Number.EPSILON;
     }
 
-    public get lastKnotIndexWhereCurveDefined(): number {
+    public get firstKnotIndexWhereCurveUndefined(): number {
         const p = this.degree;
         const m = this.knotVector.length - 1;
         return m - p;
@@ -245,7 +245,11 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
     public draw() {
         if (!this.demo.valid) return;
         const points = this.evaluationSteps.map(t => this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, t));
-        points.slice(0, -1).forEach((p, i) => drawLineVector(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2));
+        if (this.bSplineDemo.degree === 0) {
+            points.slice(0, -1).forEach(p => drawCircle(this.p5, p, this.color, this.demo.basePointDiameter * 1.25));
+        } else {
+            points.slice(0, -1).forEach((p, i) => drawLineVector(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2));
+        }
     }
 
     update(data: DemoChange): void {
@@ -279,7 +283,7 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
         } else {
             renderTextWithSubscript(
                 this.p5,
-                `This open B-Spline curve is only defined in the interval [t_{${this.bSplineDemo.firstKnotIndexWhereCurveDefined}}, t_{${this.bSplineDemo.lastKnotIndexWhereCurveDefined}})`,
+                `This open B-Spline curve is only defined in the interval [t_{${this.bSplineDemo.firstKnotIndexWhereCurveDefined}}, t_{${this.bSplineDemo.firstKnotIndexWhereCurveUndefined}})`,
                 10, this.p5.height - 20
             );
         }

@@ -27,6 +27,14 @@ export function drawLineXYCoords(p5: p5, x1: number, y1: number, x2: number, y2:
     p5.pop();
 }
 
+export function drawPointVector(p5: p5, pos: p5.Vector, color: p5.Color, thickness: number) {
+    p5.push();
+    p5.stroke(color);
+    p5.strokeWeight(thickness);
+    p5.point(pos.x, pos.y);
+    p5.pop();
+}
+
 export function isCloseToZero(val: number) {
     return Math.abs(val) < 1e-10;
 }
