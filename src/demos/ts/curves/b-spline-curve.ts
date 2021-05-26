@@ -1,6 +1,6 @@
 import p5, { Vector } from 'p5';
 import { MyObserver } from '../ui-interfaces';
-import { createArrayOfEquidistantAscendingNumbersInRange, drawLineVector } from '../util';
+import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector } from '../util';
 import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 
@@ -63,33 +63,30 @@ export class BSplineDemo extends CurveDemo {
         this._degree = 3;
         this._knotVector = [];
         this._basisFunctions = [];
-        this.updateTMinTMaxAndKnotVector();
+        this.updateKnotVector();
         this.updateBasisFunctions();
     }
 
     //called every time the curve degree changes
     protected additionalCurveDegreeChangeHandling() {
-        this.updateTMinTMaxAndKnotVector();
+        this.updateKnotVector();
         this.updateBasisFunctions();
     }
 
-    updateTMinTMaxAndKnotVector() {
+    updateKnotVector() {
         // m := (# of knots in knotVector T) - 1
         // n := (# of control points) - 1
         // k := order of curve (degree = k - 1)
         // m = k + n
         // e. g. for a cubic B-spline w/ 5 control points m = 3 + 4 = 7 (which means that there are 8 entries in the knot vector)
 
-        const k = this.degree;
+        const k = this.degree + 1;
         const n = this.controlPoints.length - 1;
         if (n <= 0) {
             this._knotVector = [];
             return;
         }
         const m = n + k;
-        this._tMax = m;
-        this._tMin = 0;
-        this.notifyObservers('rangeOfTChanged');
 
         //knots in knot vector equidistant, in other words: m + 1 values in range [0, m], distributed uniformly (same step size between them)
         //that's why this is called a *uniform* B-spline, btw
@@ -104,7 +101,7 @@ export class BSplineDemo extends CurveDemo {
         //base case: N_{i,0}(x) = 1 if t_0 <= t < t_1, else 0
 
         const n = this.controlPoints.length - 1;
-        const k = this.degree;
+        const k = this.degree + 1;
         const t = this.knotVector;
         const m = n + k;
 
@@ -124,9 +121,9 @@ export class BSplineDemo extends CurveDemo {
                 };
         }
 
-        for (let j = 1; j <= k; j++) {
+        for (let j = 1; j < k; j++) {
             basisFunctions[j] = [];
-            for (let i = 0; i < m; i++) {
+            for (let i = 0; i < basisFunctions[j - 1].length - 1; i++) {
                 basisFunctions[j][i] = (x: number) => {
                     const a = (x - t[i]) / (t[i + j] - t[i]) * basisFunctions[j - 1][i](x);
                     if (i !== m - 1) {
@@ -147,6 +144,12 @@ export class BSplineDemo extends CurveDemo {
     protected addCurveDrawingVisualization(): CurveDrawingVisualization {
         return new BSplineVisualization(this.p5, this);
     }
+
+    public evaluateBasisFunctions(k: number, t: number) {
+        return this.controlPoints.map(pt => pt.position).reduce(
+            (prev, curr, i) => Vector.add(prev, Vector.mult(curr, this.basisFunctions[k - 1][i](t))), this.p5.createVector(0, 0)
+        );
+    }
 }
 
 
@@ -162,14 +165,8 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
 
     public draw() {
         if (this.demo.controlPoints.length <= 1) return;
-        const points = this.evaluationSteps.map(t => this.evaluateBasisFunctions(t));
+        const points = this.evaluationSteps.map(t => this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, t));
         points.slice(0, -1).forEach((p, i) => drawLineVector(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2));
-    }
-
-    private evaluateBasisFunctions(t: number): p5.Vector {
-        const k = this.bSplineDemo.degree;
-        const basisFunctions = this.bSplineDemo.basisFunctions;
-        return this.bSplineDemo.controlPoints.map(pt => pt.position).reduce((prev, curr, i) => Vector.add(prev, Vector.mult(curr, basisFunctions[k - 1][i](t))), this.p5.createVector(0, 0));
     }
 
     update(data: DemoChange): void {
@@ -187,8 +184,13 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
     }
 
     public draw(): void {
+        if (this.demo.controlPoints.length <= 1) return;
         const points = this.bSplineDemo.controlPoints;
         points.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt.position, points[i + 1].position, this.color, this.bSplineDemo.baseLineWidth));
+
+        drawCircle(
+            this.p5, this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, this.bSplineDemo.t), this.colorOfPointOnCurve, this.bSplineDemo.basePointDiameter * 1.5
+        );
     }
 
     update(data: DemoChange): void {

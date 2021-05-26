@@ -12,7 +12,7 @@ const demoContainerId = 'demo';
 
 const descriptionId = 'demo-description'
 const descriptionParagraph = document.getElementById(descriptionId);
-if (descriptionParagraph) descriptionParagraph.innerText = `B-spline curves are a generalization of Bèzier curves with a very nice property: Contrary to Bézier curves, their control points only have local control instead of global control.`;
+if (descriptionParagraph) descriptionParagraph.innerText = `B-spline curves are a generalization of Bèzier curves with a very practical property: Contrary to Bézier curves, their control points only have local control instead of global control.`;
 
 //add container for b-spline basis functions visualization
 const basisFuncContainer = document.createElement('div');
@@ -93,7 +93,7 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
         }));
         this.dataPoints.forEach((d, i) => {
             console.log(`N_{${i},${degree}}`);
-            console.log(d.yValues.map((y, i) => ({x: this.xValues[i], y: y})));
+            console.log(d.yValues.map((y, i) => ({ x: this.xValues[i], y: y })));
             console.log('');
         });
         const sumOfN_ik_overRangeOfX: number[] = this.xValues.map(x => 0);
@@ -103,7 +103,7 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
                 sumOfN_ik_overRangeOfX[i] += yValues[j][i];
             }
         }
-        console.log(sumOfN_ik_overRangeOfX.map((y, i) => ({x: this.xValues[i], y: y})));
+        console.log(sumOfN_ik_overRangeOfX.map((y, i) => ({ x: this.xValues[i], y: y })));
     }
 
     draw(): void {
@@ -160,7 +160,9 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
             this.p5.push();
             this.p5.textAlign(this.p5.CENTER);
             renderTextWithSubscript(this.p5, `t_{${i}}`, this.axisRulerOffsetFromBorder + knotVectorPositionsXAxis[i], this.p5.height - this.axisRulerOffsetFromBorder / 3);
-            this.p5.text(knotVector[i], this.axisRulerOffsetFromBorder + knotVectorPositionsXAxis[i], this.p5.height - this.axisRulerOffsetFromBorder / 1.5);
+
+            //'+' before knotVector[i] drops "extra" zeroes at the end by changing toFixed()'s output string to number -> use only as many digits as necessary https://stackoverflow.com/a/12830454/13727176
+            this.p5.text(+knotVector[i].toFixed(2), this.axisRulerOffsetFromBorder + knotVectorPositionsXAxis[i], this.p5.height - this.axisRulerOffsetFromBorder / 1.5);
             this.p5.pop();
         }
     }
