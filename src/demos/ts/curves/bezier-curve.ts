@@ -8,6 +8,9 @@ import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-
 export class BezierDemo extends CurveDemo {
     public firstTValueWhereCurveDefined;
     public lastTValueWhereCurveDefined;
+    public get valid() {
+        return this.controlPoints.length > 0;
+    }
 
     constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         const tMin = 0;
@@ -18,15 +21,10 @@ export class BezierDemo extends CurveDemo {
 
         this.firstTValueWhereCurveDefined = this.tMin;
         this.lastTValueWhereCurveDefined = this.tMax;
-    }
 
-    protected addCurve(): Curve {
-        return new BezierCurve(this.p5, this);
+        this.setCurve(new BezierCurve(this.p5, this));
+        this.setCurveDrawingVisualization(new DeCasteljauVisualization(this.p5, this));
     }
-    protected addCurveDrawingVisualization(): CurveDrawingVisualization {
-        return new DeCasteljauVisualization(this.p5, this);
-    }
-    
 }
 
 

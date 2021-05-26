@@ -27,7 +27,7 @@ export class BSplineDemo extends CurveDemo {
         return this.controlPoints.length - 1;
     }
     private minDegree;
-    public degreeValid() {
+    public get degreeValid() {
         return this.degree >= this.minDegree && this.degree <= this.maxDegree;
     }
 
@@ -35,6 +35,14 @@ export class BSplineDemo extends CurveDemo {
     private _knotVector: number[];
     public get knotVector() {
         return this._knotVector;
+    }
+
+    public get knotVectorValid() {
+        return this.knotVector.every((knot, i, knots) => knots[i + 1] ? knot <= knots[i + 1] : true);
+    }
+
+    public get valid() {
+        return this.controlPoints.length > 0 && this.degreeValid && this.knotVectorValid;
     }
 
     private _basisFunctions: { (x: number): number }[][];
@@ -53,7 +61,7 @@ export class BSplineDemo extends CurveDemo {
     public get closed(): boolean {
         const p = this.degree;
         return this.knotVector.slice(0, p + 1).every((el, i, arr) => el === arr[0])
-        && this.knotVector.slice(-p).every((el, i, arr) => el === arr[0]);
+            && this.knotVector.slice(-p).every((el, i, arr) => el === arr[0]);
     }
 
     /**
@@ -64,12 +72,15 @@ export class BSplineDemo extends CurveDemo {
         return !this.closed;
     }
 
+    /**
+     * interval in which curve is defined (first number := begin, second := end; end is *not* inclusive!)
+     */
     public get curveDomain(): [number, number] {
         return [this.firstTValueWhereCurveDefined, this.lastTValueWhereCurveDefined];
     }
 
     public get curveDefinedAtCurrentT(): boolean {
-        return this.t >= this.firstTValueWhereCurveDefined || this.t <= this.lastTValueWhereCurveDefined;
+        return this.t >= this.firstTValueWhereCurveDefined && this.t <= this.lastTValueWhereCurveDefined;
     }
 
     public get firstTValueWhereCurveDefined(): number {
@@ -107,17 +118,23 @@ export class BSplineDemo extends CurveDemo {
         //degree 1 would mean linear interpolation between adjacent control points
         //degree 2 would create segments of quadratic b-splines?
         this.minDegree = 0;
-        this._degree = 3;
+        this._degree = 2;
         this._knotVector = this.createKnotVector();
         this._basisFunctions = [];
         this.createKnotVector();
         this.createBasisFunctions();
+
+        this.setCurve(new BSplineCurve(this.p5, this));
+        this.setCurveDrawingVisualization(new BSplineVisualization(this.p5, this));
     }
 
-    //called every time the curve degree changes
-    protected additionalCurveDegreeChangeHandling() {
+    /**
+     * called every time the number of control points changes
+     */
+    protected additionalCtrlPtAmountChangeHandling() {
         this._knotVector = this.createKnotVector();
         this._basisFunctions = this.createBasisFunctions();
+        this.notifyObservers('knotVectorChanged');
     }
 
     private createKnotVector() {
@@ -148,6 +165,7 @@ export class BSplineDemo extends CurveDemo {
 
         const n = this.controlPoints.length - 1;
         const k = this.degree + 1;
+        const p = this.degree;
         const t = this.knotVector;
         const m = n + k;
 
@@ -166,16 +184,13 @@ export class BSplineDemo extends CurveDemo {
                 };
         }
 
-        for (let j = 1; j < k; j++) {
+        for (let j = 1; j <= p; j++) {
             basisFunctions[j] = [];
             for (let i = 0; i < basisFunctions[j - 1].length - 1; i++) {
                 basisFunctions[j][i] = (x: number) => {
                     const a = (x - t[i]) / (t[i + j] - t[i]) * basisFunctions[j - 1][i](x);
-                    if (i !== m - 1) {
-                        const b = (t[i + j + 1] - x) / (t[i + j + 1] - t[i + 1]) * basisFunctions[j - 1][i + 1](x);
-                        return a + b;
-                    }
-                    else return a;
+                    const b = (t[i + j + 1] - x) / (t[i + j + 1] - t[i + 1]) * basisFunctions[j - 1][i + 1](x);
+                    return a + b;
                 }
             }
         }
@@ -183,16 +198,9 @@ export class BSplineDemo extends CurveDemo {
         return basisFunctions;
     }
 
-    protected addCurve(): Curve {
-        return new BSplineCurve(this.p5, this);
-    }
-    protected addCurveDrawingVisualization(): CurveDrawingVisualization {
-        return new BSplineVisualization(this.p5, this);
-    }
-
-    public evaluateBasisFunctions(k: number, t: number) {
+    public evaluateBasisFunctions(p: number, t: number) {
         return this.controlPoints.map(pt => pt.position).reduce(
-            (prev, curr, i) => Vector.add(prev, Vector.mult(curr, this.basisFunctions[k - 1][i](t))), this.p5.createVector(0, 0)
+            (prev, curr, i) => Vector.add(prev, Vector.mult(curr, this.basisFunctions[p][i](t))), this.p5.createVector(0, 0)
         );
     }
 }
@@ -209,13 +217,13 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
     }
 
     public draw() {
-        if (this.demo.controlPoints.length <= 1) return;
+        if (!this.demo.valid) return;
         const points = this.evaluationSteps.map(t => this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, t));
         points.slice(0, -1).forEach((p, i) => drawLineVector(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2));
     }
 
     update(data: DemoChange): void {
-        if (data === 'rangeOfTChanged') this.evaluationSteps = this.calculateEvaluationSteps();
+        if (data === 'rangeOfTChanged' || 'knotVectorChanged') this.evaluationSteps = this.calculateEvaluationSteps();
     }
 }
 
@@ -229,10 +237,10 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
     }
 
     public draw(): void {
-        if (this.demo.controlPoints.length <= 1) return;
         const points = this.bSplineDemo.controlPoints;
         points.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt.position, points[i + 1].position, this.color, this.bSplineDemo.baseLineWidth));
 
+        if (!this.demo.valid || !this.bSplineDemo.curveDefinedAtCurrentT) return;
         drawCircle(
             this.p5, this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, this.bSplineDemo.t), this.colorOfPointOnCurve, this.bSplineDemo.basePointDiameter * 1.5
         );

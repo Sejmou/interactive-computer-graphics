@@ -4,7 +4,7 @@ import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, Po
 import { colorsTooSimilar, createArrayOfEquidistantAscendingNumbersInRange, lightenDarkenColor, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from "../util";
 import { DragVertex } from "../vertex";
 
-export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged';
+export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged';
 
 interface ControlPointColor {
     color: p5.Color,
@@ -12,8 +12,8 @@ interface ControlPointColor {
 }
 
 export abstract class CurveDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<DemoChange> {
-    private curve: Curve;
-    private curveDrawingVisualization: CurveDrawingVisualization;
+    private curve: Curve | undefined;
+    private curveDrawingVisualization: CurveDrawingVisualization | undefined;
 
     get tMin(): number {
         return this._tMin;
@@ -33,8 +33,13 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     /**
      * not necessarily the same as tMax (have a look at open B-splines, for example!)
      */
-     public abstract lastTValueWhereCurveDefined: number;
+    public abstract lastTValueWhereCurveDefined: number;
 
+    /**
+     * A curve can also be "invalid" (or "undefined") under certain circumstances. Trying to evaluate it or use its properties wouldn't make sense.
+     * For example, one cannot render curves whose degree is higher than its number of control points!
+     */
+    public abstract valid: boolean;
 
     public set t(newVal: number) {
         this._t = newVal;
@@ -116,12 +121,15 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this.positionDisplayMode = 'relative to canvas';
 
         this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId, baseAnimationSpeedMultiplier);
-        this.curve = this.addCurve();
-        this.curveDrawingVisualization = this.addCurveDrawingVisualization();
     }
 
-    protected abstract addCurve(): Curve;
-    protected abstract addCurveDrawingVisualization(): CurveDrawingVisualization;
+    protected setCurve(curve: Curve) {
+        this.curve = curve;
+    };
+
+    protected setCurveDrawingVisualization(vis: CurveDrawingVisualization) {
+        this.curveDrawingVisualization = vis;
+    };
 
     handleMousePressed(): void {
         if (this.controlPoints.length === 0) {
@@ -196,8 +204,8 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         if (this.controlPoints.length > 0) {
             this.controlsForT.updateT();
 
-            if (this.controlPoints.length >= 2) this.curve.draw();
-            if (this.showCurveDrawingVisualization) this.curveDrawingVisualization.draw();
+            if (this.controlPoints.length >= 2) this.curve?.draw();
+            if (this.showCurveDrawingVisualization) this.curveDrawingVisualization?.draw();
 
             this.drawControlPoints();
         } else {
@@ -253,26 +261,26 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         newPt.color = this.getColorForCtrlPtAtIndex(i);
         //TODO: figure out how to do darken color so that it works with arbitrarily dark initial colors (lightenDarkenP5Color can't do this atm)
         newPt.activeColor = newPt.color;
-        this.handleCurveDegreeChange();
+        this.handleCtrlPtAmountChange();
     }
 
     remove(element: DragVertex): void {
         this._controlPoints = this._controlPoints.filter(v => v !== element);
         const idxOfColorOfElementToRemove = this.controlPointColors.findIndex(c => c.color === element.color);
         if (idxOfColorOfElementToRemove !== -1) this.controlPointColors[idxOfColorOfElementToRemove].taken = false;
-        this.handleCurveDegreeChange();
+        this.handleCtrlPtAmountChange();
     }
 
-    private handleCurveDegreeChange() {
+    private handleCtrlPtAmountChange() {
         const numOfVertices = this.controlPoints.length;
         this._controlPoints.forEach((v, i) => v.label = `P_{${i}}`);
         this.controlsForT.visible = numOfVertices > 1;
-        this.additionalCurveDegreeChangeHandling();
+        this.additionalCtrlPtAmountChangeHandling();
         this.notifyObservers('controlPointsChanged');
     }
 
     //overriden by subclasses, if necessary
-    protected additionalCurveDegreeChangeHandling() { }
+    protected additionalCtrlPtAmountChangeHandling() { }
 
 
     //Control point color picking
@@ -508,7 +516,7 @@ export abstract class Curve implements Drawable {
 
     constructor(protected p5: p5, protected demo: CurveDemo, evaluationSteps?: number, color?: p5.Color) {
         this._noOfEvaluationSteps = evaluationSteps ?? 100;
-        this.evaluationSteps = this.calculateEvaluationSteps();
+        this.evaluationSteps = createArrayOfEquidistantAscendingNumbersInRange(this.noOfEvaluationSteps, this.demo.firstTValueWhereCurveDefined, this.demo.lastTValueWhereCurveDefined);
         this.color = color ?? p5.color(30);
     }
 
@@ -519,7 +527,7 @@ export abstract class Curve implements Drawable {
      * @returns array of evaluation steps
      */
     protected calculateEvaluationSteps(): number[] {
-        return createArrayOfEquidistantAscendingNumbersInRange(this.noOfEvaluationSteps, this.demo.tMin, this.demo.tMax);
+        return createArrayOfEquidistantAscendingNumbersInRange(this.noOfEvaluationSteps, this.demo.firstTValueWhereCurveDefined, this.demo.lastTValueWhereCurveDefined);
     }
 
     public abstract draw(): void;

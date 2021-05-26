@@ -264,7 +264,7 @@ export function renderTextWithSubscript(p5: p5, text: string, x: number, y: numb
  * @returns 
  */
 export function createArrayOfEquidistantAscendingNumbersInRange(noOfValues: number, begin: number, end: number): number[] {
-    return [...Array(noOfValues).keys()].map(i => (i / (noOfValues - 1)) * (end - begin));
+    return [...Array(noOfValues).keys()].map(i => begin + (i / (noOfValues - 1)) * (end - begin));
 }
 
 export function colorsTooSimilar(colorA: p5.Color, colorB: p5.Color) {
