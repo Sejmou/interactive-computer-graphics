@@ -1,6 +1,6 @@
 import p5, { Vector } from 'p5';
 import { MyObserver } from '../ui-interfaces';
-import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawPointVector, renderTextWithSubscript } from '../util';
+import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawPointVector, drawSquare, renderTextWithSubscript } from '../util';
 import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 
@@ -66,7 +66,7 @@ export class BSplineDemo extends CurveDemo {
     protected get curveInvalidMessage(): string {
         let errors: string[] = [];
         if (this.degree > this.maxDegree) errors.push(`At least ${this.degree + 1} control points are needed for a B-Spline of degree ${this.degree}
-        Add ${this.degree - this.maxDegree} more control point${this.degree - this.maxDegree == 1 ? '' : 's'}`);
+        Add ${this.degree - this.maxDegree} more control point${this.degree - this.maxDegree == 1 ? '' : 's'}${this.degree > 0? ' or reduce the degree' : ''}`);
         if (this.degree < this.minDegree) errors.push(`A curve cannot have negative degree`);
         return `${errors.join('\n')}`;
     };
@@ -172,7 +172,7 @@ export class BSplineDemo extends CurveDemo {
 
         const k = this.degree + 1;
         const n = this.controlPoints.length - 1;
-        if (n <= 0) {
+        if (n < 0) {
             return [];
         }
         const m = n + k;
@@ -195,7 +195,7 @@ export class BSplineDemo extends CurveDemo {
         const t = this.knotVector;
         const m = n + k;
 
-        if (n <= 0) {
+        if (n < 0) {
             return [];
         }
 
@@ -260,6 +260,8 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
 
 
 class BSplineVisualization extends CurveDrawingVisualization implements MyObserver<DemoChange> {
+    private knotMarkerColor: p5.Color = this.p5.color(150);
+
     //storing bSplineDemo twice, once as Demo so that code of abstract class works and once as BSplineDemo so that we can use its specific subclass properties
     //if anyone reads my comments and knows a better solution: let me know about it (there probably is a better way to do what I want lol)
     constructor(p5: p5, private bSplineDemo: BSplineDemo, color?: p5.Color, colorOfPointOnCurve?: p5.Color) {
@@ -268,18 +270,17 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
 
     public draw(): void {
         if (this.bSplineDemo.degree >= 2) {
-            const points = this.bSplineDemo.controlPoints;
-            points.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt.position, points[i + 1].position, this.color, this.bSplineDemo.baseLineWidth));
+            //TODO: properly visualize recursive process for evaluating curve
+            // const points = this.bSplineDemo.controlPoints;
+            // points.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt.position, points[i + 1].position, this.color, this.bSplineDemo.baseLineWidth));
         }
 
         if (!this.demo.valid) return;
+
+        if (this.bSplineDemo.degree > 0) this.drawKnotMarkers();
+
         if (this.bSplineDemo.curveDefinedAtCurrentT) {
-            drawCircle(
-                this.p5,
-                this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, this.bSplineDemo.t),
-                this.colorOfPointOnCurve,
-                this.bSplineDemo.basePointDiameter * 1.5
-            );
+            this.drawPointAtT();
         } else {
             renderTextWithSubscript(
                 this.p5,
@@ -287,6 +288,27 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
                 10, this.p5.height - 20
             );
         }
+    }
+
+    private drawKnotMarkers() {
+        this.bSplineDemo.knotVector.forEach((k, i) => {
+            if (i < this.bSplineDemo.firstKnotIndexWhereCurveDefined || i > this.bSplineDemo.firstKnotIndexWhereCurveUndefined) return;
+            drawSquare(
+                this.p5,
+                this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, k),
+                this.knotMarkerColor,
+                this.bSplineDemo.basePointDiameter * 0.75
+            );
+        });
+    }
+
+    private drawPointAtT() {
+        drawCircle(
+            this.p5,
+            this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, this.bSplineDemo.t),
+            this.colorOfPointOnCurve,
+            this.bSplineDemo.basePointDiameter * 1.5
+        );
     }
 
     update(data: DemoChange): void {
@@ -359,7 +381,7 @@ class DegreeControls implements MyObserver<DemoChange> {
     }
 
     private updateVisibility() {
-        this.visible = this.demo.controlPoints.length >= 2;
+        this.visible = this.demo.controlPoints.length > 0;
     }
 
     private updateDegreeText() {

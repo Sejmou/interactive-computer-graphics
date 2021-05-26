@@ -202,12 +202,28 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     }
 
     public get hovering(): boolean {
-        return this.controlPoints.some(v => v.hovering);
+        const hovering = this.controlPoints.some(v => v.hovering);
+        if (hovering != this.lastHoverState) {
+            this.lastHoverState = hovering;
+            this.onHoverChange?.();
+        }
+        return hovering;
     };
+    private lastHoverState = false;
+
+    public onHoverChange?: () => void;
 
     public get dragging(): boolean {
-        return this.controlPoints.some(v => v.dragging);
+        const dragging = this.controlPoints.some(v => v.dragging);
+        if (dragging != this.lastDraggingState) {
+            this.lastDraggingState = dragging;
+            this.onDraggingChange?.();
+        }
+        return dragging;
     };
+    private lastDraggingState = false;
+
+    public onDraggingChange?: () => void;
 
     draw(): void {
         this.controlsForT.updateT();

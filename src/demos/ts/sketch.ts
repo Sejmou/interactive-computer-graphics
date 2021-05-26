@@ -5,6 +5,14 @@ import { Clickable, Draggable, Drawable, isClickable, isDraggable, isResponsive,
 export class Sketch {
     private p5?: p5;
 
+    /**
+     * 
+     * @param parentContainerId 
+     * @param calcCanvasWidth 
+     * @param calcCanvasHeight 
+     * @param createBGColor 
+     * @param frameRate >= 0; if 0, sketch is only updated if redraw() is called!
+     */
     constructor(
         private parentContainerId: string, public calcCanvasWidth?: (p5Instance: p5) => number, public calcCanvasHeight?: (p5Instance: p5) => number,
         private createBGColor: (p5: p5) => p5.Color | null = (p5) => p5.color(230), private frameRate?: number
@@ -76,6 +84,9 @@ export class Sketch {
                     document.addEventListener('touchmove', preventScrollIfDragging, { passive: false });
                     document.addEventListener('touchend', preventScrollIfDragging, { passive: false });
                     document.addEventListener('touchcancel', preventScrollIfDragging, { passive: false });
+
+                    //if 0 is provided as framerate, sketch should only update if redraw() is called explicitly
+                    if (this.frameRate === 0) p5Instance.noLoop();
 
                     //everything set up, we can resolve the promise
                     resolve();

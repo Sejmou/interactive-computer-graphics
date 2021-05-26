@@ -35,6 +35,15 @@ export function drawPointVector(p5: p5, pos: p5.Vector, color: p5.Color, thickne
     p5.pop();
 }
 
+export function drawSquare(p5: p5, pos: p5.Vector, color: p5.Color, sideLength: number) {
+    p5.push();
+    p5.noStroke();
+    p5.fill(color);
+    p5.rectMode(p5.CENTER);
+    p5.rect(pos.x, pos.y, sideLength, sideLength);
+    p5.pop();
+}
+
 export function isCloseToZero(val: number) {
     return Math.abs(val) < 1e-10;
 }
