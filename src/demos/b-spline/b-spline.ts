@@ -12,7 +12,7 @@ const demoContainerId = 'demo';
 
 const descriptionId = 'demo-description'
 const descriptionParagraph = document.getElementById(descriptionId);
-if (descriptionParagraph) descriptionParagraph.innerText = `B-spline curves are a generalization of Bèzier curves with a very practical property: Contrary to Bézier curves, their control points only have local control instead of global control.`;
+if (descriptionParagraph) descriptionParagraph.innerText = `B-spline curves are a generalization of Bèzier curves with a very practical property: In contrast to Bézier curves their control points only have local control.`;
 
 //add container for b-spline basis functions visualization
 const basisFuncContainer = document.createElement('div');
@@ -70,7 +70,7 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
     }
 
     update(data: DemoChange): void {
-        if (data === 'controlPointsChanged') {
+        if (data === 'controlPointsChanged' || data === 'knotVectorChanged' || data === 'rangeOfTChanged') {
             this.computeBSplineCurves();
         }
     }
@@ -91,19 +91,19 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
             yValues: this.xValues.map(x => basisFunctions[degree][i](x)),
             controlPoint: pt
         }));
-        this.dataPoints.forEach((d, i) => {
-            console.log(`N_{${i},${degree}}`);
-            console.log(d.yValues.map((y, i) => ({ x: this.xValues[i], y: y })));
-            console.log('');
-        });
-        const sumOfN_ik_overRangeOfX: number[] = this.xValues.map(x => 0);
-        const yValues = this.dataPoints.map(d => d.yValues);
-        for (let i = 0; i < this.xValues.length; i++) {
-            for (let j = 0; j < yValues.length; j++) {
-                sumOfN_ik_overRangeOfX[i] += yValues[j][i];
-            }
-        }
-        console.log(sumOfN_ik_overRangeOfX.map((y, i) => ({ x: this.xValues[i], y: y })));
+        // this.dataPoints.forEach((d, i) => {
+        //     console.log(`N_{${i},${degree}}`);
+        //     console.log(d.yValues.map((y, i) => ({ x: this.xValues[i], y: y })));
+        //     console.log('');
+        // });
+        // const sumOfN_ik_overRangeOfX: number[] = this.xValues.map(x => 0);
+        // const yValues = this.dataPoints.map(d => d.yValues);
+        // for (let i = 0; i < this.xValues.length; i++) {
+        //     for (let j = 0; j < yValues.length; j++) {
+        //         sumOfN_ik_overRangeOfX[i] += yValues[j][i];
+        //     }
+        // }
+        // console.log(sumOfN_ik_overRangeOfX.map((y, i) => ({ x: this.xValues[i], y: y })));
     }
 
     draw(): void {

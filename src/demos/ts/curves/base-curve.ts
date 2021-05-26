@@ -4,7 +4,7 @@ import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, Po
 import { colorsTooSimilar, createArrayOfEquidistantAscendingNumbersInRange, lightenDarkenColor, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from "../util";
 import { DragVertex } from "../vertex";
 
-export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged';
+export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged';
 
 interface ControlPointColor {
     color: p5.Color,
@@ -52,6 +52,8 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     }
     private _t: number = 0;
     private controlsForT: ControlsForParameterT;
+
+    protected controlsContainerId: string;
 
     private _controlPoints: DragVertex[] = [];
     /**
@@ -120,7 +122,14 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this.showPointPositions = false;
         this.positionDisplayMode = 'relative to canvas';
 
-        this.controlsForT = new ControlsForParameterT(p5, this, parentContainerId, baseAnimationSpeedMultiplier);
+        const controlsContainer = this.p5.createDiv();
+        this.controlsContainerId = 'controls-container';
+        controlsContainer.id(this.controlsContainerId);
+        if (parentContainerId) controlsContainer.parent(parentContainerId);
+        controlsContainer.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
+        
+
+        this.controlsForT = new ControlsForParameterT(p5, this, this.controlsContainerId, baseAnimationSpeedMultiplier);
     }
 
     protected setCurve(curve: Curve) {
@@ -394,7 +403,7 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
     private static animationSpeedMultipliers = [-4, -2, -1.5, -1, -0.5, -0.25, -0.125, 0.125, 0.25, 0.5, 1, 1.5, 2, 4];
     private currAnimationSpeedMultiplierIndex = ControlsForParameterT.animationSpeedMultipliers.findIndex(_ => _ === 1);
 
-    private controlsContainer: p5.Element;
+    private controlsForTContainer: p5.Element;
     private sliderLabel: p5.Element;
     private slider: p5.Element;
     private playPauseButton: p5.Element;
@@ -402,7 +411,7 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
     private slowerButton: p5.Element;
 
     public set visible(visible: boolean) {
-        this.controlsContainer.style('visibility', visible ? 'visible' : 'hidden');
+        this.controlsForTContainer.style('visibility', visible ? 'visible' : 'hidden');
     };
 
     private set animationRunning(newVal: boolean) {
@@ -420,23 +429,24 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
     constructor(private p5: p5, private demo: CurveDemo, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         this.speedCompensationForSizeOfTInterval = this.demo.tMax - this.demo.tMin;
 
-        this.controlsContainer = p5.createDiv();
+        this.controlsForTContainer = p5.createDiv();
 
-        if (parentContainerId) this.controlsContainer.parent(parentContainerId);
-        this.controlsContainer.class('controls-for-t flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
+        if (parentContainerId) this.controlsForTContainer.parent(parentContainerId);
+        this.controlsForTContainer.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select full-width');
+        this.controlsForTContainer.id('controls-for-t');
 
 
         this.sliderLabel = p5.createSpan(`t: ${this.demo.t.toFixed(2)}`);
-        this.sliderLabel.parent(this.controlsContainer);
+        this.sliderLabel.parent(this.controlsForTContainer);
 
         this.slider = this.createSlider();
 
         this.slowerButton = p5.createButton('<span class="material-icons">fast_rewind</span>');
-        this.slowerButton.parent(this.controlsContainer);
+        this.slowerButton.parent(this.controlsForTContainer);
         this.slowerButton.mouseClicked(() => this.rewindClicked());
 
         this.playPauseButton = p5.createButton('<span class="material-icons">play_arrow</span>');
-        this.playPauseButton.parent(this.controlsContainer);
+        this.playPauseButton.parent(this.controlsForTContainer);
         this.playPauseButton.mouseClicked(() => this.animationRunning = !this.animationRunning);
 
         demo.subscribe(this);
@@ -444,7 +454,7 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
 
 
         this.fasterButton = p5.createButton('<span class="material-icons">fast_forward</span>');
-        this.fasterButton.parent(this.controlsContainer);
+        this.fasterButton.parent(this.controlsForTContainer);
         this.fasterButton.mouseClicked(() => this.fastForwardClicked());
 
         if (baseAnimationSpeedMultiplier) this.baseAnimationSpeedPerFrame *= baseAnimationSpeedMultiplier;
@@ -454,7 +464,7 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
         const slider = this.p5.createSlider(this.demo.tMin, this.demo.tMax, this.demo.t, 0);
         slider.style('flex-grow', '2');
         slider.mousePressed(() => this.animationRunning = false);
-        slider.parent(this.controlsContainer);
+        slider.parent(this.controlsForTContainer);
         return slider;
     }
 
@@ -474,9 +484,9 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
         this.slider = this.createSlider();
 
         //this is necessary to preserve the order of elements in the controlsContainer
-        this.slowerButton.parent(this.controlsContainer);
-        this.playPauseButton.parent(this.controlsContainer);
-        this.fasterButton.parent(this.controlsContainer);
+        this.slowerButton.parent(this.controlsForTContainer);
+        this.playPauseButton.parent(this.controlsForTContainer);
+        this.fasterButton.parent(this.controlsForTContainer);
     }
 
     public updateT() {

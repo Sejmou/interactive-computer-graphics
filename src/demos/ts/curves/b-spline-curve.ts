@@ -19,18 +19,32 @@ export class BSplineDemo extends CurveDemo {
     }
     private _degree: number;
 
+    public increaseDegree() {
+        this._degree++;
+        this.notifyObservers('degreeChanged');
+        this.updateKnotVectorAndBasisFunctions();
+    }
+
+    public decreaseDegree() {
+        if (this._degree > this.minDegree) {
+            this._degree--;
+            this.notifyObservers('degreeChanged');
+            this.updateKnotVectorAndBasisFunctions();
+        }
+    }
+
     /**
      * a B-spline curve cannot have a degree of n (number of controlPoints), as always n + 1 control points are needed for a curve segment of degree n
      * For example, a quadratic Bèzier curve also needs 3 controlPoints!
      */
-    private get maxDegree() {
+    public get maxDegree() {
         return this.controlPoints.length - 1;
     }
     /**
      * degree < 0 doesn't make sense. Degree 0 would mean we simply switch from one control point to the other, depending on value of t.
      * Degree 1 would mean linear interpolation between adjacent control points. Degree 2 would create segments of quadratic b-splines.
      */
-    private minDegree;
+    public readonly minDegree;
     public get degreeValid() {
         return this.degree >= this.minDegree && this.degree <= this.maxDegree;
     }
@@ -129,17 +143,21 @@ export class BSplineDemo extends CurveDemo {
         this._degree = 2;
         this._knotVector = this.createKnotVector();
         this._basisFunctions = [];
-        this.createKnotVector();
-        this.createBasisFunctions();
+        this.updateKnotVectorAndBasisFunctions();
 
         this.setCurve(new BSplineCurve(this.p5, this));
         this.setCurveDrawingVisualization(new BSplineVisualization(this.p5, this));
+        new DegreeControls(this.p5, this, this.controlsContainerId);
     }
 
     /**
      * called every time the number of control points changes
      */
     protected additionalCtrlPtAmountChangeHandling() {
+        this.updateKnotVectorAndBasisFunctions();
+    }
+
+    private updateKnotVectorAndBasisFunctions() {
         this._knotVector = this.createKnotVector();
         this._basisFunctions = this.createBasisFunctions();
         this.notifyObservers('knotVectorChanged');
@@ -231,7 +249,7 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
     }
 
     update(data: DemoChange): void {
-        if (data === 'rangeOfTChanged' || 'knotVectorChanged') this.evaluationSteps = this.calculateEvaluationSteps();
+        if (data === 'rangeOfTChanged' || 'knotVectorChanged' || 'degreeChanged') this.evaluationSteps = this.calculateEvaluationSteps();
     }
 }
 
@@ -245,8 +263,10 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
     }
 
     public draw(): void {
-        const points = this.bSplineDemo.controlPoints;
-        points.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt.position, points[i + 1].position, this.color, this.bSplineDemo.baseLineWidth));
+        if (this.bSplineDemo.degree >= 2) {
+            const points = this.bSplineDemo.controlPoints;
+            points.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt.position, points[i + 1].position, this.color, this.bSplineDemo.baseLineWidth));
+        }
 
         if (!this.demo.valid) return;
         if (this.bSplineDemo.curveDefinedAtCurrentT) {
@@ -269,4 +289,76 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
         if (data === 'controlPointsChanged') { }
     }
 
+}
+
+
+
+
+
+class DegreeControls implements MyObserver<DemoChange> {
+    private container: p5.Element;
+    private degreeText: p5.Element;
+    private decreaseDegreeButton: p5.Element;
+    private increaseDegreeButton: p5.Element;
+
+    public set visible(visible: boolean) {
+        this.container.style('visibility', visible ? 'visible' : 'hidden');
+    };
+
+
+    constructor(p5: p5, private demo: BSplineDemo, parentContainerId?: string) {
+        this.container = p5.createDiv();
+
+        if (parentContainerId) this.container.parent(parentContainerId);
+        this.container.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
+        this.container.id('degree-controls');
+
+        this.degreeText = p5.createSpan(`degree: ${this.demo.degree}`);
+        this.degreeText.parent(this.container);
+        this.degreeText.id('degree-text');
+
+        this.increaseDegreeButton = p5.createButton('<span class="material-icons">add</span>');
+        this.increaseDegreeButton.parent(this.container);
+        this.increaseDegreeButton.mouseClicked(() => this.increaseDegreeButtonClicked());
+
+        this.decreaseDegreeButton = p5.createButton('<span class="material-icons">remove</span>');
+        this.decreaseDegreeButton.parent(this.container);
+        this.decreaseDegreeButton.mouseClicked(() => this.decreaseDegreeButtonClicked());
+
+        this.updateVisibility();
+
+        this.demo.subscribe(this);
+    }
+
+    update(data: DemoChange): void {
+        if (data === 'controlPointsChanged') {
+            this.updateVisibility();
+        }
+        if (data === 'degreeChanged') {
+            this.updateDegreeText();
+            this.updateButtonDisabled();
+        }
+    }
+
+    updateButtonDisabled() {
+        if (this.demo.degree === this.demo.minDegree) {
+            this.decreaseDegreeButton.attribute('disabled', 'true');
+        } else (this.decreaseDegreeButton.removeAttribute('disabled'));
+    }
+
+    private increaseDegreeButtonClicked() {
+        this.demo.increaseDegree();
+    }
+
+    private decreaseDegreeButtonClicked() {
+        this.demo.decreaseDegree();
+    }
+
+    private updateVisibility() {
+        this.visible = this.demo.controlPoints.length >= 2;
+    }
+
+    private updateDegreeText() {
+        this.degreeText.html(`degree: ${this.demo.degree}`);
+    }
 }
