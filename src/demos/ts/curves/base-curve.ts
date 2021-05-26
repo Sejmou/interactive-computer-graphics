@@ -25,6 +25,16 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     }
     protected _tMax: number;
 
+    /**
+     * not necessarily the same as tMin (have a look at open B-splines, for example!)
+     */
+    public abstract firstTValueWhereCurveDefined: number;
+
+    /**
+     * not necessarily the same as tMax (have a look at open B-splines, for example!)
+     */
+     public abstract lastTValueWhereCurveDefined: number;
+
 
     public set t(newVal: number) {
         this._t = newVal;
@@ -502,6 +512,12 @@ export abstract class Curve implements Drawable {
         this.color = color ?? p5.color(30);
     }
 
+    /**
+     * Creates an array of evaluation steps for the curve, depending on this.noOfEvaluationSteps and tMin and tMax of the demo.
+     * Should be called whenever the range for the parameter t changes
+     * 
+     * @returns array of evaluation steps
+     */
     protected calculateEvaluationSteps(): number[] {
         return createArrayOfEquidistantAscendingNumbersInRange(this.noOfEvaluationSteps, this.demo.tMin, this.demo.tMax);
     }

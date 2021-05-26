@@ -47,6 +47,53 @@ export class BSplineDemo extends CurveDemo {
         return this._basisFunctions;
     }
 
+    /**
+     * Let *p* the *degree* of the B-spline curve. For a closed B-spline curve, the first and *p* and last *p* control points are the same (have the same position).
+     */
+    public get closed(): boolean {
+        const p = this.degree;
+        return this.knotVector.slice(0, p + 1).every((el, i, arr) => el === arr[0])
+        && this.knotVector.slice(-p).every((el, i, arr) => el === arr[0]);
+    }
+
+    /**
+     * Let *p* the *degree* of the B-spline curve. For an *open* B-spline curve, the first and *p* and last *p* control points are *not* the same.
+     * Also refer to the documentation for *closed*.
+     */
+    public get open(): boolean {
+        return !this.closed;
+    }
+
+    public get curveDomain(): [number, number] {
+        return [this.firstTValueWhereCurveDefined, this.lastTValueWhereCurveDefined];
+    }
+
+    public get curveDefinedAtCurrentT(): boolean {
+        return this.t >= this.firstTValueWhereCurveDefined || this.t <= this.lastTValueWhereCurveDefined;
+    }
+
+    public get firstTValueWhereCurveDefined(): number {
+        const p = this.degree;
+        return this.knotVector[p];
+    }
+
+    public get firstKnotIndexWhereCurveDefined(): number {
+        const p = this.degree;
+        return p;
+    }
+
+    public get lastTValueWhereCurveDefined(): number {
+        const p = this.degree;
+        const m = this.knotVector.length - 1;
+        return this.knotVector[m - p];
+    }
+
+    public get lastKnotIndexWhereCurveDefined(): number {
+        const p = this.degree;
+        const m = this.knotVector.length - 1;
+        return m - p;
+    }
+
     constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         const tMin = 0;
         const tMax = 1;
@@ -61,39 +108,38 @@ export class BSplineDemo extends CurveDemo {
         //degree 2 would create segments of quadratic b-splines?
         this.minDegree = 0;
         this._degree = 3;
-        this._knotVector = [];
+        this._knotVector = this.createKnotVector();
         this._basisFunctions = [];
-        this.updateKnotVector();
-        this.updateBasisFunctions();
+        this.createKnotVector();
+        this.createBasisFunctions();
     }
 
     //called every time the curve degree changes
     protected additionalCurveDegreeChangeHandling() {
-        this.updateKnotVector();
-        this.updateBasisFunctions();
+        this._knotVector = this.createKnotVector();
+        this._basisFunctions = this.createBasisFunctions();
     }
 
-    updateKnotVector() {
-        // m := (# of knots in knotVector T) - 1
+    private createKnotVector() {
         // n := (# of control points) - 1
-        // k := order of curve (degree = k - 1)
-        // m = k + n
-        // e. g. for a cubic B-spline w/ 5 control points m = 3 + 4 = 7 (which means that there are 8 entries in the knot vector)
+        // k := order of curve
+        // side note: p := degree of curve = k - 1
+        // m := (# of knots in knotVector T) - 1 = n + k
+        // e. g. for a cubic B-spline w/ 5 control points m = 4 + 3 = 7 (which means that there are 8 entries in the knot vector)
 
         const k = this.degree + 1;
         const n = this.controlPoints.length - 1;
         if (n <= 0) {
-            this._knotVector = [];
-            return;
+            return [];
         }
         const m = n + k;
 
         //knots in knot vector equidistant, in other words: m + 1 values in range [0, m], distributed uniformly (same step size between them)
         //that's why this is called a *uniform* B-spline, btw
-        this._knotVector = createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
+        return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
     }
 
-    private updateBasisFunctions() {
+    private createBasisFunctions() {
         //basis functions (also known as N_{i,k}): retrieved using recursive Cox-de Boor formula
         //iterating over control points P_0 to P_i and k (j goes from 0 to k) - bad explanation lol
 
@@ -106,8 +152,7 @@ export class BSplineDemo extends CurveDemo {
         const m = n + k;
 
         if (n <= 0) {
-            this._basisFunctions = [];
-            return;
+            return [];
         }
 
         let basisFunctions: { (x: number): number }[][] = [[]];//also known as N_{i,k}
@@ -135,7 +180,7 @@ export class BSplineDemo extends CurveDemo {
             }
         }
 
-        this._basisFunctions = basisFunctions;
+        return basisFunctions;
     }
 
     protected addCurve(): Curve {
@@ -170,7 +215,7 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
     }
 
     update(data: DemoChange): void {
-        if (data === 'controlPointsChanged') this.evaluationSteps = this.calculateEvaluationSteps();
+        if (data === 'rangeOfTChanged') this.evaluationSteps = this.calculateEvaluationSteps();
     }
 }
 
