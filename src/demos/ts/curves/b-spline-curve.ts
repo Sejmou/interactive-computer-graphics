@@ -3,7 +3,10 @@ import { MyObserver } from '../ui-interfaces';
 import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawPointVector, drawSquare, renderTextWithSubscript } from '../util';
 import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
-
+interface BasisFunctionData {
+    basisFunction: (x: number) => number,
+    basisFunctionAsLaTeXString: string
+}
 
 export class BSplineDemo extends CurveDemo {
     /**
@@ -66,19 +69,25 @@ export class BSplineDemo extends CurveDemo {
     protected get curveInvalidMessage(): string {
         let errors: string[] = [];
         if (this.degree > this.maxDegree) errors.push(`At least ${this.degree + 1} control points are needed for a B-Spline of degree ${this.degree}
-        Add ${this.degree - this.maxDegree} more control point${this.degree - this.maxDegree == 1 ? '' : 's'}${this.degree > 0? ' or reduce the degree' : ''}`);
+        Add ${this.degree - this.maxDegree} more control point${this.degree - this.maxDegree == 1 ? '' : 's'}${this.degree > 0 ? ' or reduce the degree' : ''}`);
         if (this.degree < this.minDegree) errors.push(`A curve cannot have negative degree`);
         return `${errors.join('\n')}`;
     };
 
-    private _basisFunctions: { (x: number): number }[][];
+    private basisFunctionData: BasisFunctionData[][];
     /**
      * A spline function of order n is a piecewise polynomial function of degree n-1 in a variable x.
      * B-splines of order n are basis functions for spline functions of the same order defined over the same knots,
      * meaning that all possible spline functions can be built from a linear combination of B-splines, and there is only one unique combination for each spline function.
      */
     public get basisFunctions() {
-        return this._basisFunctions;
+        return this.basisFunctionData.map(j => j.map(d => d.basisFunction));
+    }
+    /**
+     * The B-Spline curve's basis functions as an array of arrays of LaTeX strings
+     */
+    public get basisFunctionsAsLaTeXString() {
+        return this.basisFunctionData.map(j => j.map(d => d.basisFunctionAsLaTeXString));
     }
 
     /**
@@ -125,6 +134,12 @@ export class BSplineDemo extends CurveDemo {
         return this.knotVector[m - p] - Number.EPSILON;
     }
 
+    public get firstTValueWhereCurveUndefined(): number {
+        const p = this.degree;
+        const m = this.knotVector.length - 1;
+        return this.knotVector[m - p];
+    }
+
     public get firstKnotIndexWhereCurveUndefined(): number {
         const p = this.degree;
         const m = this.knotVector.length - 1;
@@ -142,7 +157,7 @@ export class BSplineDemo extends CurveDemo {
         this.minDegree = 0;
         this._degree = 2;
         this._knotVector = this.createKnotVector();
-        this._basisFunctions = [];
+        this.basisFunctionData = [];
         this.updateKnotVectorAndBasisFunctions();
 
         this.setCurve(new BSplineCurve(this.p5, this));
@@ -159,7 +174,7 @@ export class BSplineDemo extends CurveDemo {
 
     private updateKnotVectorAndBasisFunctions() {
         this._knotVector = this.createKnotVector();
-        this._basisFunctions = this.createBasisFunctions();
+        this.basisFunctionData = this.createBasisFunctions();
         this.notifyObservers('knotVectorChanged');
     }
 
@@ -199,29 +214,35 @@ export class BSplineDemo extends CurveDemo {
             return [];
         }
 
-        let basisFunctions: { (x: number): number }[][] = [[]];//also known as N_{i,k}
+        let newBasisFunctionData: BasisFunctionData[][] = [[]];//contains the N_{i,k} as actual functions and as LaTeX strings
 
         //e. g. if there are 4 knots, there are 3 N_{i,0} functions
-        for (let j = 0; j < m; j++) {
-            basisFunctions[0][j] =
-                (x: number) => {
-                    if (t[j] <= x && x < t[j + 1]) return 1;
+        for (let i = 0; i < m; i++) {
+            newBasisFunctionData[0][i] = {
+                basisFunction: (x: number) => {
+                    if (t[i] <= x && x < t[i + 1]) return 1;
                     else return 0;
-                };
+                },
+                basisFunctionAsLaTeXString: String.raw`\[N_{${i},0} = \begin{cases} 1,& \text{if} t_{${i}} \leq x < t_{${i + 1}} \\ 0,& \text{otherwise} \end{cases} \]`
+            };
         }
 
         for (let j = 1; j <= p; j++) {
-            basisFunctions[j] = [];
-            for (let i = 0; i < basisFunctions[j - 1].length - 1; i++) {
-                basisFunctions[j][i] = (x: number) => {
-                    const a = (x - t[i]) / (t[i + j] - t[i]) * basisFunctions[j - 1][i](x);
-                    const b = (t[i + j + 1] - x) / (t[i + j + 1] - t[i + 1]) * basisFunctions[j - 1][i + 1](x);
-                    return a + b;
+            newBasisFunctionData[j] = [];
+            for (let i = 0; i < newBasisFunctionData[j - 1].length - 1; i++) {
+                newBasisFunctionData[j][i] = {
+                    basisFunction: (x: number) => {
+                        const a = (x - t[i]) / (t[i + j] - t[i]) * newBasisFunctionData[j - 1][i].basisFunction(x);
+                        const b = (t[i + j + 1] - x) / (t[i + j + 1] - t[i + 1]) * newBasisFunctionData[j - 1][i + 1].basisFunction(x);
+                        return a + b;
+                    },
+                    basisFunctionAsLaTeXString: String.raw`\[N_{${i},${j}}(t) = \frac{ t - t_{${i}} } { t_{${i + j}} - t_{${i}} } \cdot N_{${i}, ${j - 1}}(t) + \frac{ t_{${i + j + 1}} - t } { t_{${i + j + 1}} - t_{${i + 1}} } \cdot N_{${i + 1}, ${j - 1}}(t)\]`
                 }
             }
         }
 
-        return basisFunctions;
+        console.log(newBasisFunctionData);
+        return newBasisFunctionData;
     }
 
     public evaluateBasisFunctions(p: number, t: number) {
@@ -284,7 +305,7 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
         } else {
             renderTextWithSubscript(
                 this.p5,
-                `This open B-Spline curve is only defined in the interval [t_{${this.bSplineDemo.firstKnotIndexWhereCurveDefined}}, t_{${this.bSplineDemo.firstKnotIndexWhereCurveUndefined}})`,
+                `This open B-Spline curve is only defined in the interval [t_{${this.bSplineDemo.firstKnotIndexWhereCurveDefined}}, t_{${this.bSplineDemo.firstKnotIndexWhereCurveUndefined}}) = [${+this.bSplineDemo.firstTValueWhereCurveDefined.toFixed(2)}, ${+this.bSplineDemo.firstTValueWhereCurveUndefined.toFixed(2)})`,
                 10, this.p5.height - 20
             );
         }
