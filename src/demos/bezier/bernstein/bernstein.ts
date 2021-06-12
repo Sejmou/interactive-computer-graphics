@@ -3,19 +3,21 @@ import p5 from "p5";
 import { BezierDemo } from "../../ts/curves/bezier-curve";
 import { Sketch } from '../../ts/sketch';
 import { Clickable, Draggable, Drawable, MyObservable, MyObserver, Touchable } from '../../ts/ui-interfaces';
-import { binomial, drawLineXYCoords, lightenDarkenP5Color, p5TouchPoint, renderTextWithSubscript } from '../../ts/util';
+import { addParagraphWithGivenContentToHtmlElementWithId, binomial, drawLineXYCoords, lightenDarkenP5Color, p5TouchPoint, renderTextWithSubscript } from '../../ts/util';
 import colors from '../../../global-styles/color_exports.scss';
 import { DragVertex } from '../../ts/vertex';
 import { DemoChange } from '../../ts/curves/base-curve';
 
 
 const demoContainerId = 'demo';
+const descriptionContainerId = 'demo-description';
 
-const descriptionId = 'demo-description'
-const descriptionParagraph = document.getElementById(descriptionId);
-if (descriptionParagraph) descriptionParagraph.innerHTML = String.raw`In math terms, a Bézier curve of degree \(n\) is expressed as \[ C(t) = \sum_{i=0}^{n}{b_{i,n}(t) \cdot P_{i}}. \]
-Each \( b_{i,n}(t) \) is the <b>Bernstein polynomial</b> of \(P_i\), a particular control point of the Bézier curve. \( P_i \) is a 2D vector \( (x, y)\).<br>The Bernstein polynomial represents the 'influence' of the control point on the shape of the Bézier curve for the current value of \(t\).`;
-MathJax.typeset([`#${descriptionId}`]);
+const descriptionParagraph = addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
+    String.raw`In math terms, a Bézier curve of degree \(n\) is expressed as \[ C(t) = \sum_{i=0}^{n}{b_{i,n}(t) \cdot P_{i}}. \]
+Each \( b_{i,n}(t) \) is the <b>Bernstein polynomial</b> of \(P_i\), a particular control point of the Bézier curve. \( P_i \) is a 2D vector \( (x, y)\).<br>The Bernstein polynomial represents the 'influence' of the control point on the shape of the Bézier curve for the current value of \(t\).`
+    );
+
+MathJax.typeset([`#${descriptionContainerId}`]);
 
 //add container for bernstein polynomial visualization
 const bernsteinGraphContainer = document.createElement('div');

@@ -337,6 +337,17 @@ export function luminanceFromP5Color(color: p5.Color): number {
     return luminanceFromRGBAStr(rgbaStr);
 }
 
+export function addParagraphWithGivenContentToHtmlElementWithId(id: string, pContent: string): HTMLParagraphElement | undefined {
+    const element = document.getElementById(id);
+    if (element) {
+        const p = document.createElement('p');
+        p.innerHTML = pContent;
+        element.appendChild(p);
+        return p;
+    }
+    else console.warn(`HTML element with id ${id} not found`);
+}
+
 
 export class FrameRateMonitor implements Drawable {
     constructor(private p5: p5) { }

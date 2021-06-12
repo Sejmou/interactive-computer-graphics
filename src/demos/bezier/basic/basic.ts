@@ -3,14 +3,13 @@ import { BezierDemo } from "../../ts/curves/bezier-curve";
 import { Sketch } from '../../ts/sketch';
 import { MyObserver } from '../../ts/ui-interfaces';
 import { DemoChange } from '../../ts/curves/base-curve';
+import { addParagraphWithGivenContentToHtmlElementWithId } from '../../ts/util';
 
 
 
 const demoContainerId = 'demo';
-
-const descriptionId = 'demo-description'
-const descriptionParagraph = document.getElementById(descriptionId);
-if (descriptionParagraph) descriptionParagraph.innerText = 'Get an intuition for Bézier curves (which are used in many graphics applications for drawing nice, smooth curves) interactively!';
+const descriptionContainerId = 'demo-description';
+addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId, 'Get an intuition for Bézier curves (which are used in many graphics applications for drawing nice, smooth curves) interactively!');
 
 
 async function createDemo() {
