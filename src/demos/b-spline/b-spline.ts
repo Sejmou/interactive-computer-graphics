@@ -59,7 +59,7 @@ async function createDemo() {
     const bSplineDemo = sketch.add((p5, containerId) => new BSplineDemo(p5, containerId));
 
     //setting FPS to 0 causes sketch to instantiate p5 with noLoop() as last call in setup
-    //this causes the sketch to only be redrawn when p5.redraw() is called
+    //this causes the sketch to only be redrawn when p5.redraw() is called, improving performance
     const basisFuncSketch = new Sketch(basisFuncContainerId, undefined, undefined, undefined, 0);
     await basisFuncSketch.create();
 
@@ -71,6 +71,7 @@ async function createDemo() {
     bSplineDemo.onHoverChange = () => graphPlotter.redraw();
     bSplineDemo.onDraggingChange = () => graphPlotter.redraw();
 
+    //drawing line for current value of t on top of plot's canvas (onto new transparent canvas that is positioned above the plot's canvas)
     const lineForTSketch = new Sketch(basisFuncContainerId, undefined, undefined, p5 => null);
     await lineForTSketch.create();
     lineForTSketch.add(p5 => new LineAtTPlotter(p5, bSplineDemo, graphPlotter));
@@ -107,6 +108,8 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
     private axisRulerAndLabelColor: p5.Color;
     private rulerMarkerSize: number;
 
+    private curveDomainBorderColor: p5.Color;
+
     private dataPoints: CurveData[] = [];
 
     constructor(private p5: p5, private bSplineDemo: BSplineDemo) {
@@ -117,6 +120,7 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
         this.distMinToMaxYAxis = this.p5.height - this._axisRulerOffsetFromBorder * 1.5;
 
         this.axisRulerAndLabelColor = p5.color(30);
+        this.curveDomainBorderColor = p5.color(120);
 
         this.computeBSplineCurves();
         setTimeout(() => this.redraw(), 100);
@@ -172,6 +176,7 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
         if (this.dataPoints.length > 0) {
             this.drawBSplineCurves();
             this.drawAxisRulersAndLabels();
+            if (this.bSplineDemo.valid) this.drawBordersOfCurveDomain();
         }
         else this.renderInfoText();
     }
@@ -247,6 +252,15 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
         renderTextWithSubscript(this.p5, 'c_{i,n}', this._axisRulerOffsetFromBorder / 10, this._axisRulerOffsetFromBorder * 1.5 + this.distMinToMaxYAxis / 2);
 
         this.p5.pop();
+    }
+
+    private drawBordersOfCurveDomain() {
+        //lower bound
+        drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder + this.bSplineDemo.firstTValueWhereCurveDefined * this.distMinToMaxXAxis, this.p5.height - this._axisRulerOffsetFromBorder,
+            this.axisRulerOffsetFromBorder + this.bSplineDemo.firstTValueWhereCurveDefined * this.distMinToMaxXAxis, this.p5.height - this.distMinToMaxYAxis - this.axisRulerOffsetFromBorder, this.curveDomainBorderColor, 1);
+        //upper bound
+        drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder + this.bSplineDemo.lastTValueWhereCurveDefined * this.distMinToMaxXAxis, this.p5.height - this._axisRulerOffsetFromBorder,
+            this.axisRulerOffsetFromBorder + this.bSplineDemo.lastTValueWhereCurveDefined * this.distMinToMaxXAxis, this.p5.height - this.distMinToMaxYAxis - this.axisRulerOffsetFromBorder, this.curveDomainBorderColor, 1);
     }
 
     private renderInfoText() {
