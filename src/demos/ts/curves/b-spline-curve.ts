@@ -1,7 +1,7 @@
 import p5, { Vector } from 'p5';
 import { MyObserver } from '../ui-interfaces';
 import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawPointVector, drawSquare, renderTextWithSubscript } from '../util';
-import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
+import { ControlPointInfluenceData, ControlPointInfluenceVisualization as ControlPointInfluenceBarVisualization, Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 interface BasisFunctionData {
     basisFunction: (x: number) => number,
@@ -241,7 +241,7 @@ export class BSplineDemo extends CurveDemo {
             }
         }
 
-        console.log(newBasisFunctionData);
+        //console.log(newBasisFunctionData);
         return newBasisFunctionData;
     }
 
@@ -280,7 +280,7 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
 
 
 
-class BSplineVisualization extends CurveDrawingVisualization implements MyObserver<DemoChange> {
+class BSplineVisualization extends CurveDrawingVisualization {
     private knotMarkerColor: p5.Color = this.p5.color(150);
 
     //storing bSplineDemo twice, once as Demo so that code of abstract class works and once as BSplineDemo so that we can use its specific subclass properties
@@ -298,7 +298,11 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
 
         if (!this.demo.valid) return;
 
-        if (this.bSplineDemo.degree > 0) this.drawKnotMarkers();
+        this.drawInfluenceOfCurrentlyActiveCtrlPt();
+
+        if (this.bSplineDemo.degree > 0) {
+            this.drawKnotMarkers();
+        }
 
         if (this.bSplineDemo.curveDefinedAtCurrentT) {
             this.drawPointAtT();
@@ -312,14 +316,16 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
     }
 
     private drawKnotMarkers() {
-        this.bSplineDemo.knotVector.forEach((k, i) => {
+        this.bSplineDemo.knotVector.forEach((t, i) => {
             if (i < this.bSplineDemo.firstKnotIndexWhereCurveDefined || i > this.bSplineDemo.firstKnotIndexWhereCurveUndefined) return;
+            const knotPosition = this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, t);
             drawSquare(
                 this.p5,
-                this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, k),
+                knotPosition,
                 this.knotMarkerColor,
                 this.bSplineDemo.basePointDiameter * 0.75
             );
+            if (this.bSplineDemo.showPointLabels) renderTextWithSubscript(this.p5, `t_{${i}}`, knotPosition.x - 20, knotPosition.y - 10);
         });
     }
 
@@ -332,10 +338,11 @@ class BSplineVisualization extends CurveDrawingVisualization implements MyObserv
         );
     }
 
-    update(data: DemoChange): void {
-        if (data === 'controlPointsChanged') { }
+    //TODO: draw line in color of currently active ctrlPt (thicker the bigger the ctrlPt's influence)
+    private drawInfluenceOfCurrentlyActiveCtrlPt() {
+        const activeCtrlPt = this.bSplineDemo.controlPoints.findIndex(pt => pt.hovering || pt.dragging);
+        if (!activeCtrlPt) return;
     }
-
 }
 
 
@@ -407,5 +414,34 @@ class DegreeControls implements MyObserver<DemoChange> {
 
     private updateDegreeText() {
         this.degreeText.html(`degree: ${this.demo.degree}`);
+    }
+}
+
+
+
+
+/**
+ * Visualization for the influence of the B-Spline's control points (de boor points) using bars
+ */
+export class DeBoorControlPointInfluenceVisualization extends ControlPointInfluenceBarVisualization implements MyObserver<DemoChange> {
+    private bSplineDemo: BSplineDemo;
+
+    constructor(p5: p5, bSplineDemo: BSplineDemo) {
+        super(p5);
+        this.bSplineDemo = bSplineDemo;
+        bSplineDemo.subscribe(this);
+    }
+
+    update(data: DemoChange): void {
+        if (data == 'controlPointsChanged' || data == 'degreeChanged' || data == 'knotVectorChanged' || data == 'rangeOfTChanged') this.updateInfluenceDataAndBars();
+    }
+
+    protected getCurrentControlPointInfluenceDataPoints(): ControlPointInfluenceData[] {
+        return this.bSplineDemo.controlPoints.map((c, i) => {
+            return {
+                controlPoint: c,
+                currentCtrlPtInfluence: () => this.bSplineDemo.basisFunctions[this.bSplineDemo.degree][i](this.bSplineDemo.t)
+            }
+        });
     }
 }

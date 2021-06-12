@@ -1,6 +1,6 @@
 import './b-spline.scss';
 import { Sketch } from "../ts/sketch";
-import { BSplineDemo } from '../ts/curves/b-spline-curve';
+import { BSplineDemo, DeBoorControlPointInfluenceVisualization } from '../ts/curves/b-spline-curve';
 import { DemoChange } from '../ts/curves/base-curve';
 import colors from '../../global-styles/color_exports.scss';
 import p5 from 'p5';
@@ -57,6 +57,9 @@ async function createDemo() {
     const sketch = new Sketch(demoContainerId);
     await sketch.create();
     const bSplineDemo = sketch.add((p5, containerId) => new BSplineDemo(p5, containerId));
+    bSplineDemo.showPointLabels = true;
+
+    sketch.add((p5) => new DeBoorControlPointInfluenceVisualization(p5, bSplineDemo));
 
     //setting FPS to 0 causes sketch to instantiate p5 with noLoop() as last call in setup
     //this causes the sketch to only be redrawn when p5.redraw() is called, improving performance
