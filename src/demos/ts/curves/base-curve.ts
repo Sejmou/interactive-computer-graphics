@@ -631,7 +631,7 @@ export abstract class ControlPointInfluenceVisualization implements Drawable, Dr
 
     draw(): void {
         this.influenceBars.forEach(b => b.draw());
-        this.drawSummaryBar();        
+        if (this.influenceBars.length > 1) this.drawSummaryBar();        
     }
 
     /**

@@ -340,8 +340,20 @@ class BSplineVisualization extends CurveDrawingVisualization {
 
     //TODO: draw line in color of currently active ctrlPt (thicker the bigger the ctrlPt's influence)
     private drawInfluenceOfCurrentlyActiveCtrlPt() {
-        const activeCtrlPt = this.bSplineDemo.controlPoints.findIndex(pt => pt.hovering || pt.dragging);
-        if (!activeCtrlPt) return;
+        const ctrlPts = this.bSplineDemo.controlPoints.slice();
+        const activeCtrlPtIndex = ctrlPts.findIndex(pt => pt.hovering || pt.dragging);
+        if (activeCtrlPtIndex == -1) return;
+        const i = activeCtrlPtIndex;
+        const activeCtrlPt = ctrlPts[i];
+        const p = this.bSplineDemo.degree;
+        const basisFunction = this.bSplineDemo.basisFunctions[p][activeCtrlPtIndex];
+        const knotVector = this.bSplineDemo.knotVector;
+
+        //from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html we know:
+        //Basis function N_{i,p}(u) is non-zero on [u_i, u_{i+p+1}). Or, equivalently, N_{i,p}(u) is non-zero on p+1 knot spans [u_i, u_{i+1}), [u_{i+1}, u_{i+2}), ..., [u_{i+p}, u_{i+p+1}).
+        const tValues = createArrayOfEquidistantAscendingNumbersInRange(100, knotVector[Math.max(i, this.bSplineDemo.firstKnotIndexWhereCurveDefined)], knotVector[Math.min(i + p + 1, this.bSplineDemo.firstKnotIndexWhereCurveUndefined)]);
+        const pointsAndActiveCtrlPtInfluence = tValues.map(t => ({pos : this.bSplineDemo.evaluateBasisFunctions(p, t), activeCtrlPtInfluence: basisFunction(t)}));
+        pointsAndActiveCtrlPtInfluence.slice(0, -1).forEach((p, i) => drawLineVector(this.p5, p.pos, pointsAndActiveCtrlPtInfluence[i + 1].pos, activeCtrlPt.color, this.demo.baseLineWidth * 2 * p.activeCtrlPtInfluence));
     }
 }
 
