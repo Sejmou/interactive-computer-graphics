@@ -245,7 +245,19 @@ export class BSplineDemo extends CurveDemo {
         return newBasisFunctionData;
     }
 
-    public evaluateBasisFunctions(p: number, t: number) {
+    /**
+     * Returns a point on the B-Spline curve for given p and t using the basis functions computed via Cox-de Boor recursion formula.
+     * This method is less efficient than De Boor's algorithm as basis funcitons that are guaranteed to be zero are still computed/evaluated
+     * Note:  doesn't check if p is valid, also returns garbage if curve is not defined for given t!
+     * 
+     * @param p the degree of the basis functions (or simply the degree of the curve)
+     * @param t the point where the curve should be evaluated (independent variable of the curve equation formula)
+     * @returns point on the curve (or garbage if the curve is not defined at the provided value for t)
+     */
+    public getPointOnCurveByEvaluatingBasisFunctions(p: number, t: number) {
+        //from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html we know:
+        //Basis function N_{i,p}(u) is non-zero on [u_i, u_{i+p+1}). Or, equivalently, N_{i,p}(u) is non-zero on p+1 knot spans [u_i, u_{i+1}), [u_{i+1}, u_{i+2}), ..., [u_{i+p}, u_{i+p+1}).
+        //TODO: make this more efficient so that only non-zero basis functions are used for calculation 
         return this.controlPoints.map(pt => pt.position).reduce(
             (prev, curr, i) => Vector.add(prev, Vector.mult(curr, this.basisFunctions[p][i](t))), this.p5.createVector(0, 0)
         );
@@ -265,7 +277,7 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
 
     public draw() {
         if (!this.demo.valid) return;
-        const points = this.evaluationSteps.map(t => this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, t));
+        const points = this.evaluationSteps.map(t => this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(this.bSplineDemo.degree, t));
         if (this.bSplineDemo.degree === 0) {
             points.slice(0, -1).forEach(p => drawCircle(this.p5, p, this.color, this.demo.basePointDiameter * 1.25));
         } else {
@@ -318,7 +330,7 @@ class BSplineVisualization extends CurveDrawingVisualization {
     private drawKnotMarkers() {
         this.bSplineDemo.knotVector.forEach((t, i) => {
             if (i < this.bSplineDemo.firstKnotIndexWhereCurveDefined || i > this.bSplineDemo.firstKnotIndexWhereCurveUndefined) return;
-            const knotPosition = this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, t);
+            const knotPosition = this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(this.bSplineDemo.degree, t);
             drawSquare(
                 this.p5,
                 knotPosition,
@@ -332,7 +344,7 @@ class BSplineVisualization extends CurveDrawingVisualization {
     private drawPointAtT() {
         drawCircle(
             this.p5,
-            this.bSplineDemo.evaluateBasisFunctions(this.bSplineDemo.degree, this.bSplineDemo.t),
+            this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(this.bSplineDemo.degree, this.bSplineDemo.t),
             this.colorOfPointOnCurve,
             this.bSplineDemo.basePointDiameter * 1.5
         );
@@ -352,7 +364,7 @@ class BSplineVisualization extends CurveDrawingVisualization {
         //from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html we know:
         //Basis function N_{i,p}(u) is non-zero on [u_i, u_{i+p+1}). Or, equivalently, N_{i,p}(u) is non-zero on p+1 knot spans [u_i, u_{i+1}), [u_{i+1}, u_{i+2}), ..., [u_{i+p}, u_{i+p+1}).
         const tValues = createArrayOfEquidistantAscendingNumbersInRange(100, knotVector[Math.max(i, this.bSplineDemo.firstKnotIndexWhereCurveDefined)], knotVector[Math.min(i + p + 1, this.bSplineDemo.firstKnotIndexWhereCurveUndefined)]);
-        const pointsAndActiveCtrlPtInfluence = tValues.map(t => ({pos : this.bSplineDemo.evaluateBasisFunctions(p, t), activeCtrlPtInfluence: basisFunction(t)}));
+        const pointsAndActiveCtrlPtInfluence = tValues.map(t => ({pos : this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(p, t), activeCtrlPtInfluence: basisFunction(t)}));
         pointsAndActiveCtrlPtInfluence.slice(0, -1).forEach((p, i) => drawLineVector(this.p5, p.pos, pointsAndActiveCtrlPtInfluence[i + 1].pos, activeCtrlPt.color, this.demo.baseLineWidth * 2 * p.activeCtrlPtInfluence));
     }
 }
