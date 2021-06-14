@@ -301,6 +301,34 @@ export function createArrayOfEquidistantAscendingNumbersInRange(noOfValues: numb
     return [...Array(noOfValues).keys()].map(i => begin + (i / (noOfValues - 1)) * (end - begin));
 }
 
+/**
+ * Emulates Python's built-in range() function (stolen from https://stackoverflow.com/a/8273091/13727176)
+ * @param start the start of the range (if only parameter provided this the stop value (exclusive))
+ * @param stop the end of the range (exclusive)
+ * @param step the step size. If negative, the range starts at stop and ends at start (each value gets decremented by step)
+ * @returns an array with the desired range of numbers
+ */
+export function range(start: number, stop?: number, step?: number) {
+    if (stop == undefined) {
+        stop = start;
+        start = 0;
+    }
+
+    if (step == undefined) step = 1;
+
+    //invalid parameter combinations
+    if ((step > 0 && start >= stop) || (step < 0 && start <= stop)) {
+        return [];
+    }
+
+    let result = [];
+    for (let i = start; step > 0 ? i < stop : i > stop; i += step) {
+        result.push(i);
+    }
+
+    return result;
+};
+
 export function colorsTooSimilar(colorA: p5.Color, colorB: p5.Color) {
     let colAAsRGBAObj = extractColorChannelsFromRGBAString(colorA.toString());
     let colBAsRGBAObj = extractColorChannelsFromRGBAString(colorB.toString());

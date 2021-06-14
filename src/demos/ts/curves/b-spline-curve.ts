@@ -1,6 +1,6 @@
 import p5, { Vector } from 'p5';
 import { MyObserver } from '../ui-interfaces';
-import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawPointVector, drawSquare, renderTextWithSubscript } from '../util';
+import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawPointVector, drawSquare, range, renderTextWithSubscript } from '../util';
 import { ControlPointInfluenceData, ControlPointInfluenceVisualization as ControlPointInfluenceBarVisualization, Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 interface BasisFunctionData {
@@ -255,12 +255,61 @@ export class BSplineDemo extends CurveDemo {
      * @returns point on the curve (or garbage if the curve is not defined at the provided value for t)
      */
     public getPointOnCurveByEvaluatingBasisFunctions(p: number, t: number) {
-        //from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html we know:
-        //Basis function N_{i,p}(u) is non-zero on [u_i, u_{i+p+1}). Or, equivalently, N_{i,p}(u) is non-zero on p+1 knot spans [u_i, u_{i+1}), [u_{i+1}, u_{i+2}), ..., [u_{i+p}, u_{i+p+1}).
-        //TODO: make this more efficient so that only non-zero basis functions are used for calculation 
         return this.controlPoints.map(pt => pt.position).reduce(
             (prev, curr, i) => Vector.add(prev, Vector.mult(curr, this.basisFunctions[p][i](t))), this.p5.createVector(0, 0)
         );
+    }
+
+    /**
+     * Returns a point on the B-Spline curve using De Boor's algorithm (more efficient than computing and evaluating basis functions explicitly).
+     * Only non-zero basis functions are considered (however they aren't computed explicitly)
+     * 
+     * @returns 
+     */
+    public getPointOnCurveUsingDeBoorsAlgorithm(t: number) {
+        throw new Error('Not working lol');
+        // if (t < this.knotVector[this.firstKnotIndexWhereCurveDefined] || t > this.lastTValueWhereCurveDefined) {
+        //     console.warn('getPointOnCurveUsingDeBoorsAlgorithm() called with value outside of range where curve defined!');
+        //     return this.p5.createVector(0, 0);
+        // }
+        // const p = this.degree;
+        // const c = this.controlPoints.map(pt => pt.position);
+
+        // //k := Index of knot interval [t_k, t_{k+1}]that contains t.
+        // const k = this.knotVector.slice(0, -1).findIndex((k, i) => k <= t && t < this.knotVector[i + 1]);
+        // if (k == -1) {
+        //     console.warn('getPointOnCurveUsingDeBoorsAlgorithm() called with invalid value!');
+        //     return this.p5.createVector(0, 0);
+        // }
+
+        // //If t lies in [t_k, t_{k+1}) and t != t_k, let h = p (i.e., inserting t p times) and s = 0
+        // //If t = t_k and t_k is a knot of multiplicity s, let h = p - s (i.e., inserting t (p - s) times)
+        // // const s = t == this.knotVector[k]? 0 : this.knotVector.filter(knot => knot == this.knotVector[k]).length;
+        // // const h = p - s;
+
+        // //Copy the affected control points p_{k-s}, p_{k-s-1}, p_{k-s-2}, ..., p_{k-p+1} and p_{k-p} to a new array and rename them as p_{k-s,0}, p_{k-s-1,0}, p_{k-s-2,0}, ..., p_{k-p+1,0}
+        // // const copiedPts = c.slice(k - s, (k - p + 1) + 1).map(pt => pt.copy());
+        // // console.log(copiedPts.length, copiedPts);
+        // // return this.p5.createVector(0, 0);
+
+        // const zeroToP = [...Array(p + 1).keys()];
+        // const oneToP = zeroToP.slice(1);
+        // const knotVectorSlice = this.knotVector.slice(k, k + p);
+        // const paddingStart = oneToP.map(() => knotVectorSlice[0]);
+        // const paddingEnd = oneToP.map(() => knotVectorSlice.slice(-1)[0]);
+        // const paddedKnotVec = [...paddingStart, ...knotVectorSlice, ...paddingEnd];
+
+
+        // const d = zeroToP.map(j => c[j + k - p].copy());
+        // oneToP.forEach(r => {
+        //     range(p, r - 1, -1).forEach(j => {
+        //         const alpha = (t - paddedKnotVec[j + k - p]) / (paddedKnotVec[j + 1 + k - r] - paddedKnotVec[j + k - p]);
+        //         d[j].x = (1.0 - alpha) * d[j - 1].x + alpha * d[j].x;
+        //         d[j].y = (1.0 - alpha) * d[j - 1].y + alpha * d[j].y;
+        //     });
+        // });
+
+        // return d[p];
     }
 }
 
@@ -321,7 +370,7 @@ class BSplineVisualization extends CurveDrawingVisualization {
         } else {
             renderTextWithSubscript(
                 this.p5,
-                `This ${this.bSplineDemo.open? 'open' : 'closed'} B-Spline curve is only defined in the interval [t_{${this.bSplineDemo.firstKnotIndexWhereCurveDefined}}, t_{${this.bSplineDemo.firstKnotIndexWhereCurveUndefined}}) = [${+this.bSplineDemo.firstTValueWhereCurveDefined.toFixed(2)}, ${+this.bSplineDemo.firstTValueWhereCurveUndefined.toFixed(2)})`,
+                `This ${this.bSplineDemo.open ? 'open' : 'closed'} B-Spline curve is only defined in the interval [t_{${this.bSplineDemo.firstKnotIndexWhereCurveDefined}}, t_{${this.bSplineDemo.firstKnotIndexWhereCurveUndefined}}) = [${+this.bSplineDemo.firstTValueWhereCurveDefined.toFixed(2)}, ${+this.bSplineDemo.firstTValueWhereCurveUndefined.toFixed(2)})`,
                 10, this.p5.height - 20
             );
         }
@@ -364,7 +413,7 @@ class BSplineVisualization extends CurveDrawingVisualization {
         //from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html we know:
         //Basis function N_{i,p}(u) is non-zero on [u_i, u_{i+p+1}). Or, equivalently, N_{i,p}(u) is non-zero on p+1 knot spans [u_i, u_{i+1}), [u_{i+1}, u_{i+2}), ..., [u_{i+p}, u_{i+p+1}).
         const tValues = createArrayOfEquidistantAscendingNumbersInRange(100, knotVector[Math.max(i, this.bSplineDemo.firstKnotIndexWhereCurveDefined)], knotVector[Math.min(i + p + 1, this.bSplineDemo.firstKnotIndexWhereCurveUndefined)]);
-        const pointsAndActiveCtrlPtInfluence = tValues.map(t => ({pos : this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(p, t), activeCtrlPtInfluence: basisFunction(t)}));
+        const pointsAndActiveCtrlPtInfluence = tValues.map(t => ({ pos: this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(p, t), activeCtrlPtInfluence: basisFunction(t) }));
         pointsAndActiveCtrlPtInfluence.slice(0, -1).forEach((p, i) => drawLineVector(this.p5, p.pos, pointsAndActiveCtrlPtInfluence[i + 1].pos, activeCtrlPt.color, this.demo.baseLineWidth * 2 * p.activeCtrlPtInfluence));
     }
 }
