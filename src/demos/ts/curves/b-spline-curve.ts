@@ -267,37 +267,54 @@ export class BSplineDemo extends CurveDemo {
      * @returns 
      */
     public getPointOnCurveUsingDeBoorsAlgorithm(t: number) {
-        throw new Error('Not working lol');
-        // if (t < this.knotVector[this.firstKnotIndexWhereCurveDefined] || t > this.lastTValueWhereCurveDefined) {
-        //     console.warn('getPointOnCurveUsingDeBoorsAlgorithm() called with value outside of range where curve defined!');
-        //     return this.p5.createVector(0, 0);
-        // }
-        // const p = this.degree;
-        // const c = this.controlPoints.map(pt => pt.position);
+        if (t < this.knotVector[this.firstKnotIndexWhereCurveDefined] || t > this.lastTValueWhereCurveDefined) {
+            console.warn('getPointOnCurveUsingDeBoorsAlgorithm() called with value outside of range where curve defined!');
+            return this.p5.createVector(0, 0);
+        }
+        const p = this.degree;
+        const c = this.controlPoints.map(pt => pt.position);
 
-        // //k := Index of knot interval [t_k, t_{k+1}]that contains t.
-        // const k = this.knotVector.slice(0, -1).findIndex((k, i) => k <= t && t < this.knotVector[i + 1]);
-        // if (k == -1) {
-        //     console.warn('getPointOnCurveUsingDeBoorsAlgorithm() called with invalid value!');
-        //     return this.p5.createVector(0, 0);
-        // }
+        //k := Index of knot interval [t_k, t_{k+1}]that contains t.
+        const k = this.knotVector.slice(0, -1).findIndex((k, i) => k <= t && t < this.knotVector[i + 1]);
+        if (k == -1) {
+            console.warn('getPointOnCurveUsingDeBoorsAlgorithm() called with invalid value!');
+            return this.p5.createVector(0, 0);
+        }
 
-        // //If t lies in [t_k, t_{k+1}) and t != t_k, let h = p (i.e., inserting t p times) and s = 0
-        // //If t = t_k and t_k is a knot of multiplicity s, let h = p - s (i.e., inserting t (p - s) times)
-        // // const s = t == this.knotVector[k]? 0 : this.knotVector.filter(knot => knot == this.knotVector[k]).length;
-        // // const h = p - s;
+        //If t lies in [t_k, t_{k+1}) and t != t_k, let h = p (i.e., inserting t p times) and s = 0
+        //If t = t_k and t_k is a knot of multiplicity s, let h = p - s (i.e., inserting t (p - s) times)
+        const s = this.knotVector.filter(knot => knot == t).length;
+        const h = p - s;
+        //const hTimesT = [...Array(h).keys()].map(() => t);
+        //const knotVectorWithTInsertedHTimes = [...this.knotVector.slice(0, k + 1), ...hTimesT, ...this.knotVector.slice(k+1)];
 
-        // //Copy the affected control points p_{k-s}, p_{k-s-1}, p_{k-s-2}, ..., p_{k-p+1} and p_{k-p} to a new array and rename them as p_{k-s,0}, p_{k-s-1,0}, p_{k-s-2,0}, ..., p_{k-p+1,0}
-        // // const copiedPts = c.slice(k - s, (k - p + 1) + 1).map(pt => pt.copy());
-        // // console.log(copiedPts.length, copiedPts);
-        // // return this.p5.createVector(0, 0);
+        //Copy the affected control points p_{k-s}, p_{k-s-1}, p_{k-s-2}, ..., p_{k-p+1} and p_{k-p} to a new array and rename them as p_{k-s,0}, p_{k-s-1,0}, p_{k-s-2,0}, ..., p_{k-p+1,0}
+        const copiedPts = c.slice(k - p, k - s + 1).map(pt => pt.copy());
+        const ptsPerIteration = copiedPts.map(pt => [pt]);
+
+        const knotVectorSlice = this.knotVector.slice(k - p, k - s + 1);
+
+        for (let r = 1; r <= h; r++) {
+            for (let i = k - p + r; i <= k - s; i++) {
+                const alpha = (t - this.knotVector[i]) / (this.knotVector[i + p - r + 1] - this.knotVector[i]);
+                if (ptsPerIteration[i - 1] == undefined || ptsPerIteration[i] == undefined) {
+                    console.log('undefined!');
+                }
+                ptsPerIteration[i][r] = p5.Vector.add(p5.Vector.mult(ptsPerIteration[i - 1][r - 1], 1 - alpha), p5.Vector.mult(ptsPerIteration[i][r - 1], alpha));
+            }
+        }
+
+        if (ptsPerIteration[k - s][p - s] == undefined) {
+            console.log('undefined!');
+        }
+
+        return ptsPerIteration[k - s][p - s];
 
         // const zeroToP = [...Array(p + 1).keys()];
         // const oneToP = zeroToP.slice(1);
-        // const knotVectorSlice = this.knotVector.slice(k, k + p);
-        // const paddingStart = oneToP.map(() => knotVectorSlice[0]);
-        // const paddingEnd = oneToP.map(() => knotVectorSlice.slice(-1)[0]);
-        // const paddedKnotVec = [...paddingStart, ...knotVectorSlice, ...paddingEnd];
+        // const paddingStart = oneToP.map(() => this.knotVector[0]);
+        // const paddingEnd = oneToP.map(() => this.knotVector.slice(-1)[0]);
+        // const paddedKnotVec = [...paddingStart, ...this.knotVector, ...paddingEnd];
 
 
         // const d = zeroToP.map(j => c[j + k - p].copy());
@@ -326,7 +343,7 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
 
     public draw() {
         if (!this.demo.valid) return;
-        const points = this.evaluationSteps.map(t => this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(this.bSplineDemo.degree, t));
+        const points = this.evaluationSteps.map(t => this.bSplineDemo.getPointOnCurveUsingDeBoorsAlgorithm(t));
         if (this.bSplineDemo.degree === 0) {
             points.slice(0, -1).forEach(p => drawCircle(this.p5, p, this.color, this.demo.basePointDiameter * 1.25));
         } else {
