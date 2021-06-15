@@ -79,7 +79,7 @@ async function createDemo() {
     bSplineDemo.onDraggingChange = () => graphPlotter.redraw();
 
     //drawing line for current value of t on top of plot's canvas (onto new transparent canvas that is positioned above the plot's canvas)
-    const lineForTSketch = new Sketch(basisFuncContainerId, undefined, undefined, p5 => null);
+    const lineForTSketch = new Sketch(basisFuncContainerId, undefined, undefined, () => undefined);
     await lineForTSketch.create();
     lineForTSketch.add(p5 => new LineAtTPlotter(p5, bSplineDemo, graphPlotter));
 

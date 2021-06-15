@@ -11,12 +11,12 @@ export class Sketch {
      * @param parentContainerId ID of HTML tag/container in which the sketch and its canvas should be created
      * @param calcCanvasWidth function for (re-)calculating the height of the sketch's canvas
      * @param calcCanvasHeight function for (re-)calculating the height of the sketch's canvas
-     * @param createBGColor define a function for setting the desired background color (called w/ p5 instance provided by p5 when setup() is called); return null if sketch should have transparent background
+     * @param createBGColor define a function for setting the desired background color (called w/ p5 instance provided by p5 when setup() is called); return undefined if sketch should have transparent background
      * @param frameRate >= 0; if 0, sketch is only updated if redraw() is called!
      */
     constructor(
         private parentContainerId: string, public calcCanvasWidth?: (p5Instance: p5) => number, public calcCanvasHeight?: (p5Instance: p5) => number,
-        private createBGColor: (p5: p5) => p5.Color | null = (p5) => p5.color(230), private frameRate?: number
+        private createBGColor: (p5: p5) => p5.Color | undefined = (p5) => p5.color(230), private frameRate?: number
     ) {}
 
     private drawables: Drawable[] = [];
@@ -31,6 +31,11 @@ export class Sketch {
         )
     };
 
+    public get backgroundColor() {
+        return this._backgroundColor;
+    }
+    private _backgroundColor: p5.Color | undefined;
+
     /**
      * Creates the sketch; The promise this method returns has to resolve, otherwise add() will not work as p5 is not configured yet
      * 
@@ -40,7 +45,7 @@ export class Sketch {
         return new Promise((resolve) => {
             const setupSketch = (p5Instance: p5) => {
                 if (this.frameRate) p5Instance.frameRate(this.frameRate);
-                const bgColor = this.createBGColor(p5Instance);
+                this._backgroundColor = this.createBGColor(p5Instance);
     
                 const calcCanvasWidth = this.calcCanvasWidth || ((p5: p5) => Math.min(p5.windowWidth, 800));
                 const calcCanvasHeight = this.calcCanvasHeight || ((p5: p5) => p5.windowHeight * 0.6);
@@ -94,7 +99,7 @@ export class Sketch {
                 };
     
                 p5Instance.draw = () => {
-                    if (bgColor) p5Instance.background(bgColor);
+                    if (this._backgroundColor !== undefined) p5Instance.background(this._backgroundColor);
                     else p5Instance.clear();
                     this.drawables.forEach(d => d.draw());
                 };

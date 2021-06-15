@@ -1,12 +1,20 @@
 import p5, { Vector } from 'p5';
+import { Sketch } from '../sketch';
 import { MyObserver } from '../ui-interfaces';
 import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawPointVector, drawSquare, range, renderTextWithSubscript } from '../util';
 import { ControlPointInfluenceData, ControlPointInfluenceVisualization as ControlPointInfluenceBarVisualization, Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
+
+
 
 interface BasisFunctionData {
     basisFunction: (x: number) => number,
     basisFunctionAsLaTeXString: string
 }
+
+interface BSplineEvaluationData {
+    tempPtsCreatedDuringEvaluation: p5.Vector[][],
+    pt: p5.Vector
+};
 
 export class BSplineDemo extends CurveDemo {
     /**
@@ -264,17 +272,24 @@ export class BSplineDemo extends CurveDemo {
      * Returns a point on the B-Spline curve using De Boor's algorithm (more efficient than computing and evaluating basis functions explicitly).
      * Only non-zero basis functions are considered (however they aren't computed explicitly)
      * 
-     * @returns 
+     * @returns the point on the B-Spline curve
      */
-    public getPointOnCurveUsingDeBoorsAlgorithm(t: number) {
+    public getPointOnCurveWithDeBoorsAlgorithm(t: number): p5.Vector {
+        return this.getPointOnCurveAndTemporaryCtrlPtsCreatedUsingDeBoorsAlgo(t).pt;
+    }
+
+    public getPointOnCurveAndTemporaryCtrlPtsCreatedUsingDeBoorsAlgo(t: number): BSplineEvaluationData {
         const p = this.degree;
-        const c = this.controlPoints.map(pt => pt.position);
+        const ctrlPtPositions = this.controlPoints.map(pt => pt.position);
 
         //k := Index of knot interval [t_k, t_{k+1}]that contains t.
         const k = this.knotVector.slice(0, -1).findIndex((k, i) => k <= t && t < this.knotVector[i + 1]);
         if (k == -1) {
             console.warn('getPointOnCurveUsingDeBoorsAlgorithm() called with invalid value!');
-            return this.p5.createVector(0, 0);
+            return {
+                tempPtsCreatedDuringEvaluation: [[]],
+                pt: this.p5.createVector(0, 0)
+            };
         }
         // console.log('k =', k);
 
@@ -287,12 +302,15 @@ export class BSplineDemo extends CurveDemo {
         if (h < 0) {
             // console.log(`current knot multiplicity ${s} is bigger than or equal to desired multiplicity ${p}! We don't have to insert ${t} anymore to get its position on the curve!`);
             // console.log(`The position of the point on the curve is simply that of the control point with index k = ${k}!`);
-            return c[k];
+            return {
+                tempPtsCreatedDuringEvaluation: [[]],
+                pt: ctrlPtPositions[k]
+            };
         }
         // console.log(`desired multiplicity is ${p}, we therefore insert ${t} ${h} times`);
 
         //Copy the affected control points p_{k-s}, p_{k-s-1}, p_{k-s-2}, ..., p_{k-p+1} and p_{k-p} to a new array and rename them as p_{k-s,0}, p_{k-s-1,0}, p_{k-s-2,0}, ..., p_{k-p+1,0}
-        const copiedPts = c.slice(k - p, k - s + 2).map(pt => pt.copy());
+        const copiedPts = ctrlPtPositions.slice(k - p, k - s + 2).map(pt => pt.copy());
         const ptsPerIteration = copiedPts.map(pt => [pt]);
 
         let ctrlPtIndex = 0;
@@ -305,7 +323,10 @@ export class BSplineDemo extends CurveDemo {
             }
         }
 
-        return ptsPerIteration[ctrlPtIndex][h];
+        return {
+            pt: ptsPerIteration[ctrlPtIndex][h],
+            tempPtsCreatedDuringEvaluation: ptsPerIteration
+        };
     }
 }
 
@@ -316,13 +337,13 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
     //if anyone reads my comments and knows a better solution: let me know about it (there probably is a better way to do what I want lol)
     constructor(p5: p5, private bSplineDemo: BSplineDemo) {
         super(p5, bSplineDemo);
-        this.noOfEvaluationSteps = 200;
+        this.noOfEvaluationSteps = 400;
         this.bSplineDemo.subscribe(this);
     }
 
     public draw() {
         if (!this.demo.valid) return;
-        const points = this.evaluationSteps.map(t => this.bSplineDemo.getPointOnCurveUsingDeBoorsAlgorithm(t));
+        const points = this.evaluationSteps.map(t => this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(t));
         if (this.bSplineDemo.degree === 0) {
             points.slice(0, -1).forEach(p => drawCircle(this.p5, p, this.color, this.demo.basePointDiameter * 1.25));
         } else {
@@ -340,9 +361,12 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
 class BSplineVisualization extends CurveDrawingVisualization {
     private knotMarkerColor: p5.Color = this.p5.color(150);
 
+    //used if reference to sketch is not given
+    private fallBackSketchBackgroundColor: p5.Color = this.p5.color(230);
+
     //storing bSplineDemo twice, once as Demo so that code of abstract class works and once as BSplineDemo so that we can use its specific subclass properties
     //if anyone reads my comments and knows a better solution: let me know about it (there probably is a better way to do what I want lol)
-    constructor(p5: p5, private bSplineDemo: BSplineDemo, color?: p5.Color, colorOfPointOnCurve?: p5.Color) {
+    constructor(p5: p5, private bSplineDemo: BSplineDemo, color?: p5.Color, colorOfPointOnCurve?: p5.Color, private sketch?: Sketch) {
         super(p5, bSplineDemo, color, colorOfPointOnCurve);
     }
 
@@ -375,7 +399,7 @@ class BSplineVisualization extends CurveDrawingVisualization {
     private drawKnotMarkers() {
         this.bSplineDemo.knotVector.forEach((t, i) => {
             if (i < this.bSplineDemo.firstKnotIndexWhereCurveDefined || i > this.bSplineDemo.firstKnotIndexWhereCurveUndefined) return;
-            const knotPosition = this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(this.bSplineDemo.degree, t);
+            const knotPosition = this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(t);
             drawSquare(
                 this.p5,
                 knotPosition,
@@ -389,13 +413,12 @@ class BSplineVisualization extends CurveDrawingVisualization {
     private drawPointAtT() {
         drawCircle(
             this.p5,
-            this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(this.bSplineDemo.degree, this.bSplineDemo.t),
+            this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(this.bSplineDemo.t),
             this.colorOfPointOnCurve,
             this.bSplineDemo.basePointDiameter * 1.5
         );
     }
 
-    //TODO: draw line in color of currently active ctrlPt (thicker the bigger the ctrlPt's influence)
     private drawInfluenceOfCurrentlyActiveCtrlPt() {
         const ctrlPts = this.bSplineDemo.controlPoints.slice();
         const activeCtrlPtIndex = ctrlPts.findIndex(pt => pt.hovering || pt.dragging);
@@ -409,8 +432,13 @@ class BSplineVisualization extends CurveDrawingVisualization {
         //from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html we know:
         //Basis function N_{i,p}(u) is non-zero on [u_i, u_{i+p+1}). Or, equivalently, N_{i,p}(u) is non-zero on p+1 knot spans [u_i, u_{i+1}), [u_{i+1}, u_{i+2}), ..., [u_{i+p}, u_{i+p+1}).
         const tValues = createArrayOfEquidistantAscendingNumbersInRange(100, knotVector[Math.max(i, this.bSplineDemo.firstKnotIndexWhereCurveDefined)], knotVector[Math.min(i + p + 1, this.bSplineDemo.firstKnotIndexWhereCurveUndefined)]);
-        const pointsAndActiveCtrlPtInfluence = tValues.map(t => ({ pos: this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(p, t), activeCtrlPtInfluence: basisFunction(t) }));
-        pointsAndActiveCtrlPtInfluence.slice(0, -1).forEach((p, i) => drawLineVector(this.p5, p.pos, pointsAndActiveCtrlPtInfluence[i + 1].pos, activeCtrlPt.color, this.demo.baseLineWidth * 2 * p.activeCtrlPtInfluence));
+        const pointsAndActiveCtrlPtInfluence = tValues.map(t => ({ pos: this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(t), activeCtrlPtInfluence: basisFunction(t) }));
+        pointsAndActiveCtrlPtInfluence.slice(0, -1).forEach((p, i) => {
+            //draw line in sketch's background color to make "regular" black line disappear
+            drawLineVector(this.p5, p.pos, pointsAndActiveCtrlPtInfluence[i + 1].pos, this.sketch?.backgroundColor ?? this.fallBackSketchBackgroundColor, this.demo.baseLineWidth * 2);
+            //draw line that gets thicker the more influence the control point has on the shape of the curve
+            drawLineVector(this.p5, p.pos, pointsAndActiveCtrlPtInfluence[i + 1].pos, activeCtrlPt.color, this.demo.baseLineWidth * 2 * p.activeCtrlPtInfluence);
+        });
     }
 }
 

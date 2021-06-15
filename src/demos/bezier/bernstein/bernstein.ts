@@ -40,7 +40,7 @@ async function createDemo() {
 
     const bernsteinVisSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.35, 400);
     const bernsteinVisSketchHeight = bernsteinVisSketchWidth;
-    const bernsteinVisSketch = new Sketch(bernsteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight, () => null, 30);
+    const bernsteinVisSketch = new Sketch(bernsteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight, () => undefined, 30);
     await bernsteinVisSketch.create();
     const bernsteinVis = bernsteinVisSketch.add((p5) => new BernsteinPolynomialVisualization(p5, bezierDemo));
 
