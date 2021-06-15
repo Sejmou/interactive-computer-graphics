@@ -6,11 +6,12 @@ export class Sketch {
     private p5?: p5;
 
     /**
+     * Creates a sketch that can display instances of class implementing the Drawable, Clickable, Touchable, Draggable or Responsive interfaces
      * 
-     * @param parentContainerId 
-     * @param calcCanvasWidth 
-     * @param calcCanvasHeight 
-     * @param createBGColor 
+     * @param parentContainerId ID of HTML tag/container in which the sketch and its canvas should be created
+     * @param calcCanvasWidth function for (re-)calculating the height of the sketch's canvas
+     * @param calcCanvasHeight function for (re-)calculating the height of the sketch's canvas
+     * @param createBGColor define a function for setting the desired background color (called w/ p5 instance provided by p5 when setup() is called); return null if sketch should have transparent background
      * @param frameRate >= 0; if 0, sketch is only updated if redraw() is called!
      */
     constructor(
@@ -33,7 +34,7 @@ export class Sketch {
     /**
      * Creates the sketch; The promise this method returns has to resolve, otherwise add() will not work as p5 is not configured yet
      * 
-     * @returns promise that resolves as soon as sketch was created
+     * @returns promise that resolves as soon as sketch was created (p5 instance is available to the sketch)
      */
     public async create(): Promise<void> {
         return new Promise((resolve) => {

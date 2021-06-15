@@ -267,10 +267,6 @@ export class BSplineDemo extends CurveDemo {
      * @returns 
      */
     public getPointOnCurveUsingDeBoorsAlgorithm(t: number) {
-        if (t < this.knotVector[this.firstKnotIndexWhereCurveDefined] || t > this.lastTValueWhereCurveDefined) {
-            console.warn('getPointOnCurveUsingDeBoorsAlgorithm() called with value outside of range where curve defined!');
-            return this.p5.createVector(0, 0);
-        }
         const p = this.degree;
         const c = this.controlPoints.map(pt => pt.position);
 
@@ -280,53 +276,36 @@ export class BSplineDemo extends CurveDemo {
             console.warn('getPointOnCurveUsingDeBoorsAlgorithm() called with invalid value!');
             return this.p5.createVector(0, 0);
         }
+        // console.log('k =', k);
 
         //If t lies in [t_k, t_{k+1}) and t != t_k, let h = p (i.e., inserting t p times) and s = 0
         //If t = t_k and t_k is a knot of multiplicity s, let h = p - s (i.e., inserting t (p - s) times)
         const s = this.knotVector.filter(knot => knot == t).length;
+        // console.log(`multiplicity s of knot ${t}: ${s}`);
+
         const h = p - s;
-        //const hTimesT = [...Array(h).keys()].map(() => t);
-        //const knotVectorWithTInsertedHTimes = [...this.knotVector.slice(0, k + 1), ...hTimesT, ...this.knotVector.slice(k+1)];
+        if (h < 0) {
+            // console.log(`current knot multiplicity ${s} is bigger than or equal to desired multiplicity ${p}! We don't have to insert ${t} anymore to get its position on the curve!`);
+            // console.log(`The position of the point on the curve is simply that of the control point with index k = ${k}!`);
+            return c[k];
+        }
+        // console.log(`desired multiplicity is ${p}, we therefore insert ${t} ${h} times`);
 
         //Copy the affected control points p_{k-s}, p_{k-s-1}, p_{k-s-2}, ..., p_{k-p+1} and p_{k-p} to a new array and rename them as p_{k-s,0}, p_{k-s-1,0}, p_{k-s-2,0}, ..., p_{k-p+1,0}
-        const copiedPts = c.slice(k - p, k - s + 1).map(pt => pt.copy());
+        const copiedPts = c.slice(k - p, k - s + 2).map(pt => pt.copy());
         const ptsPerIteration = copiedPts.map(pt => [pt]);
 
-        const knotVectorSlice = this.knotVector.slice(k - p, k - s + 1);
-
+        let ctrlPtIndex = 0;
         for (let r = 1; r <= h; r++) {
             for (let i = k - p + r; i <= k - s; i++) {
                 const alpha = (t - this.knotVector[i]) / (this.knotVector[i + p - r + 1] - this.knotVector[i]);
-                if (ptsPerIteration[i - 1] == undefined || ptsPerIteration[i] == undefined) {
-                    console.log('undefined!');
-                }
-                ptsPerIteration[i][r] = p5.Vector.add(p5.Vector.mult(ptsPerIteration[i - 1][r - 1], 1 - alpha), p5.Vector.mult(ptsPerIteration[i][r - 1], alpha));
+                // console.log(`a_{${i},${r}} = ${alpha}`);
+                ctrlPtIndex = i - k + p;
+                ptsPerIteration[ctrlPtIndex][r] = p5.Vector.add(p5.Vector.mult(ptsPerIteration[ctrlPtIndex - 1][r - 1], 1 - alpha), p5.Vector.mult(ptsPerIteration[ctrlPtIndex][r - 1], alpha));
             }
         }
 
-        if (ptsPerIteration[k - s][p - s] == undefined) {
-            console.log('undefined!');
-        }
-
-        return ptsPerIteration[k - s][p - s];
-
-        // const zeroToP = [...Array(p + 1).keys()];
-        // const oneToP = zeroToP.slice(1);
-        // const paddingStart = oneToP.map(() => this.knotVector[0]);
-        // const paddingEnd = oneToP.map(() => this.knotVector.slice(-1)[0]);
-        // const paddedKnotVec = [...paddingStart, ...this.knotVector, ...paddingEnd];
-
-
-        // const d = zeroToP.map(j => c[j + k - p].copy());
-        // oneToP.forEach(r => {
-        //     range(p, r - 1, -1).forEach(j => {
-        //         const alpha = (t - paddedKnotVec[j + k - p]) / (paddedKnotVec[j + 1 + k - r] - paddedKnotVec[j + k - p]);
-        //         d[j].x = (1.0 - alpha) * d[j - 1].x + alpha * d[j].x;
-        //         d[j].y = (1.0 - alpha) * d[j - 1].y + alpha * d[j].y;
-        //     });
-        // });
-
-        // return d[p];
+        return ptsPerIteration[ctrlPtIndex][h];
     }
 }
 
