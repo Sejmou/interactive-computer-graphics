@@ -310,7 +310,7 @@ export class BSplineDemo extends CurveDemo {
         // console.log(`desired multiplicity is ${p}, we therefore insert ${t} ${h} times`);
 
         //Copy the affected control points p_{k-s}, p_{k-s-1}, p_{k-s-2}, ..., p_{k-p+1} and p_{k-p} to a new array and rename them as p_{k-s,0}, p_{k-s-1,0}, p_{k-s-2,0}, ..., p_{k-p+1,0}
-        const copiedPts = ctrlPtPositions.slice(k - p, k - s + 2).map(pt => pt.copy());
+        const copiedPts = ctrlPtPositions.slice(k - p, k - s + 1).map(pt => pt.copy());
         const ptsPerIteration = [copiedPts];
 
         let ctrlPtIndex = 0;
