@@ -1,7 +1,7 @@
 import p5, { Vector } from 'p5';
 import { Sketch } from '../sketch';
 import { MyObserver } from '../ui-interfaces';
-import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawPointVector, drawSquare, range, renderTextWithSubscript } from '../util';
+import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawSquare, renderTextWithSubscript } from '../util';
 import { ControlPointInfluenceData, ControlPointInfluenceVisualization as ControlPointInfluenceBarVisualization, Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 
@@ -311,20 +311,21 @@ export class BSplineDemo extends CurveDemo {
 
         //Copy the affected control points p_{k-s}, p_{k-s-1}, p_{k-s-2}, ..., p_{k-p+1} and p_{k-p} to a new array and rename them as p_{k-s,0}, p_{k-s-1,0}, p_{k-s-2,0}, ..., p_{k-p+1,0}
         const copiedPts = ctrlPtPositions.slice(k - p, k - s + 2).map(pt => pt.copy());
-        const ptsPerIteration = copiedPts.map(pt => [pt]);
+        const ptsPerIteration = [copiedPts];
 
         let ctrlPtIndex = 0;
         for (let r = 1; r <= h; r++) {
+            ptsPerIteration[r] = []
             for (let i = k - p + r; i <= k - s; i++) {
                 const alpha = (t - this.knotVector[i]) / (this.knotVector[i + p - r + 1] - this.knotVector[i]);
                 // console.log(`a_{${i},${r}} = ${alpha}`);
                 ctrlPtIndex = i - k + p;
-                ptsPerIteration[ctrlPtIndex][r] = p5.Vector.add(p5.Vector.mult(ptsPerIteration[ctrlPtIndex - 1][r - 1], 1 - alpha), p5.Vector.mult(ptsPerIteration[ctrlPtIndex][r - 1], alpha));
+                ptsPerIteration[r][ctrlPtIndex] = p5.Vector.add(p5.Vector.mult(ptsPerIteration[r-1][ctrlPtIndex - 1], 1 - alpha), p5.Vector.mult(ptsPerIteration[r -1][ctrlPtIndex], alpha));
             }
         }
 
         return {
-            pt: ptsPerIteration[ctrlPtIndex][h],
+            pt: ptsPerIteration[h][ctrlPtIndex],
             tempPtsCreatedDuringEvaluation: ptsPerIteration
         };
     }
@@ -386,7 +387,9 @@ class BSplineVisualization extends CurveDrawingVisualization {
         }
 
         if (this.bSplineDemo.curveDefinedAtCurrentT) {
-            this.drawPointAtT();
+            const deBoorData = this.bSplineDemo.getPointOnCurveAndTemporaryCtrlPtsCreatedUsingDeBoorsAlgo(this.bSplineDemo.t);
+            this.drawDeBoorVisualization(deBoorData.tempPtsCreatedDuringEvaluation);
+            this.drawPointAtT(deBoorData.pt);
         } else {
             renderTextWithSubscript(
                 this.p5,
@@ -410,13 +413,20 @@ class BSplineVisualization extends CurveDrawingVisualization {
         });
     }
 
-    private drawPointAtT() {
+    private drawPointAtT(pointPos: p5.Vector) {
         drawCircle(
             this.p5,
-            this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(this.bSplineDemo.t),
+            pointPos,
             this.colorOfPointOnCurve,
             this.bSplineDemo.basePointDiameter * 1.5
         );
+    }
+
+    private drawDeBoorVisualization(tempPtsCreatedDuringEvaluation: p5.Vector[][]) {
+        tempPtsCreatedDuringEvaluation.forEach(iteration => {
+            iteration.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt, iteration[i + 1], this.color, this.bSplineDemo.baseLineWidth));
+            iteration.forEach(pt => drawCircle(this.p5, pt, this.color, this.bSplineDemo.basePointDiameter));
+        });
     }
 
     private drawInfluenceOfCurrentlyActiveCtrlPt() {
