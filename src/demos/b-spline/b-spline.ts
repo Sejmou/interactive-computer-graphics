@@ -12,35 +12,39 @@ const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';
 
 addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
-    String.raw`B-Spline curves are a generalization of Bèzier curves with a very practical property: In contrast to Bézier curves their control points only have local control.<br>
-B-Spline curves can be expressed mathematically using the formula \[ C(t) = \sum_{i=0}^{n}{N_{i,p}(t) \cdot P_{i}}. \]
-where \(p\) is the degree of the curve and \( k = p + 1 \) is its order. The \(N_{i,p}(t)\) are the <em>basis functions</em> of the B-Spline curve. The \(P_{i}\) are the curve's \(n + 1\) control points, sometimes called <em>de Boor points</em>.<br>
-
-Unfortunately, notation across math publications is inconsistent, for example some use \(u\) instead of \(t\), sometimes also \(S\) or \(s\) are used instead of \(C\).`
+    String.raw`B-Spline curves are a generalization of Bèzier curves with two very practical properties compared to Bézier curves:<br>
+    Their evaluation remains efficient even for very large numbers of control points, and their control points only have "local control".`
 );
 
 addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
-    String.raw`Note that, contrary to Bézier curves, the degree and order of B-Spline curves are independent of the number of control points.<br>
-They stay the same even if more points are added, getting rid of the problem of exponentially increasing computational effort with each added control point.<br>
-For B-Spline curves, a new concept is introduced: a knot vector \(T = \{t_0, t_1, ..., t_m\}\) containing \(m + 1\) values in non-decreasing order, called knots.<br>
-Those knots determine at what value of \(t\) a basis function starts to gain influence on the position of the point on the curve while another one looses influence.<br>
-This means that the values of \(N_{i,p}(t)\) are only \(> 0\) in a certain interval and \(0\) outside of it, which results in the desired local (instead of global) influence of control points.<br>
-Side-note: there is no upper limit for the largest knot value which means that the domain in which a B-Spline is defined is no longer necessarily \([0, 1]\).<br>
-We can think of B-Splines as piecewise polynomial functions of degree \( p \) that meet at the knots of the knot vector.`);
+    String.raw`B-Spline curves can be expressed mathematically using the formula \[ C(t) = \sum_{i=0}^{n}{N_{i,p}(t) \cdot P_{i}}. \]
+where \(p\) is the degree of the curve and \( k = p + 1 \) is its order. The \(N_{i,p}(t)\) are the <em>basis functions</em> of the B-Spline curve. The \(P_{i}\) are the curve's \(n + 1\) control points, sometimes called <em>de Boor points</em>.`
+);
 
 addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
-    String.raw`The relationship \( m = n + k \) is a requirement for any B-Spline curve (otherwise it is not properly defined).<br>
-If this relationship is given, this allows us to properly define the basis functions \(N_{i,p}\) of the B-Spline curve.<br>
-The basis functions are computed in a recursive way that can be visualized as a triangular scheme.<br>
-The recursive formula is:
+    String.raw`Note that, contrary to Bézier curves, the degree of a B-Spline curve (and therefore also its order) is independent of the number of control points.<br>
+It stays the same even if more points are added, getting rid of the problem of exponentially increasing computational effort with each added control point.`
+);
+
+addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
+    String.raw`For B-Spline curves, a new concept is introduced: a knot vector \(T = \{t_0, t_1, ..., t_m\}\) containing \(m + 1\) values (where \( m = n + k \)) in non-decreasing order, called knots.<br>
+If we have a "valid" knot vector, this allows us to define the basis functions \(N_{i,p}\) of degree \(p\) of the B-Spline curve that are computed using a recursive formula:
 \[N_{i,j}(t) = \frac{ t - t_{i} } { t_{i + j} - t_i } \cdot N_{i, j - 1}(t) + \frac{ t_{i + j + 1} - t } { t_{i + j + 1} - t_{i + 1} } \cdot N_{i + 1, j - 1}(t),\]
 With the "base case" being:
 \[N_{i,0} = \begin{cases} 1 & \text{if } t_{i} \leq x < t_{i + 1} \\ 0 & \text{otherwise.} \end{cases} \]`
 );
 
 addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
-    String.raw`B-Spline curves are only defined in the interval for \(t\) where the condition \(\sum_{i=0}^{n}{N_{i,p}(t) \cdot P_{i}} = 1\) is satisfied.<br>
-We differentiate between open and closed B-Spline curves. Compared to open B-Spline curves, closed B-Spline curves put additional restrictions on the knot vector: Its first \(k\) values must be the same. The same restriction also applies to its last \(k\) values.<br>
+    String.raw`The knots of the knot vector determine at what value of \(t\) a basis function starts to gain influence on the position of the point on the curve while another one looses influence.<br>
+They split the space for parameter \(t\) into segments. In each so-called <em>span</em> \([t_i,t_{i+1})\) defined by two adjacent knots \(t_i\) and \(t_{i+1}\), at most \(p+1\) degree \(p\) basis functions are non-zero.<br>
+For a given \(t\), each \(N_{i,p}(t)\) is only \(> 0\) in a certain interval and \(0\) outside of it. Those properties combined give us the desired local (instead of global) influence of control points.<br>
+We can think of B-Splines as piecewise polynomial functions (or, more specific, Bézier curves) of degree \( p \) that meet at the knots of the knot vector.<br>
+Side-note: there is no upper limit for the largest knot value which means that the domain in which a B-Spline is defined is no longer necessarily \([0, 1]\).<br>`
+);
+
+addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
+    String.raw`B-Spline curves are only defined in the interval for \(t\) where the condition \(\sum_{i=0}^{n}{N_{i,p}(t) \cdot P_{i}} = 1\) is satisfied. We differentiate between open and closed B-Spline curves.<br>
+Compared to open B-Spline curves, closed B-Spline curves put additional restrictions on the knot vector: Its first \(k\) values must be the same. The same restriction also applies to its last \(k\) values.<br>
 A consequence of this restriction is that closed B-Spline curves are defined in the whole interval \([t_0, t_m]\), while for open B-Spline curves we can only guarantee that they are defined in the interval \([t_p, t_{m-p}]\).`
 );
 
