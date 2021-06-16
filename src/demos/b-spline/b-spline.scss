@@ -1,4 +1,4 @@
-@import '../demo.scss';
+@import "../demo.scss";
 
 #degree-text {
     margin-right: 10px;
@@ -14,9 +14,20 @@
     position: relative;
     width: 800px;
 
-    canvas {
+    canvas:not(:first-child) {
         position: absolute;
         top: 0;
         left: 0;
+    }
+}
+
+#knot-table-container {
+    overflow-x: auto;
+}
+
+#knot-table {
+    td,
+    th {
+        min-width: 75px;
     }
 }

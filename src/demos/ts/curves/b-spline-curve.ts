@@ -1,7 +1,7 @@
 import p5, { Vector } from 'p5';
 import { Sketch } from '../sketch';
 import { MyObserver } from '../ui-interfaces';
-import { createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawSquare, renderTextWithSubscript } from '../util';
+import { clamp, createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawSquare, renderTextWithSubscript } from '../util';
 import { ControlPointInfluenceData, ControlPointInfluenceVisualization as ControlPointInfluenceBarVisualization, Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 
@@ -142,6 +142,10 @@ export class BSplineDemo extends CurveDemo {
         return this.knotVector[m - p] - Number.EPSILON;
     }
 
+    public get lastKnotIndexWhereCurveDefined(): number {
+        return this.firstKnotIndexWhereCurveUndefined - 1;
+    }
+
     public get firstTValueWhereCurveUndefined(): number {
         const p = this.degree;
         const m = this.knotVector.length - 1;
@@ -154,6 +158,36 @@ export class BSplineDemo extends CurveDemo {
         return m - p;
     }
 
+    public setKnotVectorValue(i: number, val: number) {
+        if (i < 0 || i >= this.knotVector.length) {
+            console.warn(`BSplineCurve.setKnotVectorValue(): index ${i} is invalid!`);
+            return;
+        }
+        const newVal = clamp(val, this.knotVector[i - 1] ?? 0, this.knotVector[i + 1] ?? Number.MAX_VALUE);
+        this.scheduleKnotValueChange(i, newVal);
+    }
+
+    scheduleKnotValueChange(i: number, newVal: number) {
+        //override any value changes to the same knot that might still be "in queue"
+        this.scheduledKnotValueChanges = this.scheduledKnotValueChanges.filter(c => c.i !== i);
+        this.scheduledKnotValueChanges.push({i, newVal});
+    }
+
+    draw() {
+        super.draw();
+        if (this.scheduledKnotValueChanges.length > 0) {
+            this.scheduledKnotValueChanges.forEach(c => this.knotVector[c.i] = c.newVal);
+            this.scheduledKnotValueChanges = [];
+
+            this.updateBasisFunctions();
+
+            this.notifyObservers('knotVectorChanged');
+        }
+    }
+
+    private scheduledKnotValueChanges: {i: number, newVal: number}[];
+
+
     constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         const tMin = 0;
         const tMax = 1;
@@ -162,6 +196,7 @@ export class BSplineDemo extends CurveDemo {
         //unfortunately, this.tMin and this.tMax can't be set directly before super() call
         //they have to be set in constructor, setting them in subclass constructor is too late...
 
+        this.scheduledKnotValueChanges = [];
         this.minDegree = 0;
         this._degree = 2;
         this._knotVector = this.createKnotVector();
@@ -181,9 +216,18 @@ export class BSplineDemo extends CurveDemo {
     }
 
     private updateKnotVectorAndBasisFunctions() {
-        this._knotVector = this.createKnotVector();
-        this.basisFunctionData = this.createBasisFunctions();
+        this.updateKnotVector();
+        this.updateBasisFunctions();
+        this.scheduledKnotValueChanges = [];
         this.notifyObservers('knotVectorChanged');
+    }
+
+    private updateKnotVector() {
+        this._knotVector = this.createKnotVector();
+    }
+
+    private updateBasisFunctions() {
+        this.basisFunctionData = this.createBasisFunctions();
     }
 
     private createKnotVector() {
@@ -402,7 +446,9 @@ class BSplineVisualization extends CurveDrawingVisualization {
     private drawKnotMarkers() {
         this.bSplineDemo.knotVector.forEach((t, i) => {
             if (i < this.bSplineDemo.firstKnotIndexWhereCurveDefined || i > this.bSplineDemo.firstKnotIndexWhereCurveUndefined) return;
-            const knotPosition = this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(t);
+            //can't use De Boor's implementation for closed B-Splines as, if we're very strict, at the last knot the curve is not defined anymore
+            //(hopefully I implemented this correctly, but how I understand it, t_max is not part of the curve domain anymore)
+            const knotPosition = this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(this.bSplineDemo.degree, t);
             drawSquare(
                 this.p5,
                 knotPosition,
@@ -527,6 +573,7 @@ class DegreeControls implements MyObserver<DemoChange> {
 
 
 
+
 /**
  * Visualization for the influence of the B-Spline's control points (de boor points) using bars
  */
@@ -550,5 +597,84 @@ export class DeBoorControlPointInfluenceVisualization extends ControlPointInflue
                 currentCtrlPtInfluence: () => this.bSplineDemo.basisFunctions[this.bSplineDemo.degree][i](this.bSplineDemo.t)
             }
         });
+    }
+}
+
+
+
+
+
+export class KnotVectorControls implements MyObserver<DemoChange> {
+    private knotInputElements: HTMLInputElement[] = [];
+    private tableContainer: HTMLDivElement | undefined;
+    private table: HTMLTableElement | undefined;
+
+    constructor(private bSplineDemo: BSplineDemo, private parentContainerId: string) {
+        bSplineDemo.subscribe(this);
+        this.updateKnotVectorDisplay();
+    }
+
+    update(data: DemoChange): void {
+        if (data == 'knotVectorChanged') {
+            this.updateKnotVectorDisplay();
+        }
+    }
+
+    updateKnotVectorDisplay() {
+        this.knotInputElements = this.bSplineDemo.knotVector.map((k, i, arr) => {
+            const inputEl = document.createElement('input');
+            inputEl.type = 'number';
+
+            //this weird looking code allows us to display up to 2 digits (only if necessary) - we have to make it a string again in the end
+            inputEl.value = (+(k.toFixed(2))).toString();
+            inputEl.addEventListener('focus', () => inputEl.value = arr[i].toString());
+            inputEl.addEventListener('blur', () => {
+                const value = clamp(+inputEl.value, arr[i - 1] ?? 0, arr[i + 1] ?? Number.MAX_VALUE);
+                this.bSplineDemo.scheduleKnotValueChange(i, value);
+                inputEl.value = value.toString();
+            });
+
+            return inputEl;
+        });
+
+        const headerRow = document.createElement('tr');
+        let knotHeadingIds: string[] = [];
+        this.knotInputElements.forEach((_, i) => {
+            const th = document.createElement('th');
+            th.innerText = String.raw`\(t_{${i}}\)`;
+            headerRow.appendChild(th);
+
+            const id = `knot-${i}`;
+            th.id = id;
+            knotHeadingIds.push(`#${id}`);
+        });
+        
+        const knotInputRow = document.createElement('tr');
+
+        this.knotInputElements.forEach(k => {
+            const td = document.createElement('td');
+            td.appendChild(k);
+            knotInputRow.appendChild(td);
+        });
+
+        const parentContainer = document.getElementById(this.parentContainerId);
+        if (!parentContainer) {
+            console.warn(`couldn't create table for knot vector, parent container id invalid!`);
+            return;
+        }
+
+        if (this.tableContainer) parentContainer.removeChild(this.tableContainer);
+        this.tableContainer = document.createElement('div');
+        this.tableContainer.id = 'knot-table-container';
+
+        const table = document.createElement('table');
+        table.appendChild(headerRow);
+        table.appendChild(knotInputRow);
+        table.id = 'knot-table';
+
+        this.tableContainer.appendChild(table);
+        parentContainer.appendChild(this.tableContainer);
+
+        MathJax.typeset(knotHeadingIds);
     }
 }
