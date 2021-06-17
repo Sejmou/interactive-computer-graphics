@@ -39,13 +39,13 @@ addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
 They split the space for parameter \(t\) into segments. In each so-called <em>span</em> \([t_i,t_{i+1})\) defined by two adjacent knots \(t_i\) and \(t_{i+1}\), at most \(p+1\) degree \(p\) basis functions are non-zero.<br>
 For a given \(t\), each \(N_{i,p}(t)\) is only \(> 0\) in a certain interval and \(0\) outside of it. Those properties combined give us the desired local (instead of global) influence of control points.<br>
 We can think of B-Splines as piecewise polynomial functions (or, more specific, Bézier curves) of degree \( p \) that meet at the knots of the knot vector.<br>
-Side-note: there is no upper limit for the largest knot value which means that the domain in which a B-Spline is defined is no longer necessarily \([0, 1]\).<br>`
+Side-note: there is no upper limit for the largest knot value which means that the domain where a B-Spline is defined is no longer necessarily \([0, 1]\).<br>`
 );
 
 addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
     String.raw`B-Spline curves are only defined in the interval for \(t\) where the condition \(\sum_{i=0}^{n}{N_{i,p}(t) \cdot P_{i}} = 1\) is satisfied. We differentiate between open and clamped B-Spline curves.<br>
 Compared to open B-Spline curves, clamped B-Spline curves put additional restrictions on the knot vector: Its first \(k\) values must be the same. The same restriction also applies to its last \(k\) values.<br>
-A consequence of this restriction is that clamped B-Spline curves are defined in the whole interval \([t_0, t_m]\), while for open B-Spline curves we can only guarantee that they are defined in the interval \([t_p, t_{m-p}]\).`
+A consequence of this restriction is that clamped B-Spline curves are defined in the interval \([t_0, t_m)\), while for open B-Spline curves we can only guarantee that they are defined in the interval \([t_p, t_{m-p})\).`
 );
 
 MathJax.typeset([`#${descriptionContainerId}`]);

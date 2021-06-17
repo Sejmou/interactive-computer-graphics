@@ -181,7 +181,11 @@ export class BSplineDemo extends CurveDemo {
     draw() {
         super.draw();
         if (this.scheduledKnotValueChanges.length > 0) {
-            this.scheduledKnotValueChanges.forEach(c => this.knotVector[c.i] = c.newVal);
+            this.scheduledKnotValueChanges.forEach(c => {
+                if (c.i == 0) this._tMin = c.newVal;
+                if (c.i == this.knotVector.length -1) this._tMax = c.newVal;  
+                this.knotVector[c.i] = c.newVal
+            });
             this.scheduledKnotValueChanges = [];
 
             this.updateBasisFunctions();
@@ -674,12 +678,15 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
         this.knotInputElements = this.bSplineDemo.knotVector.map((k, i, arr) => {
             const inputEl = document.createElement('input');
             inputEl.type = 'number';
+            inputEl.setAttribute('step', 'any');//deactivates "please enter a valid value in range..." hint
 
             //this weird looking code allows us to display up to 2 digits (only if necessary) - we have to make it a string again in the end
             inputEl.value = (+(k.toFixed(2))).toString();
             inputEl.addEventListener('focus', () => inputEl.value = arr[i].toString());
             inputEl.addEventListener('blur', () => {
-                const value = clamp(+inputEl.value, arr[i - 1] ?? 0, arr[i + 1] ?? Number.MAX_VALUE);
+                const min = arr[i - 1] ?? 0;
+                const max = arr[i + 1] ?? Number.MAX_VALUE;
+                const value = clamp(+inputEl.value, min, max);
                 this.bSplineDemo.scheduleKnotValueChange(i, value);
                 inputEl.value = value.toString();
             });
