@@ -16,7 +16,7 @@ interface BSplineEvaluationData {
     pt: p5.Vector
 };
 
-export type knotVectorInitializationMode = 'open B-Spline' | 'closed B-Spline' | 'emulate Bézier';
+export type knotVectorInitializationMode = 'open B-Spline' | 'clamped B-Spline' | 'emulate Bézier';
 
 export class BSplineDemo extends CurveDemo {
     /**
@@ -104,9 +104,9 @@ export class BSplineDemo extends CurveDemo {
     }
 
     /**
-     * Let *p* the *degree* of the B-spline curve. For a closed B-spline curve, the first and *p* and last *p* control points are the same (have the same position).
+     * Let *p* the *degree* of the B-spline curve. For a clamped B-spline curve, the first and *p* and last *p* control points are the same (have the same position).
      */
-    public get closed(): boolean {
+    public get clamped(): boolean {
         const p = this.degree;
         return this.knotVector.slice(0, p + 1).every((el, i, arr) => el === arr[0])
             && this.knotVector.slice(-p).every((el, i, arr) => el === arr[0]);
@@ -114,10 +114,10 @@ export class BSplineDemo extends CurveDemo {
 
     /**
      * Let *p* the *degree* of the B-spline curve. For an *open* B-spline curve, the first and *p* and last *p* control points are *not* the same.
-     * Also refer to the documentation for *closed*.
+     * Also refer to the documentation for *clamped*.
      */
     public get open(): boolean {
-        return !this.closed;
+        return !this.clamped;
     }
 
     /**
@@ -258,15 +258,13 @@ export class BSplineDemo extends CurveDemo {
         //that's why the resulting B-Spline curve is then also called *uniform*, btw
         if (this.knotVectorInitializationMode == 'open B-Spline') return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
         //TODO: implement this properly
-        if (this.knotVectorInitializationMode == 'closed B-Spline') {
+        if (this.knotVectorInitializationMode == 'clamped B-Spline') {
             const p = this.degree;
             const pPlusOneArr = [...Array(p + 1).keys()];
             const pPlusOneTimesMin = pPlusOneArr.map(_ => this.tMin);
             const pPlusOneTimesMax = pPlusOneArr.map(_ => this.tMax);
             const equidistantValuesBetweenMinAndMax = createArrayOfEquidistantAscendingNumbersInRange(m + 1 - 2* p, this.tMin, this.tMax).slice(1, -1);
-            const returnValue = [...pPlusOneTimesMin, ...equidistantValuesBetweenMinAndMax, ...pPlusOneTimesMax];
-            console.log(m + 1 == returnValue.length);
-            return returnValue;
+            return [...pPlusOneTimesMin, ...equidistantValuesBetweenMinAndMax, ...pPlusOneTimesMax];
         }
         //TODO: implement knotVectorInitializationMode 'emulate Bézier'
 
@@ -300,20 +298,28 @@ export class BSplineDemo extends CurveDemo {
                     if (t[i] <= x && x < t[i + 1]) return 1;
                     else return 0;
                 },
-                basisFunctionAsLaTeXString: String.raw`\[N_{${i},0} = \begin{cases} 1,& \text{if} t_{${i}} \leq x < t_{${i + 1}} \\ 0,& \text{otherwise} \end{cases} \]`
+                basisFunctionAsLaTeXString: String.raw`\[N_{${i},0} = ${t[i] == t[i +1]? String.raw`\(0 \text{ as } [t_${i}, t_${i + 1}) \text{ does not exist}\)` : String.raw`\begin{cases} 1,& \text{if} t_{${i}} \leq x < t_{${i + 1}} \\ 0,& \text{otherwise} \end{cases} \]`}`
             };
         }
 
         for (let j = 1; j <= p; j++) {
             newBasisFunctionData[j] = [];
             for (let i = 0; i < newBasisFunctionData[j - 1].length - 1; i++) {
+                //we can't divide by zero, so we define the factor for each term a or b of the addition in the equation as 0 if its denominator is 0
+                const denominatorOfFactorForA = t[i + j] - t[i];
+                const denominatorOfFactorForAZero = denominatorOfFactorForA == 0;
+                const denominatorOfFactorForB = t[i + j + 1] - t[i + 1];
+                const denominatorOfFactorForBZero = denominatorOfFactorForB == 0;
+
                 newBasisFunctionData[j][i] = {
                     basisFunction: (x: number) => {
-                        const a = (x - t[i]) / (t[i + j] - t[i]) * newBasisFunctionData[j - 1][i].basisFunction(x);
-                        const b = (t[i + j + 1] - x) / (t[i + j + 1] - t[i + 1]) * newBasisFunctionData[j - 1][i + 1].basisFunction(x);
+                        const a = (x - t[i]) / (denominatorOfFactorForAZero ? 1 : denominatorOfFactorForA) * newBasisFunctionData[j - 1][i].basisFunction(x);
+                        const b = (t[i + j + 1] - x) / (denominatorOfFactorForBZero ? 1 : denominatorOfFactorForB) * newBasisFunctionData[j - 1][i + 1].basisFunction(x);
                         return a + b;
                     },
-                    basisFunctionAsLaTeXString: String.raw`\[N_{${i},${j}}(t) = \frac{ t - t_{${i}} } { t_{${i + j}} - t_{${i}} } \cdot N_{${i}, ${j - 1}}(t) + \frac{ t_{${i + j + 1}} - t } { t_{${i + j + 1}} - t_{${i + 1}} } \cdot N_{${i + 1}, ${j - 1}}(t)\]`
+                    basisFunctionAsLaTeXString: String.raw`\[N_{${i},${j}}(t) = \frac{ t - t_{${i}} } { t_{${i + j}} - t_{${i}} } \cdot N_{${i}, ${j - 1}}(t) + \frac{ t_{${i + j + 1}} - t } { t_{${i + j + 1}} - t_{${i + 1}} } \cdot N_{${i + 1}, ${j - 1}}(t) 
+                        ${denominatorOfFactorForAZero? String.raw`t_{${i + j}} - t_{${i}} := 1\text{ as division by zero is not defined }` : ''}
+                        ${denominatorOfFactorForBZero? String.raw`t_{${i + j + 1}} - t_{${i + 1}} := 1\text{ as division by zero is not defined }` : ''}\]`
                 }
             }
         }
@@ -351,10 +357,24 @@ export class BSplineDemo extends CurveDemo {
         const p = this.degree;
         const ctrlPtPositions = this.controlPoints.map(pt => pt.position);
 
+        //TODO: Find out how to handle these edge cases, algorithm returns BS for those values
+        if(t == this.tMin && this.firstTValueWhereCurveDefined == this.tMin) {
+            return {
+                pt: ctrlPtPositions[0],
+                tempPtsCreatedDuringEvaluation: [[]]
+            }
+        }
+        if(t == this.tMax && this.firstTValueWhereCurveUndefined == this.tMax) {
+            return {
+                pt: ctrlPtPositions[ctrlPtPositions.length - 1],
+                tempPtsCreatedDuringEvaluation: [[]]
+            }
+        }
+
         //k := Index of knot interval [t_k, t_{k+1}]that contains t.
         const k = this.knotVector.slice(0, -1).findIndex((k, i) => k <= t && t < this.knotVector[i + 1]);
         if (k == -1) {
-            console.warn('getPointOnCurveUsingDeBoorsAlgorithm() called with invalid value!');
+            console.warn(`getPointOnCurveUsingDeBoorsAlgorithm() called with invalid value ${t}`);
             return {
                 tempPtsCreatedDuringEvaluation: [[]],
                 pt: this.p5.createVector(0, 0)
@@ -462,7 +482,7 @@ class BSplineVisualization extends CurveDrawingVisualization {
         } else {
             renderTextWithSubscript(
                 this.p5,
-                `This ${this.bSplineDemo.open ? 'open' : 'closed'} B-Spline curve is only defined in the interval [t_{${this.bSplineDemo.firstKnotIndexWhereCurveDefined}}, t_{${this.bSplineDemo.firstKnotIndexWhereCurveUndefined}}) = [${+this.bSplineDemo.firstTValueWhereCurveDefined.toFixed(2)}, ${+this.bSplineDemo.firstTValueWhereCurveUndefined.toFixed(2)})`,
+                `This ${this.bSplineDemo.open ? 'open' : 'clamped'} B-Spline curve is only defined in the interval [t_{${this.bSplineDemo.firstKnotIndexWhereCurveDefined}}, t_{${this.bSplineDemo.firstKnotIndexWhereCurveUndefined}}) = [${+this.bSplineDemo.firstTValueWhereCurveDefined.toFixed(2)}, ${+this.bSplineDemo.firstTValueWhereCurveUndefined.toFixed(2)})`,
                 10, this.p5.height - 20
             );
         }
@@ -471,9 +491,7 @@ class BSplineVisualization extends CurveDrawingVisualization {
     private drawKnotMarkers() {
         this.bSplineDemo.knotVector.forEach((t, i) => {
             if (i < this.bSplineDemo.firstKnotIndexWhereCurveDefined || i > this.bSplineDemo.firstKnotIndexWhereCurveUndefined) return;
-            //can't use De Boor's implementation for closed B-Splines as, if we're very strict, at the last knot the curve is not defined anymore
-            //(hopefully I implemented this correctly, but how I understand it, t_max is not part of the curve domain anymore)
-            const knotPosition = this.bSplineDemo.getPointOnCurveByEvaluatingBasisFunctions(this.bSplineDemo.degree, t);
+            const knotPosition = this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(t);
             drawSquare(
                 this.p5,
                 knotPosition,
@@ -494,7 +512,10 @@ class BSplineVisualization extends CurveDrawingVisualization {
     }
 
     private drawDeBoorVisualization(tempPtsCreatedDuringEvaluation: p5.Vector[][]) {
-        tempPtsCreatedDuringEvaluation.forEach(iteration => {
+        if (tempPtsCreatedDuringEvaluation.length <= 2) {//only a single iteration or none was needed to get the position of the point (note: iteration 0 is just copying the control points, no interpolations are made)
+            return;
+        }
+        tempPtsCreatedDuringEvaluation.forEach((iteration) => {
             iteration.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt, iteration[i + 1], this.color, this.bSplineDemo.baseLineWidth));
             iteration.forEach(pt => drawCircle(this.p5, pt, this.color, this.bSplineDemo.basePointDiameter));
         });

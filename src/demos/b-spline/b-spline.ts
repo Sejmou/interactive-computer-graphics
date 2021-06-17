@@ -43,9 +43,9 @@ Side-note: there is no upper limit for the largest knot value which means that t
 );
 
 addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
-    String.raw`B-Spline curves are only defined in the interval for \(t\) where the condition \(\sum_{i=0}^{n}{N_{i,p}(t) \cdot P_{i}} = 1\) is satisfied. We differentiate between open and closed B-Spline curves.<br>
-Compared to open B-Spline curves, closed B-Spline curves put additional restrictions on the knot vector: Its first \(k\) values must be the same. The same restriction also applies to its last \(k\) values.<br>
-A consequence of this restriction is that closed B-Spline curves are defined in the whole interval \([t_0, t_m]\), while for open B-Spline curves we can only guarantee that they are defined in the interval \([t_p, t_{m-p}]\).`
+    String.raw`B-Spline curves are only defined in the interval for \(t\) where the condition \(\sum_{i=0}^{n}{N_{i,p}(t) \cdot P_{i}} = 1\) is satisfied. We differentiate between open and clamped B-Spline curves.<br>
+Compared to open B-Spline curves, clamped B-Spline curves put additional restrictions on the knot vector: Its first \(k\) values must be the same. The same restriction also applies to its last \(k\) values.<br>
+A consequence of this restriction is that clamped B-Spline curves are defined in the whole interval \([t_0, t_m]\), while for open B-Spline curves we can only guarantee that they are defined in the interval \([t_p, t_{m-p}]\).`
 );
 
 MathJax.typeset([`#${descriptionContainerId}`]);
