@@ -16,6 +16,8 @@ interface BSplineEvaluationData {
     pt: p5.Vector
 };
 
+export type knotVectorInitializationMode = 'open B-Spline' | 'closed B-Spline' | 'emulate Bézier';
+
 export class BSplineDemo extends CurveDemo {
     /**
      * The *degree* of a B-Spline curve is "the degree of its piecewise polynomial function in a variable x". In other words, it is the degree of the subsequent segments that the curve is built with.
@@ -67,7 +69,10 @@ export class BSplineDemo extends CurveDemo {
     }
 
     public get knotVectorValid() {
-        return this.knotVector.every((knot, i, knots) => knots[i + 1] ? knot <= knots[i + 1] : true);
+        const n = this.controlPoints.length - 1;
+        const k = this.degree + 1;
+        const m = n + k;
+        return this.knotVector.every((knot, i, knots) => knots[i + 1] ? knot <= knots[i + 1] : true) && this.knotVector.length == (m + 1);
     }
 
     public get valid() {
@@ -187,6 +192,7 @@ export class BSplineDemo extends CurveDemo {
 
     private scheduledKnotValueChanges: {i: number, newVal: number}[];
 
+    public knotVectorInitializationMode: knotVectorInitializationMode;
 
     constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         const tMin = 0;
@@ -196,9 +202,13 @@ export class BSplineDemo extends CurveDemo {
         //unfortunately, this.tMin and this.tMax can't be set directly before super() call
         //they have to be set in constructor, setting them in subclass constructor is too late...
 
-        this.scheduledKnotValueChanges = [];
+        
         this.minDegree = 0;
         this._degree = 2;
+        
+        this.scheduledKnotValueChanges = [];
+        this.knotVectorInitializationMode = 'open B-Spline';
+
         this._knotVector = this.createKnotVector();
         this.basisFunctionData = [];
         this.updateKnotVectorAndBasisFunctions();
@@ -244,9 +254,24 @@ export class BSplineDemo extends CurveDemo {
         }
         const m = n + k;
 
-        //knots in knot vector equidistant, in other words: m + 1 values in range [0, m], distributed uniformly (same step size between them)
-        //that's why this is called a *uniform* B-spline, btw
-        return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
+        //for the two "B-Spline knot vector initialization modes", the knots in knot vector equidistant, in other words: m + 1 values in range [0, m], distributed uniformly (same step size between them)
+        //that's why the resulting B-Spline curve is then also called *uniform*, btw
+        if (this.knotVectorInitializationMode == 'open B-Spline') return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
+        //TODO: implement this properly
+        if (this.knotVectorInitializationMode == 'closed B-Spline') {
+            const p = this.degree;
+            const pPlusOneArr = [...Array(p + 1).keys()];
+            const pPlusOneTimesMin = pPlusOneArr.map(_ => this.tMin);
+            const pPlusOneTimesMax = pPlusOneArr.map(_ => this.tMax);
+            const equidistantValuesBetweenMinAndMax = createArrayOfEquidistantAscendingNumbersInRange(m + 1 - 2* p, this.tMin, this.tMax).slice(1, -1);
+            const returnValue = [...pPlusOneTimesMin, ...equidistantValuesBetweenMinAndMax, ...pPlusOneTimesMax];
+            console.log(m + 1 == returnValue.length);
+            return returnValue;
+        }
+        //TODO: implement knotVectorInitializationMode 'emulate Bézier'
+
+        //simply return the same as if the mode were 'open B-Spline'
+        else return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
     }
 
     private createBasisFunctions() {
@@ -562,7 +587,7 @@ class DegreeControls implements MyObserver<DemoChange> {
     }
 
     private updateVisibility() {
-        this.visible = this.demo.controlPoints.length > 0;
+        this.visible = this.demo.valid;
     }
 
     private updateDegreeText() {
@@ -581,7 +606,7 @@ export class DeBoorControlPointInfluenceVisualization extends ControlPointInflue
     private bSplineDemo: BSplineDemo;
 
     constructor(p5: p5, bSplineDemo: BSplineDemo) {
-        super(p5);
+        super(p5, bSplineDemo);
         this.bSplineDemo = bSplineDemo;
         bSplineDemo.subscribe(this);
     }
@@ -607,7 +632,6 @@ export class DeBoorControlPointInfluenceVisualization extends ControlPointInflue
 export class KnotVectorControls implements MyObserver<DemoChange> {
     private knotInputElements: HTMLInputElement[] = [];
     private tableContainer: HTMLDivElement | undefined;
-    private table: HTMLTableElement | undefined;
 
     constructor(private bSplineDemo: BSplineDemo, private parentContainerId: string) {
         bSplineDemo.subscribe(this);
@@ -621,6 +645,11 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
     }
 
     updateKnotVectorDisplay() {
+        if (!this.bSplineDemo.valid) {
+            if (this.tableContainer) this.tableContainer.style.visibility = 'hidden';
+            return;
+        }
+
         this.knotInputElements = this.bSplineDemo.knotVector.map((k, i, arr) => {
             const inputEl = document.createElement('input');
             inputEl.type = 'number';

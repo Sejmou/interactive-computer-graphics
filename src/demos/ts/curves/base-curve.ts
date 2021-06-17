@@ -492,7 +492,7 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
         }
     }
     private updateVisibility() {
-        this.visible = this.demo.controlPoints.length >= 2;
+        this.visible = this.demo.valid;
     }
 
     private updateSliderRange() {
@@ -609,7 +609,7 @@ export abstract class ControlPointInfluenceVisualization implements Drawable, Dr
     private ctrlPtInfluenceDataPoints: ControlPointInfluenceData[] = [];
     private influenceBars: ControlPointInfluenceBar[] = [];
 
-    constructor(private p5: p5) {
+    constructor(private p5: p5, private demo: CurveDemo) {
         this.barBorderColor = p5.color(120);
     }
 
@@ -630,6 +630,7 @@ export abstract class ControlPointInfluenceVisualization implements Drawable, Dr
     protected abstract getCurrentControlPointInfluenceDataPoints(): ControlPointInfluenceData[];
 
     draw(): void {
+        if (!this.demo.valid) return;
         this.influenceBars.forEach(b => b.draw());
         if (this.influenceBars.length > 1) this.drawSummaryBar();        
     }

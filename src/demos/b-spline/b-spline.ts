@@ -182,10 +182,10 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
     }
 
     draw(): void {
-        if (this.dataPoints.length > 0) {
+        if (this.bSplineDemo.valid) {
             this.drawBSplineCurves();
             this.drawAxisRulersAndLabels();
-            if (this.bSplineDemo.valid) this.drawBordersOfCurveDomain();
+            this.drawBordersOfCurveDomain();
         }
         else this.renderInfoText();
     }
@@ -275,7 +275,7 @@ class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
     private renderInfoText() {
         this.p5.push();
         this.p5.textAlign(this.p5.CENTER);
-        this.p5.text('Add control points to the canvas on the left!\nThe B-spline basis functions will then show up here.', this.p5.width / 2, this.p5.height / 2);
+        this.p5.text('Add more control points to the canvas on the left!\nThe B-spline basis functions will then show up here.', this.p5.width / 2, this.p5.height / 2);
         this.p5.pop();
     }
 }
@@ -290,7 +290,7 @@ class LineAtTPlotter implements Drawable {
     constructor(private p5: p5, private bSplineDemo: BSplineDemo, private graphPlotter: BSplineGraphPlotter) { }
 
     draw(): void {
-        this.drawLineAtT();
+        if (this.bSplineDemo.valid) this.drawLineAtT();
     }
 
     private drawLineAtT() {
