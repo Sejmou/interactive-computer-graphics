@@ -4,7 +4,7 @@ import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, Po
 import { colorsTooSimilar, createArrayOfEquidistantAscendingNumbersInRange, drawLineXYCoords, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from "../util";
 import { DragVertex } from "../vertex";
 
-export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged';
+export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged' | 'showCurveDrawingVisualizationChanged';
 
 interface ControlPointColor {
     color: p5.Color,
@@ -99,7 +99,15 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this._controlPoints.forEach(v => v.showPosition = value);
     }
 
-    showCurveDrawingVisualization: boolean = true;
+    _showCurveDrawingVisualization: boolean = true;
+    set showCurveDrawingVisualization(newValue: boolean) {
+        const oldValue = this._showCurveDrawingVisualization;
+        this._showCurveDrawingVisualization = newValue;
+        if (oldValue !== newValue) this.notifyObservers('showCurveDrawingVisualizationChanged');
+    }
+    get showCurveDrawingVisualization(): boolean {
+        return this._showCurveDrawingVisualization;
+    };
 
     private _positionDisplayMode: PositionDisplayMode = "absolute";
     public get positionDisplayMode(): PositionDisplayMode {
@@ -485,14 +493,14 @@ class ControlsForParameterT implements MyObserver<DemoChange> {
     }
 
     update(data: DemoChange): void {
-        if (data === 'controlPointsChanged') this.updateVisibility();
+        if (data === 'controlPointsChanged' || data === 'showCurveDrawingVisualizationChanged') this.updateVisibility();
         if (data === 'rangeOfTChanged') {
             this.speedCompensationForSizeOfTInterval = this.demo.tMax - this.demo.tMin;
             this.updateSliderRange();
         }
     }
     private updateVisibility() {
-        this.visible = this.demo.valid;
+        this.visible = this.demo.showCurveDrawingVisualization && this.demo.valid;
     }
 
     private updateSliderRange() {
@@ -859,56 +867,4 @@ class ControlPointInfluenceBar implements Drawable, Draggable, Touchable, Clicka
 
     private dragPtOffsetX = 0;
     private dragPtOffsetY = 0;
-}
-
-export class InfluenceVisVisibilityCheckbox implements MyObserver<DemoChange> {
-    private form: HTMLFormElement;
-
-    constructor(private demo: CurveDemo, private influenceVis: ControlPointInfluenceVisualization, controlsParentContainerId?: string) {
-        this.demo.subscribe(this);
-
-        const formFieldName = 'showInfluenceBars';
-
-        const checkBox = document.createElement('input');
-        checkBox.type = 'checkbox';
-        checkBox.name = formFieldName;
-        checkBox.checked = this.influenceVis.visible;
-        checkBox.className = 'filled-in';
-        const desc = document.createElement('span');
-        desc.innerText = 'show control point influence bars';
-        const label = document.createElement('label');
-        label.appendChild(checkBox);
-        label.appendChild(desc);
-        this.form = document.createElement('form');
-        this.form.appendChild(label);
-        this.form.addEventListener('change', () => {
-            this.influenceVis.visible = new FormData(this.form).get(formFieldName) !== null;
-            checkBox.checked = this.influenceVis.visible;
-        });
-        this.updateCheckboxVisibility();
-
-        if (controlsParentContainerId) {
-            const parentContainer = document.getElementById(controlsParentContainerId);
-            if (parentContainer) {
-                parentContainer.appendChild(this.form);
-                return;
-            }
-            console.warn(`parent container with id '${controlsParentContainerId}' for influence bar checkbox not found`);
-        }
-        else {
-            console.warn('no parent container for influence bar checkbox provided');
-        }
-        document.appendChild(label);
-    }
-
-    update(): void {
-        this.updateCheckboxVisibility();
-    }
-
-    private updateCheckboxVisibility() {
-        if (this.form) {
-            if (this.demo.valid) this.form.style.removeProperty('visibility');
-            else this.form.style.visibility = 'hidden';
-        }
-    }
 }
