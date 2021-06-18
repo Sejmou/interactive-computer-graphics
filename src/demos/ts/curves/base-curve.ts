@@ -605,11 +605,11 @@ export abstract class ControlPointInfluenceVisualization implements Drawable, Dr
     private barHeight = 60;
     private barWidth = 30;
     private borderThickness = 5;
-    
+
     private ctrlPtInfluenceDataPoints: ControlPointInfluenceData[] = [];
     private influenceBars: ControlPointInfluenceBar[] = [];
 
-    constructor(private p5: p5, private demo: CurveDemo, private visible = true) {
+    constructor(private p5: p5, private demo: CurveDemo, public visible: boolean = true) {
         this.barBorderColor = p5.color(120);
     }
 
@@ -619,10 +619,10 @@ export abstract class ControlPointInfluenceVisualization implements Drawable, Dr
     protected updateInfluenceDataAndBars() {
         this.ctrlPtInfluenceDataPoints = this.getCurrentControlPointInfluenceDataPoints();
         //needed so that positions of influence bars don't reset if new vertices get added
-        const ctrlPtsAndOffsetsOfInfluenceBars = this.influenceBars.map(b => ({ ctrlPt: b.assignedControlPoint, offsetX: b.offsetFromCtrlPtPosX, offsetY: b.offsetFromCtrlPtPosY}));
+        const ctrlPtsAndOffsetsOfInfluenceBars = this.influenceBars.map(b => ({ ctrlPt: b.assignedControlPoint, offsetX: b.offsetFromCtrlPtPosX, offsetY: b.offsetFromCtrlPtPosY }));
         this.influenceBars = this.ctrlPtInfluenceDataPoints.map(d => {
             const alreadyDisplayedCtrlPt = ctrlPtsAndOffsetsOfInfluenceBars.find(co => co.ctrlPt === d.controlPoint);
-            if (alreadyDisplayedCtrlPt) return new ControlPointInfluenceBar(this.p5, d, {offsetFromCtrlPtPosX: alreadyDisplayedCtrlPt.offsetX, offsetFromCtrlPtPosY: alreadyDisplayedCtrlPt.offsetY});
+            if (alreadyDisplayedCtrlPt) return new ControlPointInfluenceBar(this.p5, d, { offsetFromCtrlPtPosX: alreadyDisplayedCtrlPt.offsetX, offsetFromCtrlPtPosY: alreadyDisplayedCtrlPt.offsetY });
             else return new ControlPointInfluenceBar(this.p5, d);
         });
     }
@@ -632,7 +632,7 @@ export abstract class ControlPointInfluenceVisualization implements Drawable, Dr
     draw(): void {
         if (!this.demo.valid || !this.visible) return;
         this.influenceBars.forEach(b => b.draw());
-        if (this.influenceBars.length > 1) this.drawSummaryBar();        
+        if (this.influenceBars.length > 1) this.drawSummaryBar();
     }
 
     /**
@@ -859,4 +859,56 @@ class ControlPointInfluenceBar implements Drawable, Draggable, Touchable, Clicka
 
     private dragPtOffsetX = 0;
     private dragPtOffsetY = 0;
+}
+
+export class InfluenceVisVisibilityCheckbox implements MyObserver<DemoChange> {
+    private form: HTMLFormElement;
+
+    constructor(private demo: CurveDemo, private influenceVis: ControlPointInfluenceVisualization, controlsParentContainerId?: string) {
+        this.demo.subscribe(this);
+
+        const formFieldName = 'showInfluenceBars';
+
+        const checkBox = document.createElement('input');
+        checkBox.type = 'checkbox';
+        checkBox.name = formFieldName;
+        checkBox.checked = this.influenceVis.visible;
+        checkBox.className = 'filled-in';
+        const desc = document.createElement('span');
+        desc.innerText = 'show control point influence bars';
+        const label = document.createElement('label');
+        label.appendChild(checkBox);
+        label.appendChild(desc);
+        this.form = document.createElement('form');
+        this.form.appendChild(label);
+        this.form.addEventListener('change', () => {
+            this.influenceVis.visible = new FormData(this.form).get(formFieldName) !== null;
+            checkBox.checked = this.influenceVis.visible;
+        });
+        this.updateCheckboxVisibility();
+
+        if (controlsParentContainerId) {
+            const parentContainer = document.getElementById(controlsParentContainerId);
+            if (parentContainer) {
+                parentContainer.appendChild(this.form);
+                return;
+            }
+            console.warn(`parent container with id '${controlsParentContainerId}' for influence bar checkbox not found`);
+        }
+        else {
+            console.warn('no parent container for influence bar checkbox provided');
+        }
+        document.appendChild(label);
+    }
+
+    update(): void {
+        this.updateCheckboxVisibility();
+    }
+
+    private updateCheckboxVisibility() {
+        if (this.form) {
+            if (this.demo.valid) this.form.style.removeProperty('visibility');
+            else this.form.style.visibility = 'hidden';
+        }
+    }
 }

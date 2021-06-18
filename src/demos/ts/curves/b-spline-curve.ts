@@ -175,7 +175,7 @@ export class BSplineDemo extends CurveDemo {
     scheduleKnotValueChange(i: number, newVal: number) {
         //override any value changes to the same knot that might still be "in queue"
         this.scheduledKnotValueChanges = this.scheduledKnotValueChanges.filter(c => c.i !== i);
-        this.scheduledKnotValueChanges.push({i, newVal});
+        this.scheduledKnotValueChanges.push({ i, newVal });
     }
 
     draw() {
@@ -183,7 +183,7 @@ export class BSplineDemo extends CurveDemo {
         if (this.scheduledKnotValueChanges.length > 0) {
             this.scheduledKnotValueChanges.forEach(c => {
                 if (c.i == 0) this._tMin = c.newVal;
-                if (c.i == this.knotVector.length -1) this._tMax = c.newVal;  
+                if (c.i == this.knotVector.length - 1) this._tMax = c.newVal;
                 this.knotVector[c.i] = c.newVal
             });
             this.scheduledKnotValueChanges = [];
@@ -194,7 +194,7 @@ export class BSplineDemo extends CurveDemo {
         }
     }
 
-    private scheduledKnotValueChanges: {i: number, newVal: number}[];
+    private scheduledKnotValueChanges: { i: number, newVal: number }[];
 
     private _curveType: CurveType;
     public get curveType(): CurveType {
@@ -215,10 +215,10 @@ export class BSplineDemo extends CurveDemo {
         //unfortunately, this.tMin and this.tMax can't be set directly before super() call
         //they have to be set in constructor, setting them in subclass constructor is too late...
 
-        
+
         this.minDegree = 0;
         this._degree = 2;
-        
+
         this.scheduledKnotValueChanges = [];
         this._curveType = 'clamped B-Spline';
 
@@ -283,7 +283,7 @@ export class BSplineDemo extends CurveDemo {
             const pPlusOneArr = [...Array(p + 1).keys()];
             const pPlusOneTimesMin = pPlusOneArr.map(_ => this.tMin);
             const pPlusOneTimesMax = pPlusOneArr.map(_ => this.tMax);
-            const equidistantValuesBetweenMinAndMax = createArrayOfEquidistantAscendingNumbersInRange(m + 1 - 2* p, this.tMin, this.tMax).slice(1, -1);
+            const equidistantValuesBetweenMinAndMax = createArrayOfEquidistantAscendingNumbersInRange(m + 1 - 2 * p, this.tMin, this.tMax).slice(1, -1);
             return [...pPlusOneTimesMin, ...equidistantValuesBetweenMinAndMax, ...pPlusOneTimesMax];
         }
 
@@ -318,7 +318,7 @@ export class BSplineDemo extends CurveDemo {
                     if (t[i] <= x && x < t[i + 1]) return 1;
                     else return 0;
                 },
-                basisFunctionAsLaTeXString: String.raw`\[N_{${i},0} = ${t[i] == t[i +1]? String.raw`\(0 \text{ as } [t_${i}, t_${i + 1}) \text{ does not exist}\)` : String.raw`\begin{cases} 1,& \text{if} t_{${i}} \leq x < t_{${i + 1}} \\ 0,& \text{otherwise} \end{cases} \]`}`
+                basisFunctionAsLaTeXString: String.raw`\[N_{${i},0} = ${t[i] == t[i + 1] ? String.raw`\(0 \text{ as } [t_${i}, t_${i + 1}) \text{ does not exist}\)` : String.raw`\begin{cases} 1,& \text{if} t_{${i}} \leq x < t_{${i + 1}} \\ 0,& \text{otherwise} \end{cases} \]`}`
             };
         }
 
@@ -338,8 +338,8 @@ export class BSplineDemo extends CurveDemo {
                         return a + b;
                     },
                     basisFunctionAsLaTeXString: String.raw`\[N_{${i},${j}}(t) = \frac{ t - t_{${i}} } { t_{${i + j}} - t_{${i}} } \cdot N_{${i}, ${j - 1}}(t) + \frac{ t_{${i + j + 1}} - t } { t_{${i + j + 1}} - t_{${i + 1}} } \cdot N_{${i + 1}, ${j - 1}}(t) 
-                        ${denominatorOfFactorForAZero? String.raw`t_{${i + j}} - t_{${i}} := 1\text{ as division by zero is not defined }` : ''}
-                        ${denominatorOfFactorForBZero? String.raw`t_{${i + j + 1}} - t_{${i + 1}} := 1\text{ as division by zero is not defined }` : ''}\]`
+                        ${denominatorOfFactorForAZero ? String.raw`t_{${i + j}} - t_{${i}} := 1\text{ as division by zero is not defined }` : ''}
+                        ${denominatorOfFactorForBZero ? String.raw`t_{${i + j + 1}} - t_{${i + 1}} := 1\text{ as division by zero is not defined }` : ''}\]`
                 }
             }
         }
@@ -378,13 +378,13 @@ export class BSplineDemo extends CurveDemo {
         const ctrlPtPositions = this.controlPoints.map(pt => pt.position);
 
         //TODO: Find out how to handle these edge cases, algorithm returns BS for those values
-        if(t == this.tMin && this.firstTValueWhereCurveDefined == this.tMin) {
+        if (t == this.tMin && this.firstTValueWhereCurveDefined == this.tMin) {
             return {
                 pt: ctrlPtPositions[0],
                 tempPtsCreatedDuringEvaluation: [[]]
             }
         }
-        if(t == this.tMax && this.firstTValueWhereCurveUndefined == this.tMax) {
+        if (t == this.tMax && this.firstTValueWhereCurveUndefined == this.tMax) {
             return {
                 pt: ctrlPtPositions[ctrlPtPositions.length - 1],
                 tempPtsCreatedDuringEvaluation: [[]]
@@ -429,7 +429,7 @@ export class BSplineDemo extends CurveDemo {
                 const alpha = (t - this.knotVector[i]) / (this.knotVector[i + p - r + 1] - this.knotVector[i]);
                 // console.log(`a_{${i},${r}} = ${alpha}`);
                 ctrlPtIndex = i - k + p;
-                ptsPerIteration[r][ctrlPtIndex] = p5.Vector.add(p5.Vector.mult(ptsPerIteration[r-1][ctrlPtIndex - 1], 1 - alpha), p5.Vector.mult(ptsPerIteration[r -1][ctrlPtIndex], alpha));
+                ptsPerIteration[r][ctrlPtIndex] = p5.Vector.add(p5.Vector.mult(ptsPerIteration[r - 1][ctrlPtIndex - 1], 1 - alpha), p5.Vector.mult(ptsPerIteration[r - 1][ctrlPtIndex], alpha));
             }
         }
 
@@ -661,8 +661,8 @@ class DegreeControls implements MyObserver<DemoChange> {
 export class DeBoorControlPointInfluenceVisualization extends ControlPointInfluenceBarVisualization implements MyObserver<DemoChange> {
     private bSplineDemo: BSplineDemo;
 
-    constructor(p5: p5, bSplineDemo: BSplineDemo) {
-        super(p5, bSplineDemo);
+    constructor(p5: p5, bSplineDemo: BSplineDemo, visible: boolean = true) {
+        super(p5, bSplineDemo, visible);
         this.bSplineDemo = bSplineDemo;
         bSplineDemo.subscribe(this);
     }
@@ -736,7 +736,7 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
             th.id = id;
             knotHeadingIds.push(`#${id}`);
         });
-        
+
         const knotInputRow = document.createElement('tr');
 
         this.knotInputElements.forEach(k => {
@@ -778,7 +778,7 @@ export class CurveTypeControls implements MyObserver<DemoChange> {
 
     constructor(private bSplineDemo: BSplineDemo, private parentContainerId: string) {
         bSplineDemo.subscribe(this);
-        
+
         const formFieldName = 'curveType';
         this.radioButtons = [...Array(3)].map((_, i) => {
             const inputEl = document.createElement('input');
@@ -837,21 +837,24 @@ export class CurveTypeControls implements MyObserver<DemoChange> {
         }
         parentContainer.appendChild(this.container);
 
-        this.updateCheckboxes();
+        this.updateVisibility();
+        this.updateSelectedCheckboxes();
     }
 
     update(data: DemoChange): void {
-        if (data == 'controlPointsChanged') {
-            this.updateCheckboxes();
-        }
+        if (data == 'curveTypeChanged') this.updateSelectedCheckboxes();
+        this.updateVisibility();
     }
 
-    updateCheckboxes() {
+    private updateVisibility() {
         if (!this.bSplineDemo.valid) {
             this.container.style.visibility = 'hidden';
             return;
         }
         this.container.style.removeProperty('visibility');
+    }
+
+    updateSelectedCheckboxes() {
         this.radioButtons.forEach(b => b.checked = b.value == this.bSplineDemo.curveType);
     }
 }

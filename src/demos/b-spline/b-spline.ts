@@ -1,7 +1,7 @@
 import './b-spline.scss';
 import { Sketch } from "../ts/sketch";
 import { BSplineDemo, CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls } from '../ts/curves/b-spline-curve';
-import { DemoChange } from '../ts/curves/base-curve';
+import { DemoChange, InfluenceVisVisibilityCheckbox } from '../ts/curves/base-curve';
 import colors from '../../global-styles/color_exports.scss';
 import p5 from 'p5';
 import { addParagraphWithGivenContentToHtmlElementWithId, createArrayOfEquidistantAscendingNumbersInRange, drawLineXYCoords, FrameRateMonitor, renderTextWithSubscript } from '../ts/util';
@@ -63,7 +63,8 @@ async function createDemo() {
     const bSplineDemo = sketch.add((p5, containerId) => new BSplineDemo(p5, containerId));
     bSplineDemo.showPointLabels = true;
 
-    sketch.add((p5) => new DeBoorControlPointInfluenceVisualization(p5, bSplineDemo));
+    const influenceVis = sketch.add((p5) => new DeBoorControlPointInfluenceVisualization(p5, bSplineDemo, false));
+    new InfluenceVisVisibilityCheckbox(bSplineDemo, influenceVis, demoContainerId);
 
     //setting FPS to 0 causes sketch to instantiate p5 with noLoop() as last call in setup
     //this causes the sketch to only be redrawn when p5.redraw() is called, improving performance
