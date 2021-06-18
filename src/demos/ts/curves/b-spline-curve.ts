@@ -1,7 +1,7 @@
 import p5, { Vector } from 'p5';
 import { Sketch } from '../sketch';
 import { MyObserver } from '../ui-interfaces';
-import { clamp, createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawSquare, renderTextWithSubscript } from '../util';
+import { clamp, createArrayOfEquidistantAscendingNumbersInRange, directionVector, drawCircle, drawLineVector, drawSquare, renderTextWithSubscript } from '../util';
 import { ControlPointInfluenceData, ControlPointInfluenceVisualization as ControlPointInfluenceBarVisualization, Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 
 
@@ -16,7 +16,7 @@ interface BSplineEvaluationData {
     pt: p5.Vector
 };
 
-export type knotVectorInitializationMode = 'open B-Spline' | 'clamped B-Spline' | 'emulate Bézier';
+export type CurveType = 'open B-Spline' | 'clamped B-Spline' | 'Bézier';
 
 export class BSplineDemo extends CurveDemo {
     /**
@@ -196,7 +196,16 @@ export class BSplineDemo extends CurveDemo {
 
     private scheduledKnotValueChanges: {i: number, newVal: number}[];
 
-    public knotVectorInitializationMode: knotVectorInitializationMode;
+    private _curveType: CurveType;
+    public get curveType(): CurveType {
+        return this._curveType;
+    };
+    public set curveType(newType: CurveType) {
+        this._curveType = newType;
+        this.updateDegree();
+        this.updateKnotVectorAndBasisFunctions();
+        this.notifyObservers('curveTypeChanged');
+    }
 
     constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         const tMin = 0;
@@ -211,7 +220,7 @@ export class BSplineDemo extends CurveDemo {
         this._degree = 2;
         
         this.scheduledKnotValueChanges = [];
-        this.knotVectorInitializationMode = 'open B-Spline';
+        this._curveType = 'clamped B-Spline';
 
         this._knotVector = this.createKnotVector();
         this.basisFunctionData = [];
@@ -226,7 +235,15 @@ export class BSplineDemo extends CurveDemo {
      * called every time the number of control points changes
      */
     protected additionalCtrlPtAmountChangeHandling() {
+        this.updateDegree();
         this.updateKnotVectorAndBasisFunctions();
+    }
+
+    private updateDegree() {
+        if (this.curveType == 'Bézier') {
+            this._degree = this.controlPoints.length - 1;
+            this.notifyObservers('degreeChanged');
+        }
     }
 
     private updateKnotVectorAndBasisFunctions() {
@@ -260,9 +277,8 @@ export class BSplineDemo extends CurveDemo {
 
         //for the two "B-Spline knot vector initialization modes", the knots in knot vector equidistant, in other words: m + 1 values in range [0, m], distributed uniformly (same step size between them)
         //that's why the resulting B-Spline curve is then also called *uniform*, btw
-        if (this.knotVectorInitializationMode == 'open B-Spline') return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
-        //TODO: implement this properly
-        if (this.knotVectorInitializationMode == 'clamped B-Spline') {
+        if (this.curveType == 'open B-Spline') return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
+        if (this.curveType == 'clamped B-Spline' || this.curveType == 'Bézier') {
             const p = this.degree;
             const pPlusOneArr = [...Array(p + 1).keys()];
             const pPlusOneTimesMin = pPlusOneArr.map(_ => this.tMin);
@@ -270,8 +286,8 @@ export class BSplineDemo extends CurveDemo {
             const equidistantValuesBetweenMinAndMax = createArrayOfEquidistantAscendingNumbersInRange(m + 1 - 2* p, this.tMin, this.tMax).slice(1, -1);
             return [...pPlusOneTimesMin, ...equidistantValuesBetweenMinAndMax, ...pPlusOneTimesMax];
         }
-        //TODO: implement knotVectorInitializationMode 'emulate Bézier'
 
+        //effectively not reachable
         //simply return the same as if the mode were 'open B-Spline'
         else return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
     }
@@ -593,14 +609,29 @@ class DegreeControls implements MyObserver<DemoChange> {
         }
         if (data === 'degreeChanged') {
             this.updateDegreeText();
-            this.updateButtonDisabled();
+            this.updateDecreaseDegreeButtonDisabled();
+        }
+        if (data === 'curveTypeChanged') {
+            if (this.demo.curveType == 'Bézier') {
+                const disabledHoverText = 'For Bézier curves the degree is always n (depends on the number of control points)';
+                this.increaseDegreeButton.attribute('disabled', 'true');
+                this.decreaseDegreeButton.attribute('disabled', 'true');
+                this.increaseDegreeButton.attribute('title', disabledHoverText);
+                this.decreaseDegreeButton.attribute('title', disabledHoverText);
+            }
+            else {
+                this.increaseDegreeButton.removeAttribute('title');
+                this.decreaseDegreeButton.removeAttribute('title');
+                this.increaseDegreeButton.removeAttribute('disabled');
+                this.updateDecreaseDegreeButtonDisabled();
+            }
         }
     }
 
-    updateButtonDisabled() {
+    updateDecreaseDegreeButtonDisabled() {
         if (this.demo.degree === this.demo.minDegree) {
             this.decreaseDegreeButton.attribute('disabled', 'true');
-        } else (this.decreaseDegreeButton.removeAttribute('disabled'));
+        } else if (!(this.demo.curveType == 'Bézier')) (this.decreaseDegreeButton.removeAttribute('disabled'));
     }
 
     private increaseDegreeButtonClicked() {
@@ -733,5 +764,94 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
         parentContainer.appendChild(this.tableContainer);
 
         MathJax.typeset(knotHeadingIds);
+    }
+}
+
+
+
+
+
+export class CurveTypeControls implements MyObserver<DemoChange> {
+    private radioButtons: HTMLInputElement[] = [];
+    private checkBoxForm: HTMLFormElement;
+    private container: HTMLDivElement;
+
+    constructor(private bSplineDemo: BSplineDemo, private parentContainerId: string) {
+        bSplineDemo.subscribe(this);
+        
+        const formFieldName = 'curveType';
+        this.radioButtons = [...Array(3)].map((_, i) => {
+            const inputEl = document.createElement('input');
+            inputEl.type = 'radio';
+            inputEl.name = formFieldName;
+            inputEl.id = `radio-btn-${i}`;
+
+            let value: CurveType;
+            if (i == 0) value = 'open B-Spline';
+            else if (i == 1) value = 'clamped B-Spline';
+            else value = 'Bézier';
+            inputEl.value = value;
+
+            return inputEl;
+        });
+
+        this.checkBoxForm = document.createElement('form');
+        this.checkBoxForm.addEventListener('change', () => {
+            const currVal = new FormData(this.checkBoxForm).get(formFieldName);
+            if (currVal) {
+                this.bSplineDemo.curveType = currVal.toString() as CurveType;
+            } else {
+                console.warn(`Could not find form field ${formFieldName}`);
+            }
+        });
+        // this.checkBoxForm.style.display = 'flex';
+        // this.checkBoxForm.style.flexDirection = 'row';
+        // this.checkBoxForm.style.gap = '25px';
+
+        this.radioButtons.forEach(b => {
+            const container = document.createElement('div');
+            const label = document.createElement('label');
+            label.appendChild(b);
+
+            const span = document.createElement('span');
+            span.innerText = b.value;
+            label.appendChild(span);
+
+            container.appendChild(label);
+            this.checkBoxForm.appendChild(container);
+        });
+
+        this.container = document.createElement('div');
+        // this.container.style.display = 'flex';
+        // this.container.style.gap = '25px';
+        const desc = document.createElement('span');
+        desc.innerText = 'curve type:';
+
+        this.container.appendChild(desc);
+        this.container.appendChild(this.checkBoxForm);
+
+        const parentContainer = document.getElementById(this.parentContainerId);
+        if (!parentContainer) {
+            console.warn(`couldn't create table for knot vector, parent container id invalid!`);
+            return;
+        }
+        parentContainer.appendChild(this.container);
+
+        this.updateCheckboxes();
+    }
+
+    update(data: DemoChange): void {
+        if (data == 'controlPointsChanged') {
+            this.updateCheckboxes();
+        }
+    }
+
+    updateCheckboxes() {
+        if (!this.bSplineDemo.valid) {
+            this.container.style.visibility = 'hidden';
+            return;
+        }
+        this.container.style.removeProperty('visibility');
+        this.radioButtons.forEach(b => b.checked = b.value == this.bSplineDemo.curveType);
     }
 }

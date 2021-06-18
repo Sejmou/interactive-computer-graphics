@@ -4,7 +4,7 @@ import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, Po
 import { colorsTooSimilar, createArrayOfEquidistantAscendingNumbersInRange, drawLineXYCoords, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from "../util";
 import { DragVertex } from "../vertex";
 
-export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged';
+export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged';
 
 interface ControlPointColor {
     color: p5.Color,
@@ -609,7 +609,7 @@ export abstract class ControlPointInfluenceVisualization implements Drawable, Dr
     private ctrlPtInfluenceDataPoints: ControlPointInfluenceData[] = [];
     private influenceBars: ControlPointInfluenceBar[] = [];
 
-    constructor(private p5: p5, private demo: CurveDemo) {
+    constructor(private p5: p5, private demo: CurveDemo, private visible = true) {
         this.barBorderColor = p5.color(120);
     }
 
@@ -630,7 +630,7 @@ export abstract class ControlPointInfluenceVisualization implements Drawable, Dr
     protected abstract getCurrentControlPointInfluenceDataPoints(): ControlPointInfluenceData[];
 
     draw(): void {
-        if (!this.demo.valid) return;
+        if (!this.demo.valid || !this.visible) return;
         this.influenceBars.forEach(b => b.draw());
         if (this.influenceBars.length > 1) this.drawSummaryBar();        
     }
