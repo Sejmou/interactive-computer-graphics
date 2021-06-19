@@ -3,7 +3,7 @@ import { Sketch } from "../ts/sketch";
 import { BSplineDemo, BSplineGraphPlotter, CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/curves/b-spline-curve';
 import { DemoChange } from '../ts/curves/base-curve';
 import { addParagraphWithGivenContentToHtmlElementWithId, BooleanPropCheckbox } from '../ts/util';
-import { NURBSDemo } from "../ts/curves/nurb-curve";
+import { ControlsForControlPointWeights, NURBSDemo } from "../ts/curves/nurbs-curve";
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';
@@ -66,6 +66,7 @@ async function createDemo() {
     lineForTSketch.add(p5 => new LineAtTPlotter(p5, nurbsDemo, graphPlotter));
 
     new KnotVectorControls(nurbsDemo, basisFuncContainerId);
+    new ControlsForControlPointWeights(nurbsDemo, basisFuncContainerId);
 
     new CurveTypeControls(nurbsDemo, demoContainerId);
 

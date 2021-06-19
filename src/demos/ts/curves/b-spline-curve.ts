@@ -8,7 +8,7 @@ import colors from '../../../global-styles/color_exports.scss';
 
 
 
-interface BasisFunctionData {
+export interface BasisFunctionData {
     basisFunction: (x: number) => number,
     basisFunctionAsLaTeXString: string
 }
@@ -89,20 +89,24 @@ export class BSplineDemo extends CurveDemo {
         return `${errors.join('\n')}`;
     };
 
-    private basisFunctionData: BasisFunctionData[][];
+    private _basisFunctionData: BasisFunctionData[][];
     /**
      * A spline function of order n is a piecewise polynomial function of degree n-1 in a variable x.
      * B-splines of order n are basis functions for spline functions of the same order defined over the same knots,
      * meaning that all possible spline functions can be built from a linear combination of B-splines, and there is only one unique combination for each spline function.
      */
     public get basisFunctions() {
-        return this.basisFunctionData.map(j => j.map(d => d.basisFunction));
+        return this._basisFunctionData.map(j => j.map(d => d.basisFunction));
     }
     /**
      * The B-Spline curve's basis functions as an array of arrays of LaTeX strings
      */
     public get basisFunctionsAsLaTeXString() {
-        return this.basisFunctionData.map(j => j.map(d => d.basisFunctionAsLaTeXString));
+        return this._basisFunctionData.map(j => j.map(d => d.basisFunctionAsLaTeXString));
+    }
+
+    public get basisFunctionData() {
+        return this._basisFunctionData;
     }
 
     /**
@@ -225,7 +229,7 @@ export class BSplineDemo extends CurveDemo {
         this._curveType = 'clamped B-Spline';
 
         this._knotVector = this.createKnotVector();
-        this.basisFunctionData = [];
+        this._basisFunctionData = [];
         this.updateKnotVectorAndBasisFunctions();
 
         this.setCurve(new BSplineCurve(this.p5, this));
@@ -260,7 +264,7 @@ export class BSplineDemo extends CurveDemo {
     }
 
     private updateBasisFunctions() {
-        this.basisFunctionData = this.createBasisFunctions();
+        this._basisFunctionData = this.createBasisFunctions();
     }
 
     private createKnotVector() {
