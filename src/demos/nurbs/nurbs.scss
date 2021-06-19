@@ -1,0 +1,33 @@
+@import "../demo.scss";
+
+#degree-text {
+    margin-right: 10px;
+}
+
+#controls-container {
+    gap: 20px;
+}
+
+//this is a hack to render two canvases on top of each other (one renders the graphs and is rarely updated,
+//the other renders the line at the current value of t and gets updated every 60 frames)
+#b-spline-basis-function-visualization {
+    position: relative;
+    width: 800px;
+
+    canvas:not(:first-child) {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}
+
+#knot-table-container {
+    overflow-x: auto;
+}
+
+#knot-table {
+    td,
+    th {
+        min-width: 75px;
+    }
+}

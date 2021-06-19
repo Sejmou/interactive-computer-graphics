@@ -6,7 +6,8 @@ module.exports = {
         bezierBasic: './src/demos/bezier/basic/basic.ts',
         bezierBernstein: './src/demos/bezier/bernstein/bernstein.ts',
         bSpline: './src/demos/b-spline/b-spline.ts',
-        bary: './src/demos/bary/bary.ts'
+        bary: './src/demos/bary/bary.ts',
+        nurbs: './src/demos/nurbs/nurbs.ts'
     },
     optimization: {
         splitChunks: {// this allows webpack to load dependencies (per default those from /node_modules, e.g. p5) only when we are on a site which needs them; probably an unnecessary optimization lol
@@ -52,6 +53,14 @@ module.exports = {
             filename: 'barycentric-coordinates.html', // don't forget this! otherwise plugin would emit to index.html!
             title: 'Barycentric Coordinates Demo (Interactive Computer Graphics)',
             heading: 'Barycentric Coordinates'
+        }),
+        new HtmlWebpackPlugin({
+            favicon: "favicon.ico",
+            template: 'src/demos/demo.ejs',
+            chunks: ['nurbs'],
+            filename: 'nurbs.html', // don't forget this! otherwise plugin would emit to index.html!
+            title: 'NURBS Demo (Interactive Computer Graphics)',
+            heading: 'NURBS'
         })
     ],
     module: {
