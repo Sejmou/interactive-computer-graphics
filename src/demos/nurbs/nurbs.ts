@@ -9,7 +9,7 @@ const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';
 
 addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
-    String.raw`Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight.`
+    String.raw`<b style="color: red">DISCLAIMER: this demo is currently broken, might fix later</b><br>Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight.`
 );
 
 // MathJax.typeset([`#${descriptionContainerId}`]);

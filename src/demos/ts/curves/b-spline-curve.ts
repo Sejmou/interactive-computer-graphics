@@ -13,7 +13,7 @@ export interface BasisFunctionData {
     basisFunctionAsLaTeXString: string
 }
 
-interface BSplineEvaluationData {
+export interface DeBoorEvaluationData {
     tempPtsCreatedDuringEvaluation: p5.Vector[][],
     pt: p5.Vector
 };
@@ -379,7 +379,7 @@ export class BSplineDemo extends CurveDemo {
         return this.getPointOnCurveAndTemporaryCtrlPtsCreatedUsingDeBoorsAlgo(t).pt;
     }
 
-    public getPointOnCurveAndTemporaryCtrlPtsCreatedUsingDeBoorsAlgo(t: number): BSplineEvaluationData {
+    public getPointOnCurveAndTemporaryCtrlPtsCreatedUsingDeBoorsAlgo(t: number): DeBoorEvaluationData {
         const p = this.degree;
         const ctrlPtPositions = this.controlPoints.map(pt => pt.position);
 

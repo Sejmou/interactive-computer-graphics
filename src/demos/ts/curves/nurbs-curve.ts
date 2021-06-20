@@ -2,7 +2,7 @@ import p5 from "p5";
 import { MyObserver } from "../ui-interfaces";
 import { clamp } from "../util";
 import { DragVertex } from "../vertex";
-import { BasisFunctionData, BSplineDemo } from "./b-spline-curve";
+import { BasisFunctionData, BSplineDemo, DeBoorEvaluationData } from "./b-spline-curve";
 import { DemoChange } from "./base-curve";
 
 
@@ -17,13 +17,19 @@ export class NURBSDemo extends BSplineDemo {
         super(p5, parentContainerId, baseAnimationSpeedMultiplier);
     }
 
-    private ctrlPtsAndWeights: CtrlPtAndWeight[] = [];
     private weightedBasisFunctionData: BasisFunctionData[][] = [[]];
+     public get weightedBasisFunctions() {
+        return this.weightedBasisFunctionData.map(j => j.map(d => d.basisFunction));
+    }
+
+    public get weightedBasisFunctionsAsLaTeXString() {
+        return this.weightedBasisFunctionData.map(j => j.map(d => d.basisFunctionAsLaTeXString));
+    }
 
     private scheduledCtrlPtWeightChanges: { i: number, newVal: number }[] = [];
     
     public scheduleCtrlPtWeightChange(i: number, newVal: number) {
-        if (i < 0 || i > this.ctrlPtsAndWeights.length - 1) {
+        if (i < 0 || i > this.controlPoints.length - 1) {
             console.error('invalid index for control point weight change:', i);
             return;
         }
@@ -33,7 +39,7 @@ export class NURBSDemo extends BSplineDemo {
     draw() {
         super.draw();
         if (this.scheduledCtrlPtWeightChanges.length > 0) {
-            this.scheduledCtrlPtWeightChanges.forEach(c => this.ctrlPtsAndWeights[c.i].weight = c.newVal);
+            this.scheduledCtrlPtWeightChanges.forEach(c => this._controlPoints[c.i].position.z = c.newVal);
             this.scheduledCtrlPtWeightChanges = [];
 
             this.updateWeightedBasisFunctions();
@@ -49,20 +55,46 @@ export class NURBSDemo extends BSplineDemo {
     }
 
     private updateCtrlPtsAndWeights() {
-        const oldCtrlPtsAndWeights = this.ctrlPtsAndWeights.slice();
-        this.ctrlPtsAndWeights = this.controlPoints.map(pt => ({
-            pt,
-            //if the same control point is already in the old list of ctrlPtsAndWeights, copy its current weight, else set weight to default of 1
-            weight: oldCtrlPtsAndWeights.find(ptWeight => ptWeight.pt == pt)?.weight ?? 1
-        }));
+        const oldCtrlPts = this.controlPoints.slice();
+        this.controlPoints.forEach(pt => {
+            //if a control point is new set its weight to default of 1
+            if (oldCtrlPts.find(p => p == pt)) pt.position.z = 1;
+        });
     }
 
     private updateWeightedBasisFunctions() {
-        
+        let newWeightedBasisFunctionData: BasisFunctionData[][] = [];
+        for (let j = 0; j < this.basisFunctionData.length; j++) {
+            const basisFuncs = this.basisFunctionData[j].map(d => d.basisFunction);
+            const weightedBasisFuncSum = (x: number) => basisFuncs.reduce((prev, curr) => prev + curr(x), 0);
+            newWeightedBasisFunctionData[j] = basisFuncs.map((f, i) => ({
+                basisFunction: (x: number) => (f(x) * this.controlPoints[i].position.z) / weightedBasisFuncSum(x),
+                basisFunctionAsLaTeXString: ''
+            }));
+        }
     }
 
-    getPointOnNURBSCurve(t: number) {
+    getPointOnCurveByEvaluatingBasisFunctions(p: number, t: number) {
+        return this.controlPoints.map(pt => pt.position).reduce(
+            (prev, curr, i) => p5.Vector.add(prev, p5.Vector.mult(curr, this.weightedBasisFunctions[p][i](t))), this.p5.createVector(0, 0)
+        );
+    }
 
+    /**
+     * Returns a point on the B-Spline curve using De Boor's algorithm (more efficient than computing and evaluating basis functions explicitly).
+     * Only non-zero basis functions are considered (however they aren't computed explicitly)
+     * 
+     * @returns the point on the B-Spline curve
+     */
+     public getPointOnCurveWithDeBoorsAlgorithm(t: number): p5.Vector {
+        return this.getPointOnCurveAndTemporaryCtrlPtsCreatedUsingDeBoorsAlgo(t).pt;
+    }
+
+    public getPointOnCurveAndTemporaryCtrlPtsCreatedUsingDeBoorsAlgo(t: number): DeBoorEvaluationData {
+        const data = super.getPointOnCurveAndTemporaryCtrlPtsCreatedUsingDeBoorsAlgo(t);
+        data.pt.x = data.pt.x / data.pt.z;
+        data.pt.y = data.pt.y / data.pt.z;
+        return data;
     }
 }
 

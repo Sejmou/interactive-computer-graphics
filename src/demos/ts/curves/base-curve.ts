@@ -55,7 +55,7 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
 
     protected controlsContainerId: string;
 
-    private _controlPoints: DragVertex[] = [];
+    protected _controlPoints: DragVertex[] = [];
     /**
      * The control points of the curve.
      * Others should only be able to read data from the control points, but not change them directly.
