@@ -17,7 +17,7 @@ export class Sketch {
     constructor(
         private parentContainerId: string, public calcCanvasWidth?: (p5Instance: p5) => number, public calcCanvasHeight?: (p5Instance: p5) => number,
         private createBGColor: (p5: p5) => p5.Color | undefined = (p5) => p5.color(230), private frameRate?: number
-    ) {}
+    ) { }
 
     private drawables: Drawable[] = [];
     private clickables: Clickable[] = [];
@@ -46,46 +46,46 @@ export class Sketch {
             const setupSketch = (p5Instance: p5) => {
                 if (this.frameRate) p5Instance.frameRate(this.frameRate);
                 this._backgroundColor = this.createBGColor(p5Instance);
-    
+
                 const calcCanvasWidth = this.calcCanvasWidth || ((p5: p5) => Math.min(p5.windowWidth, 800));
                 const calcCanvasHeight = this.calcCanvasHeight || ((p5: p5) => calcCanvasWidth(p5) * 0.75);
-    
+
                 p5Instance.setup = () => {
                     const canvas = p5Instance.createCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));
                     if (this.parentContainerId) canvas.parent(this.parentContainerId);
-    
+
                     canvas.mousePressed(() => {
                         this.clickables.forEach(c => c.handleMousePressed());
                         //the following line somehow fixed the issue that grabbing cursor was not applied correctly, some weird timing issues behind the scenes lol
                         setTimeout(() => this.updateCursor(p5Instance), 0);
                         return false; // prevent any browser defaults
                     });
-    
+
                     canvas.mouseReleased(() => {
                         this.clickables.forEach(c => c.handleMouseReleased());
                         this.updateCursor(p5Instance);
                     });
-    
+
                     canvas.mouseMoved(() => {
                         this.updateCursor(p5Instance);
                         return false;
                     });
-    
+
                     canvas.touchStarted(() => {
                         //calling this in setTimeout as p5Inst.touches is apparently not updated until after canvas.touchStarted is done executing
                         setTimeout(() => this.touchables.forEach(t => t.handleTouchStarted()));
                         return false; // prevent any browser defaults
                     });
-    
+
                     canvas.touchEnded(() => {
                         this.touchables.forEach(t => t.handleTouchReleased());
                         return false; // prevent any browser defaults
                     });
-    
+
                     const preventScrollIfDragging = (e: TouchEvent) => {
                         if (this.draggables.some(t => t.dragging)) e.preventDefault();
                     };
-    
+
                     document.addEventListener('touchstart', preventScrollIfDragging, { passive: false });// https://stackoverflow.com/a/49582193/13727176
                     document.addEventListener('touchmove', preventScrollIfDragging, { passive: false });
                     document.addEventListener('touchend', preventScrollIfDragging, { passive: false });
@@ -97,19 +97,20 @@ export class Sketch {
                     //everything set up, we can resolve the promise
                     resolve();
                 };
-    
+
                 p5Instance.draw = () => {
                     if (this._backgroundColor !== undefined) p5Instance.background(this._backgroundColor);
                     else p5Instance.clear();
                     this.drawables.forEach(d => d.draw());
                 };
-    
+
                 p5Instance.windowResized = () => {
+                    console.log('resizing', p5Instance.width, p5Instance.height);
                     p5Instance.resizeCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));
                     this.responsiveThings.forEach(r => r.canvasResized());
                 }
             }
-    
+
             //after this line this.p5 is defined, but the sketch actually hasn't been set up yet!
             //for example, width and height are still 0!
             //that's why we package the whole thing in a promise which is resolved on the last line of the p5.setup function we defined in setupSketch 

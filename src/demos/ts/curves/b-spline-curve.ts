@@ -1,6 +1,6 @@
 import p5, { Vector } from 'p5';
 import { Sketch } from '../sketch';
-import { Drawable, MyObserver } from '../ui-interfaces';
+import { Drawable, MyObserver, Responsive } from '../ui-interfaces';
 import { clamp, createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawLineXYCoords, drawSquare, renderTextWithSubscript } from '../util';
 import { DragVertex } from '../vertex';
 import { ControlPointInfluenceData, ControlPointInfluenceVisualization as ControlPointInfluenceBarVisualization, Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
@@ -515,8 +515,11 @@ class BSplineVisualization extends CurveDrawingVisualization {
     }
 
     private drawKnotMarkers() {
-        this.bSplineDemo.knotVector.forEach((t, i) => {
-            if (i < this.bSplineDemo.firstKnotIndexWhereCurveDefined || i > this.bSplineDemo.firstKnotIndexWhereCurveUndefined) return;
+        let multiplicity = 0;
+        this.bSplineDemo.knotVector.forEach((t, i, arr) => {
+            if (arr[i - 1] !== undefined && arr[i - 1] !== t) multiplicity = 0;
+            multiplicity += 1;
+            if (i < this.bSplineDemo.firstKnotIndexWhereCurveDefined || i > this.bSplineDemo.firstKnotIndexWhereCurveUndefined || arr[i + 1] && arr[i + 1] == t) return;
             const knotPosition = this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(t);
             drawSquare(
                 this.p5,
@@ -524,7 +527,7 @@ class BSplineVisualization extends CurveDrawingVisualization {
                 this.knotMarkerColor,
                 this.bSplineDemo.basePointDiameter * 0.75
             );
-            if (this.bSplineDemo.showPointLabels) renderTextWithSubscript(this.p5, `t_{${i}}`, knotPosition.x - 20, knotPosition.y - 10);
+            if (this.bSplineDemo.showPointLabels) renderTextWithSubscript(this.p5, `t=${+(this.bSplineDemo.knotVector[i].toFixed(2))}${multiplicity > 1 && ((arr[i + 1] && arr[i + 1] !== t) || arr[i + 1] == undefined)? ` (${multiplicity}x)`: ''}`, knotPosition.x - 20, knotPosition.y - 10);
         });
     }
 
@@ -874,7 +877,7 @@ interface CurveData {
     controlPoint: DragVertex
 }
 
-export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
+export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Responsive {
     private noOfStepsXAxis: number = 700;
     private xValues: number[] = [];
 
@@ -909,8 +912,16 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
         this.curveDomainBorderColor = p5.color(120);
 
         this.computeBSplineCurves();
-        setTimeout(() => this.redraw(), 100);
         bSplineDemo.subscribe(this);
+    }
+
+    canvasResized(): void {
+        this._axisRulerOffsetFromBorder = this.p5.width / 15;
+        this.rulerMarkerSize = this._axisRulerOffsetFromBorder * 0.075;
+
+        this._distMinToMaxXAxis = this.p5.width - this._axisRulerOffsetFromBorder * 1.5;
+        this.distMinToMaxYAxis = this.p5.height - this._axisRulerOffsetFromBorder * 1.5;
+        this.redraw();
     }
 
     update(data: DemoChange): void {
@@ -1035,7 +1046,7 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange> {
         this.p5.text('0.5', this._axisRulerOffsetFromBorder / 2, this.p5.height - this._axisRulerOffsetFromBorder - steps / 2 * rulerMarkerIncrementY);
         this.p5.text('1', this._axisRulerOffsetFromBorder / 2, this.p5.height - this._axisRulerOffsetFromBorder - steps * rulerMarkerIncrementY);
         this.p5.textAlign(this.p5.LEFT, this.p5.CENTER);
-        renderTextWithSubscript(this.p5, 'c_{i,n}', this._axisRulerOffsetFromBorder / 10, this._axisRulerOffsetFromBorder * 1.5 + this.distMinToMaxYAxis / 2);
+        renderTextWithSubscript(this.p5, `N_{i,${this.bSplineDemo.degree}}`, this._axisRulerOffsetFromBorder / 10, this._axisRulerOffsetFromBorder * 1.5 + this.distMinToMaxYAxis / 2);
 
         this.p5.pop();
     }

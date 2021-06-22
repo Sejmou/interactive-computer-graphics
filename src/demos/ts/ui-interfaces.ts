@@ -69,7 +69,7 @@ export function isTouchable(object: any): object is Touchable {
 }
 
 export function isResponsive(object: any): object is Responsive {
-    return ('windowResized' in object) && (typeof object.windowResized === 'function');
+    return ('canvasResized' in object) && (typeof object.canvasResized === 'function');
 }
 
 //Those interfaces might be overkill for my use case, but nvm
