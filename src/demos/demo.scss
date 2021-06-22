@@ -1,19 +1,5 @@
 @import "../global-styles/styles.scss";
 
-#controls-container {
-    * {
-        margin-bottom: 5px;
-
-        span {
-            white-space: nowrap;
-        }
-
-        input[type="range"] {
-            margin: 0 10px;
-        }
-    }
-}
-
 #demo-description p {
     text-align: center;
 }
@@ -41,5 +27,47 @@
     }
     & > :last-child {
         margin-bottom: 0;
+    }
+}
+
+#controls-container {
+    * {
+        margin-bottom: 5px;
+
+        span {
+            white-space: nowrap;
+        }
+
+        input[type="range"] {
+            margin: 0 10px;
+        }
+    }
+    input[type="range"] + .thumb {
+        background-color: $error-color !important;
+
+        .value {
+            color: $error-color !important;
+        }
+    }
+
+    @mixin range-thumb {
+        background: $error-color !important;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        @include range-thumb;
+        background-color: $error-color !important;
+    }
+
+    .keyboard-focused input[type="range"]:focus:not(.active)::-webkit-slider-thumb {
+        box-shadow: 0 0 0 10px rgba($error-color, 0.26) !important;
+    }
+
+    .keyboard-focused input[type="range"]:focus:not(.active)::-moz-range-thumb {
+        box-shadow: 0 0 0 10px rgba($error-color, 0.26) !important;
+    }
+
+    .keyboard-focused input[type="range"]:focus:not(.active)::-ms-thumb {
+        box-shadow: 0 0 0 10px rgba($error-color, 0.26) !important;
     }
 }

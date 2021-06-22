@@ -8,6 +8,3 @@ $secondary-color: color("teal", "lighten-1");
 $success-color: color("green", "base");
 $error-color: color("red", "base");
 $link-color: color("light-blue", "darken-1");
-
-//$radio-fill-color is used for materialize's slider, too -> we want to set it to the primary color
-$radio-fill-color: $error-color;
