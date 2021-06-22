@@ -22,6 +22,11 @@
 
 #knot-table-container {
     overflow-x: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    padding: 0.25em;
 }
 
 #knot-table {
