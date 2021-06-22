@@ -527,7 +527,7 @@ class BSplineVisualization extends CurveDrawingVisualization {
                 this.knotMarkerColor,
                 this.bSplineDemo.basePointDiameter * 0.75
             );
-            if (this.bSplineDemo.showPointLabels) renderTextWithSubscript(this.p5, `t=${+(this.bSplineDemo.knotVector[i].toFixed(2))}${multiplicity > 1 && ((arr[i + 1] && arr[i + 1] !== t) || arr[i + 1] == undefined)? ` (${multiplicity}x)`: ''}`, knotPosition.x - 20, knotPosition.y - 10);
+            if (this.bSplineDemo.showPointLabels) renderTextWithSubscript(this.p5, `t=${+(this.bSplineDemo.knotVector[i].toFixed(2))}${multiplicity > 1 && ((arr[i + 1] && arr[i + 1] !== t) || arr[i + 1] == undefined) ? ` (${multiplicity}x)` : ''}`, knotPosition.x - 20, knotPosition.y - 10);
         });
     }
 
@@ -715,35 +715,45 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
             return;
         }
 
+        const headerRow = document.createElement('tr');
+        let knotHeadingIds: string[] = [];
+
         this.knotInputElements = this.bSplineDemo.knotVector.map((k, i, arr) => {
             const inputEl = document.createElement('input');
             inputEl.type = 'number';
             inputEl.setAttribute('step', 'any');//deactivates "please enter a valid value in range..." hint
 
-            //this weird looking code allows us to display up to 2 digits (only if necessary) - we have to make it a string again in the end
-            inputEl.value = (+(k.toFixed(2))).toString();
-            inputEl.addEventListener('focus', () => inputEl.value = arr[i].toString());
-            inputEl.addEventListener('blur', () => {
-                const min = arr[i - 1] ?? 0;
-                const max = arr[i + 1] ?? Number.MAX_VALUE;
-                const value = clamp(+inputEl.value, min, max);
-                this.bSplineDemo.scheduleKnotValueChange(i, value);
-                inputEl.value = value.toString();
-            });
-
-            return inputEl;
-        });
-
-        const headerRow = document.createElement('tr');
-        let knotHeadingIds: string[] = [];
-        this.knotInputElements.forEach((_, i) => {
             const th = document.createElement('th');
-            th.innerText = String.raw`\(t_{${i}}\)`;
+            th.innerText = String.raw`\(t_{${i}}${arr[i + 1] !== undefined && arr[i + 1] == k ? ` = t_{${i + 1}}` : ''}\)`;
             headerRow.appendChild(th);
 
             const id = `knot-${i}`;
             th.id = id;
             knotHeadingIds.push(`#${id}`);
+
+            const updateValue = () => {
+                const min = arr[i - 1] ?? 0;
+                const max = arr[i + 1] ?? Number.MAX_VALUE;
+                const value = clamp(+inputEl.value, min, max);
+                this.bSplineDemo.scheduleKnotValueChange(i, value);
+                inputEl.value = value.toString();
+            };
+
+            //this weird looking code allows us to display up to 2 digits (only if necessary) - we have to make it a string again in the end
+            inputEl.value = (+(k.toFixed(2))).toString();
+            inputEl.addEventListener('focus', () => inputEl.value = arr[i].toString());
+            inputEl.addEventListener('blur', () => {
+                updateValue();
+            });
+            
+            inputEl.addEventListener('keydown', e => {
+                if (e.key == 'Enter') inputEl.blur();
+            })
+
+            return inputEl;
+        });
+
+        this.knotInputElements.forEach((_, i) => {
         });
 
         const knotInputRow = document.createElement('tr');
