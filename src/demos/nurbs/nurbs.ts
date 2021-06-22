@@ -18,7 +18,7 @@ addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
 const basisFuncContainer = document.createElement('div');
 const basisFuncContainerId = 'b-spline-basis-function-visualization';
 basisFuncContainer.id = basisFuncContainerId;
-basisFuncContainer.className = 'flex-col center-cross-axis';
+basisFuncContainer.className = 'flex-column center-cross-axis';
 document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', basisFuncContainer);
 
 async function createDemo() {

@@ -23,7 +23,7 @@ MathJax.typeset([`#${descriptionContainerId}`]);
 const bernsteinGraphContainer = document.createElement('div');
 const bernsteinGraphContainerId = 'bernstein-visualization';
 bernsteinGraphContainer.id = bernsteinGraphContainerId;
-bernsteinGraphContainer.className = 'flex-col center-cross-axis';
+bernsteinGraphContainer.className = 'flex-column center-cross-axis';
 document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bernsteinGraphContainer);
 
 

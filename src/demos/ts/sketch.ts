@@ -48,7 +48,7 @@ export class Sketch {
                 this._backgroundColor = this.createBGColor(p5Instance);
     
                 const calcCanvasWidth = this.calcCanvasWidth || ((p5: p5) => Math.min(p5.windowWidth, 800));
-                const calcCanvasHeight = this.calcCanvasHeight || ((p5: p5) => p5.windowHeight * 0.6);
+                const calcCanvasHeight = this.calcCanvasHeight || ((p5: p5) => calcCanvasWidth(p5) * 0.75);
     
                 p5Instance.setup = () => {
                     const canvas = p5Instance.createCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));

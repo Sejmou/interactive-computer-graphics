@@ -39,7 +39,7 @@ Side-note: there is no upper limit for the largest knot value which means that t
 );
 
 addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
-    String.raw`B-Spline curves are only defined in the interval for \(t\) where the condition \(\sum_{i=0}^{n}{N_{i,p}(t) \cdot P_{i}} = 1\) is satisfied. We differentiate between open and clamped B-Spline curves.<br>
+    String.raw`B-Spline curves are only defined in the interval for \(t\) where the condition \(\sum_{i=0}^{n}{N_{i,p}(t)} = 1\) is satisfied. We differentiate between open and clamped B-Spline curves.<br>
 Compared to open B-Spline curves, clamped B-Spline curves put additional restrictions on the knot vector: Its first \(k\) values must be the same. The same restriction also applies to its last \(k\) values.<br>
 A consequence of this restriction is that clamped B-Spline curves are defined in the interval \([t_0, t_m)\), while for open B-Spline curves we can only guarantee that they are defined in the interval \([t_p, t_{m-p})\).`
 );
@@ -50,11 +50,13 @@ MathJax.typeset([`#${descriptionContainerId}`]);
 const basisFuncContainer = document.createElement('div');
 const basisFuncContainerId = 'b-spline-basis-function-visualization';
 basisFuncContainer.id = basisFuncContainerId;
-basisFuncContainer.className = 'flex-col center-cross-axis';
+basisFuncContainer.className = 'flex-column';
 document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', basisFuncContainer);
 
+const demoWrapperContainer = document.getElementById('demo-wrapper')!;
+
 async function createDemo() {
-    const sketch = new Sketch(demoContainerId);
+    const sketch = new Sketch(demoContainerId, p5 => Math.min(p5.windowWidth * 0.6, 800));
     await sketch.create();
     const bSplineDemo = sketch.add((p5, containerId) => new BSplineDemo(p5, containerId));
     bSplineDemo.showPointLabels = true;
@@ -81,7 +83,11 @@ async function createDemo() {
 
     //setting FPS to 0 causes sketch to instantiate p5 with noLoop() as last call in setup
     //this causes the sketch to only be redrawn when p5.redraw() is called, improving performance
-    const basisFuncSketch = new Sketch(basisFuncContainerId, undefined, undefined, undefined, 0);
+    const basisFuncSketch = new Sketch(basisFuncContainerId, (p5) => {
+        const width = Math.min(p5.windowWidth * 0.4 - 10 , 600);
+        basisFuncContainer.style.maxWidth = `${width}px`;
+        return width;
+    }, undefined, undefined, 0);
     await basisFuncSketch.create();
 
     //the graphPlotter calls p5.redraw() whenever something relevant changes in the bSplineDemo
@@ -93,7 +99,7 @@ async function createDemo() {
     bSplineDemo.onDraggingChange = () => graphPlotter.redraw();
 
     //drawing line for current value of t on top of plot's canvas (onto new transparent canvas that is positioned above the plot's canvas)
-    const lineForTSketch = new Sketch(basisFuncContainerId, undefined, undefined, () => undefined);
+    const lineForTSketch = new Sketch(basisFuncContainerId, (p5) => Math.min(p5.windowWidth * 0.4 - 10, 600), undefined, () => undefined);
     await lineForTSketch.create();
     lineForTSketch.add(p5 => new LineAtTPlotter(p5, bSplineDemo, graphPlotter));
 

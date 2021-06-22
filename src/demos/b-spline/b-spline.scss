@@ -12,7 +12,6 @@
 //the other renders the line at the current value of t and gets updated every 60 frames)
 #b-spline-basis-function-visualization {
     position: relative;
-    width: 800px;
 
     canvas:not(:first-child) {
         position: absolute;
