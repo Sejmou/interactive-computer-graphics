@@ -187,16 +187,21 @@ export class BSplineDemo extends CurveDemo {
     draw() {
         super.draw();
         if (this.scheduledKnotValueChanges.length > 0) {
+            let rangeOfTChanged = false;
             this.scheduledKnotValueChanges.forEach(c => {
                 if (c.i == 0) this._tMin = c.newVal;
-                if (c.i == this.knotVector.length - 1) this._tMax = c.newVal;
-                this.knotVector[c.i] = c.newVal
+                if (c.i == this.knotVector.length - 1) {
+                    this._tMax = c.newVal;
+                    rangeOfTChanged = true;
+                }
+                this.knotVector[c.i] = c.newVal;
             });
             this.scheduledKnotValueChanges = [];
 
             this.updateBasisFunctions();
 
             this.notifyObservers('knotVectorChanged');
+            if (rangeOfTChanged) this.notifyObservers('rangeOfTChanged');
         }
     }
 
