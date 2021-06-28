@@ -927,6 +927,10 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
     }
     private _distMinToMaxYAxis: number;
 
+    protected get yAxisLabel() {
+        return `N_{i,${this.bSplineDemo.degree}}`;
+    }
+
     //needed by LineAtTPlotter
     public get axisRulerOffsetFromBorder() {
         return this._axisRulerOffsetFromBorder;
@@ -1087,7 +1091,7 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
         //max value of value range (rounded to two digits)
         this.p5.text(+(this.maxYValue).toFixed(2), this._axisRulerOffsetFromBorder / 2, this.p5.height - this._axisRulerOffsetFromBorder - steps * rulerMarkerIncrementY);
         this.p5.textAlign(this.p5.LEFT, this.p5.CENTER);
-        renderTextWithSubscript(this.p5, `N_{i,${this.bSplineDemo.degree}}`, this._axisRulerOffsetFromBorder / 10, this._axisRulerOffsetFromBorder * 1.5 + this._distMinToMaxYAxis / 2);
+        renderTextWithSubscript(this.p5, this.yAxisLabel, this._axisRulerOffsetFromBorder / 10, this._axisRulerOffsetFromBorder * 1.5 + this._distMinToMaxYAxis / 2);
 
         this.p5.pop();
     }

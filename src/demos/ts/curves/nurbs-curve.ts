@@ -397,8 +397,15 @@ export class ControlsForControlPointWeights implements MyObserver<DemoChange> {
 export class NURBSGraphPlotter extends BSplineGraphPlotter {
     private NURBSDataPoints: CurveData[] = [];
 
+    protected get yAxisLabel() {
+        return this._yAxisLabel;
+    }
+
+    _yAxisLabel: string;
+
     constructor(p5: p5, private nurbsDemo: NURBSDemo) {
         super(p5, nurbsDemo);
+        this._yAxisLabel = '  y';//the spaces are a dirty quickfix to make label appear more to the right
     }
 
     protected computeCurves() {
