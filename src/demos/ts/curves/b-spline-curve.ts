@@ -18,7 +18,7 @@ export interface DeBoorEvaluationData {
     pt: p5.Vector
 };
 
-export type CurveType = 'open B-Spline' | 'clamped B-Spline' | 'Bézier';
+export type CurveType = 'open' | 'clamped' | 'emulated Bézier';
 
 export class BSplineDemo extends CurveDemo {
     /**
@@ -231,7 +231,7 @@ export class BSplineDemo extends CurveDemo {
         this._degree = 2;
 
         this.scheduledKnotValueChanges = [];
-        this._curveType = 'clamped B-Spline';
+        this._curveType = 'clamped';
 
         this._knotVector = this.createKnotVector();
         this._basisFunctionData = [];
@@ -251,7 +251,7 @@ export class BSplineDemo extends CurveDemo {
     }
 
     private updateDegree() {
-        if (this.curveType == 'Bézier') {
+        if (this.curveType == 'emulated Bézier') {
             this._degree = this.controlPoints.length - 1;
             this.notifyObservers('degreeChanged');
         }
@@ -288,8 +288,8 @@ export class BSplineDemo extends CurveDemo {
 
         //for the two "B-Spline knot vector initialization modes", the knots in knot vector equidistant, in other words: m + 1 values in range [0, m], distributed uniformly (same step size between them)
         //that's why the resulting B-Spline curve is then also called *uniform*, btw
-        if (this.curveType == 'open B-Spline') return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
-        if (this.curveType == 'clamped B-Spline' || this.curveType == 'Bézier') {
+        if (this.curveType == 'open') return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
+        if (this.curveType == 'clamped' || this.curveType == 'emulated Bézier') {
             const p = this.degree;
             const pPlusOneArr = [...Array(p + 1).keys()];
             const pPlusOneTimesMin = pPlusOneArr.map(_ => this.tMin);
@@ -626,7 +626,7 @@ class DegreeControls implements MyObserver<DemoChange> {
             this.updateDecreaseDegreeButtonDisabled();
         }
         if (data === 'curveTypeChanged') {
-            if (this.demo.curveType == 'Bézier') {
+            if (this.demo.curveType == 'emulated Bézier') {
                 const disabledHoverText = 'For Bézier curves the degree is always n (depends on the number of control points)';
                 this.increaseDegreeButton.attribute('disabled', 'true');
                 this.decreaseDegreeButton.attribute('disabled', 'true');
@@ -645,7 +645,7 @@ class DegreeControls implements MyObserver<DemoChange> {
     updateDecreaseDegreeButtonDisabled() {
         if (this.demo.degree === this.demo.minDegree) {
             this.decreaseDegreeButton.attribute('disabled', 'true');
-        } else if (!(this.demo.curveType == 'Bézier')) (this.decreaseDegreeButton.removeAttribute('disabled'));
+        } else if (!(this.demo.curveType == 'emulated Bézier')) (this.decreaseDegreeButton.removeAttribute('disabled'));
     }
 
     private increaseDegreeButtonClicked() {
@@ -826,9 +826,9 @@ export class CurveTypeControls implements MyObserver<DemoChange> {
             inputEl.id = `radio-btn-${i}`;
 
             let value: CurveType;
-            if (i == 0) value = 'open B-Spline';
-            else if (i == 1) value = 'clamped B-Spline';
-            else value = 'Bézier';
+            if (i == 0) value = 'open';
+            else if (i == 1) value = 'clamped';
+            else value = 'emulated Bézier';
             inputEl.value = value;
 
             return inputEl;

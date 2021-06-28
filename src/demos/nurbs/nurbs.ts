@@ -9,7 +9,9 @@ const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';
 
 addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
-    String.raw`Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight. Weights can be any given value.<br>Theoretically, even negative weights were possible, but this would result in weird behavior. Note that a weight of 0 essentially means that the control point is "deactivated".`
+    String.raw`Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight. Weights can be any given value.<br>
+    Theoretically, even negative weights were possible, but this would result in weird behavior. Note that a weight of 0 essentially means that the control point is "deactivated".
+    <br>Note: Unfortunately, I couldn't spend as much time on this demo as I wanted, thus there is <b style="color: red">a higher chance for errors.</b> However, the "core ideas" should be implemented correctly.`
 );
 
 // MathJax.typeset([`#${descriptionContainerId}`]);
