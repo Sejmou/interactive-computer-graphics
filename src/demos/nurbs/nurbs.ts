@@ -1,15 +1,15 @@
 import './nurbs.scss';
 import { Sketch } from "../ts/sketch";
-import { BSplineDemo, BSplineGraphPlotter, CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/curves/b-spline-curve';
+import { CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/curves/b-spline-curve';
 import { DemoChange } from '../ts/curves/base-curve';
 import { addParagraphWithGivenContentToHtmlElementWithId, BooleanPropCheckbox } from '../ts/util';
-import { ControlsForControlPointWeights, NURBSDemo } from "../ts/curves/nurbs-curve";
+import { ControlsForControlPointWeights, NURBSDemo, NURBSGraphPlotter } from "../ts/curves/nurbs-curve";
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';
 
 addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
-    String.raw`<b style="color: red">DISCLAIMER: this demo is currently broken, might fix later</b><br>Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight.`
+    String.raw`Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight. Weights can be any given value.<br>Theoretically, even negative weights were possible, but this would result in weird behavior. Note that a weight of 0 essentially means that the control point is "deactivated".`
 );
 
 // MathJax.typeset([`#${descriptionContainerId}`]);
@@ -47,7 +47,7 @@ async function createDemo() {
          showCheckBoxIf: demo => demo.valid,
          labelText: 'show curve evaluation visualization',
          parentContainerId: demoContainerId
-    }); 
+    });
 
     //setting FPS to 0 causes sketch to instantiate p5 with noLoop() as last call in setup
     //this causes the sketch to only be redrawn when p5.redraw() is called, improving performance
@@ -60,7 +60,7 @@ async function createDemo() {
 
     //the graphPlotter calls p5.redraw() whenever something relevant changes in the NURBSDemo
     //the graphPlotter gets notified by the NURBSDemo via its update() method as it has subscribed to the DemoChanges of the NURBSDemo
-    const graphPlotter = basisFuncSketch.add(p5 => new BSplineGraphPlotter(p5, nurbsDemo));
+    const graphPlotter = basisFuncSketch.add(p5 => new NURBSGraphPlotter(p5, nurbsDemo));
 
     //if the hover/drag state of a control point of the NURBSDemo changes, the graph has to be redrawn (hovered functions are drawn bold)
     nurbsDemo.onHoverChange = () => graphPlotter.redraw();

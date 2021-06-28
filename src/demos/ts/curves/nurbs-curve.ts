@@ -1,9 +1,9 @@
 import p5 from "p5";
 import { Sketch } from "../sketch";
 import { MyObserver } from "../ui-interfaces";
-import { clamp, createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawSquare, renderTextWithSubscript } from "../util";
+import { clamp, createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawLineXYCoords, drawPointVector, drawSquare, renderTextWithSubscript } from "../util";
 import { DragVertex } from "../vertex";
-import { BasisFunctionData, BSplineDemo } from "./b-spline-curve";
+import { BasisFunctionData, BSplineDemo, BSplineGraphPlotter, CurveData } from "./b-spline-curve";
 import { Curve, CurveDrawingVisualization, DemoChange } from "./base-curve";
 
 
@@ -55,8 +55,13 @@ export class NURBSDemo extends BSplineDemo {
     }
 
     additionalCtrlPtAmountChangeHandling() {
-        super.additionalCtrlPtAmountChangeHandling();
         this.updateCtrlPtWeights();
+        super.additionalCtrlPtAmountChangeHandling();
+    }
+
+    protected updateBasisFunctions() {
+        //update "regular" basis functions
+        super.updateBasisFunctions();
         this.updateWeightedBasisFunctions();
     }
 
@@ -333,7 +338,7 @@ export class ControlsForControlPointWeights implements MyObserver<DemoChange> {
 
             //this weird looking code allows us to display up to 2 digits (only if necessary) - we have to make it a string again in the end
             inputEl.value = (+(pt.position.z.toFixed(2))).toString();
-            
+
             inputEl.addEventListener('focus', () => inputEl.value = arr[i].position.z.toString());
             const updateValue = () => {
                 const min = 0;
@@ -381,5 +386,87 @@ export class ControlsForControlPointWeights implements MyObserver<DemoChange> {
         this.tableContainer.appendChild(ctrlPtWeightTable);
 
         MathJax.typeset(ctrlPtHeadingIds);
+    }
+}
+
+
+
+
+
+
+export class NURBSGraphPlotter extends BSplineGraphPlotter {
+    private NURBSDataPoints: CurveData[] = [];
+
+    constructor(p5: p5, private nurbsDemo: NURBSDemo) {
+        super(p5, nurbsDemo);
+    }
+
+    protected computeCurves() {
+        this.minYValue = 0;
+        this.maxYValue = 0;
+        if (!this.nurbsDemo || !this.nurbsDemo.valid) return;
+        //compute bSplineCurves
+        super.computeCurves();
+        if (this.xValues.length < 1) return;
+        const ctrlPts = this.nurbsDemo.controlPoints;
+        const weightedBasisFunctions = this.nurbsDemo.weightedBasisFunctions;
+        const degree = this.nurbsDemo.degree;
+
+        this.NURBSDataPoints = ctrlPts.map((pt, i) => ({
+            yValues: this.xValues.map(x => {
+                const yVal = weightedBasisFunctions[degree][i](x);
+                if (yVal < this.minYValue) this.minYValue = yVal;
+                if (yVal > this.maxYValue) this.maxYValue = yVal;
+                return yVal;
+            }),
+            controlPoint: pt
+        }));
+    }
+
+
+    protected drawCurves() {
+        //draw regular B-Spline curves dotted
+        this.bSplineDataPoints.forEach(d => {
+            const pointColor = d.controlPoint.color;
+            const pointThickness = (d.controlPoint.hovering || d.controlPoint.dragging) ? 4 : 1.5;
+
+            d.yValues.forEach((y, i) => {
+                if (i % 7 < 6) return;
+                const x = this.xValues[i] / (this.nurbsDemo.tMax - this.nurbsDemo.tMin);
+                const x1 = x * this.distMinToMaxXAxis + this.axisRulerOffsetFromBorder;
+                const y1 = this.p5.height - this.axisRulerOffsetFromBorder - this.normalize(y) * this.distMinToMaxYAxis;
+                drawPointVector(this.p5, this.p5.createVector(x1, y1), pointColor, pointThickness);
+            });
+        });
+
+        //draw weighted basis function curves in regular fashion
+        this.NURBSDataPoints.forEach(d => {
+            const lineColor = d.controlPoint.color;
+            const lineThickness = (d.controlPoint.hovering || d.controlPoint.dragging) ? 4 : 1.5;
+
+            d.yValues.forEach((y, i, yVals) => {
+                if (i === yVals.length - 1) return;
+                const x = this.xValues[i] / (this.nurbsDemo.tMax - this.nurbsDemo.tMin);
+                const nextY = yVals[i + 1];
+                const nextX = this.xValues[i + 1] / (this.nurbsDemo.tMax - this.nurbsDemo.tMin);
+                const x1 = x * this.distMinToMaxXAxis + this.axisRulerOffsetFromBorder;
+                const y1 = this.p5.height - this.axisRulerOffsetFromBorder - this.normalize(y) * this.distMinToMaxYAxis;
+                const x2 = nextX * this.distMinToMaxXAxis + this.axisRulerOffsetFromBorder;
+                const y2 = this.p5.height - this.axisRulerOffsetFromBorder - this.normalize(nextY) * this.distMinToMaxYAxis;
+                drawLineXYCoords(this.p5, x1, y1, x2, y2, lineColor, lineThickness);
+            });
+        });
+        
+    }
+
+    private normalize(yVal: number) {
+        return (yVal - this.minYValue) / (this.maxYValue - this.minYValue);
+    }
+
+    protected renderInfoText() {
+        this.p5.push();
+        this.p5.textAlign(this.p5.CENTER);
+        this.p5.text('Add more control points to the canvas on the left!\nThe weighted and regular basis functions will then show up here.', this.p5.width / 2, this.p5.height / 2);
+        this.p5.pop();
     }
 }

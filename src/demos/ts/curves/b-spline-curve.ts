@@ -268,7 +268,7 @@ export class BSplineDemo extends CurveDemo {
         this._knotVector = this.createKnotVector();
     }
 
-    private updateBasisFunctions() {
+    protected updateBasisFunctions() {
         this._basisFunctionData = this.createBasisFunctions();
     }
 
@@ -902,14 +902,19 @@ export class CurveTypeControls implements MyObserver<DemoChange> {
 
 
 
-interface CurveData {
+export interface CurveData {
     yValues: number[],
     controlPoint: DragVertex
 }
 
 export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Responsive {
     private noOfStepsXAxis: number = 700;
-    private xValues: number[] = [];
+    protected xValues: number[] = [];
+    
+    //B-Spline basis functions should always be in range [0, 1]; for other functions this might not always be the case
+    //e.g. weighted basis functions of NURBS curves, which are a generalization of the B-Spline curve
+    protected minYValue = 0;
+    protected maxYValue = 1;
 
     //needed by LineAtTPlotter
     public get distMinToMaxXAxis() {
@@ -917,7 +922,10 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
     }
     private _distMinToMaxXAxis: number;
 
-    private distMinToMaxYAxis: number;
+    public get distMinToMaxYAxis() {
+        return this._distMinToMaxYAxis;
+    }
+    private _distMinToMaxYAxis: number;
 
     //needed by LineAtTPlotter
     public get axisRulerOffsetFromBorder() {
@@ -929,19 +937,19 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
 
     private curveDomainBorderColor: p5.Color;
 
-    private dataPoints: CurveData[] = [];
+    protected bSplineDataPoints: CurveData[] = [];
 
-    constructor(private p5: p5, private bSplineDemo: BSplineDemo) {
+    constructor(protected p5: p5, private bSplineDemo: BSplineDemo) {
         this._axisRulerOffsetFromBorder = this.p5.width / 15;
         this.rulerMarkerSize = this._axisRulerOffsetFromBorder * 0.075;
 
         this._distMinToMaxXAxis = this.p5.width - this._axisRulerOffsetFromBorder * 1.5;
-        this.distMinToMaxYAxis = this.p5.height - this._axisRulerOffsetFromBorder * 1.5;
+        this._distMinToMaxYAxis = this.p5.height - this._axisRulerOffsetFromBorder * 1.5;
 
         this.axisRulerAndLabelColor = p5.color(30);
         this.curveDomainBorderColor = p5.color(120);
 
-        this.computeBSplineCurves();
+        this.computeCurves();
         bSplineDemo.subscribe(this);
     }
 
@@ -950,13 +958,13 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
         this.rulerMarkerSize = this._axisRulerOffsetFromBorder * 0.075;
 
         this._distMinToMaxXAxis = this.p5.width - this._axisRulerOffsetFromBorder * 1.5;
-        this.distMinToMaxYAxis = this.p5.height - this._axisRulerOffsetFromBorder * 1.5;
+        this._distMinToMaxYAxis = this.p5.height - this._axisRulerOffsetFromBorder * 1.5;
         this.redraw();
     }
 
     update(data: DemoChange): void {
         if (data === 'controlPointsChanged' || data === 'knotVectorChanged' || data === 'rangeOfTChanged') {
-            this.computeBSplineCurves();
+            this.computeCurves();
             this.redraw();
         }
     }
@@ -968,11 +976,11 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
         this.p5.redraw();
     }
 
-    computeBSplineCurves() {
+    protected computeCurves() {
         const ctrlPts = this.bSplineDemo.controlPoints;
         if (ctrlPts.length < 1) {
             this.xValues = [];
-            this.dataPoints = [];
+            this.bSplineDataPoints = [];
             return;
         }
         const basisFunctions = this.bSplineDemo.basisFunctions;
@@ -980,7 +988,7 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
 
         this.xValues = createArrayOfEquidistantAscendingNumbersInRange(this.noOfStepsXAxis, this.bSplineDemo.tMin, this.bSplineDemo.tMax);
 
-        this.dataPoints = ctrlPts.map((pt, i) => ({
+        this.bSplineDataPoints = ctrlPts.map((pt, i) => ({
             yValues: this.xValues.map(x => basisFunctions[degree][i](x)),
             controlPoint: pt
         }));
@@ -1001,7 +1009,7 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
 
     draw(): void {
         if (this.bSplineDemo.valid) {
-            this.drawBSplineCurves();
+            this.drawCurves();
             this.drawAxisRulersAndLabels();
             this.drawBordersOfCurveDomain();
         }
@@ -1009,8 +1017,8 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
     }
 
 
-    private drawBSplineCurves() {
-        this.dataPoints.forEach(d => {
+    protected drawCurves() {
+        this.bSplineDataPoints.forEach(d => {
             const lineColor = d.controlPoint.color;
             const lineThickness = (d.controlPoint.hovering || d.controlPoint.dragging) ? 4 : 1.5;
 
@@ -1020,9 +1028,9 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
                 const nextY = yVals[i + 1];
                 const nextX = this.xValues[i + 1] / (this.bSplineDemo.tMax - this.bSplineDemo.tMin);
                 const x1 = x * this._distMinToMaxXAxis + this._axisRulerOffsetFromBorder;
-                const y1 = this.p5.height - this._axisRulerOffsetFromBorder - y * this.distMinToMaxYAxis;
+                const y1 = this.p5.height - this._axisRulerOffsetFromBorder - y * this._distMinToMaxYAxis;
                 const x2 = nextX * this._distMinToMaxXAxis + this._axisRulerOffsetFromBorder;
-                const y2 = this.p5.height - this._axisRulerOffsetFromBorder - nextY * this.distMinToMaxYAxis;
+                const y2 = this.p5.height - this._axisRulerOffsetFromBorder - nextY * this._distMinToMaxYAxis;
                 drawLineXYCoords(this.p5, x1, y1, x2, y2, lineColor, lineThickness);
             });
         });
@@ -1061,7 +1069,7 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
 
     private drawRulerMarkersAndLabelsYAxis() {
         const steps = 10;
-        const rulerMarkerIncrementY = this.distMinToMaxYAxis / steps;
+        const rulerMarkerIncrementY = this._distMinToMaxYAxis / steps;
         for (let i = 1; i <= steps; i++) {
             drawLineXYCoords(this.p5, this._axisRulerOffsetFromBorder - (i === steps / 2 || i === steps ? this.rulerMarkerSize * 2 : this.rulerMarkerSize), this.p5.height - this._axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
                 this._axisRulerOffsetFromBorder, this.p5.height - this._axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
@@ -1073,10 +1081,12 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
         this.p5.push();
         this.p5.textAlign(this.p5.CENTER);
 
-        this.p5.text('0.5', this._axisRulerOffsetFromBorder / 2, this.p5.height - this._axisRulerOffsetFromBorder - steps / 2 * rulerMarkerIncrementY);
-        this.p5.text('1', this._axisRulerOffsetFromBorder / 2, this.p5.height - this._axisRulerOffsetFromBorder - steps * rulerMarkerIncrementY);
+        //middle value of value range (rounded to two digits)
+        this.p5.text(+((0.5 * (this.maxYValue - this.minYValue)).toFixed(2)), this._axisRulerOffsetFromBorder / 2, this.p5.height - this._axisRulerOffsetFromBorder - steps / 2 * rulerMarkerIncrementY);
+        //max value of value range (rounded to two digits)
+        this.p5.text(+(this.maxYValue).toFixed(2), this._axisRulerOffsetFromBorder / 2, this.p5.height - this._axisRulerOffsetFromBorder - steps * rulerMarkerIncrementY);
         this.p5.textAlign(this.p5.LEFT, this.p5.CENTER);
-        renderTextWithSubscript(this.p5, `N_{i,${this.bSplineDemo.degree}}`, this._axisRulerOffsetFromBorder / 10, this._axisRulerOffsetFromBorder * 1.5 + this.distMinToMaxYAxis / 2);
+        renderTextWithSubscript(this.p5, `N_{i,${this.bSplineDemo.degree}}`, this._axisRulerOffsetFromBorder / 10, this._axisRulerOffsetFromBorder * 1.5 + this._distMinToMaxYAxis / 2);
 
         this.p5.pop();
     }
@@ -1084,13 +1094,13 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
     private drawBordersOfCurveDomain() {
         //lower bound
         drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder + this.bSplineDemo.firstTValueWhereCurveDefined * this.distMinToMaxXAxis, this.p5.height - this._axisRulerOffsetFromBorder,
-            this.axisRulerOffsetFromBorder + this.bSplineDemo.firstTValueWhereCurveDefined * this.distMinToMaxXAxis, this.p5.height - this.distMinToMaxYAxis - this.axisRulerOffsetFromBorder, this.curveDomainBorderColor, 1);
+            this.axisRulerOffsetFromBorder + this.bSplineDemo.firstTValueWhereCurveDefined * this.distMinToMaxXAxis, this.p5.height - this._distMinToMaxYAxis - this.axisRulerOffsetFromBorder, this.curveDomainBorderColor, 1);
         //upper bound
         drawLineXYCoords(this.p5, this.axisRulerOffsetFromBorder + this.bSplineDemo.lastTValueWhereCurveDefined * this.distMinToMaxXAxis, this.p5.height - this._axisRulerOffsetFromBorder,
-            this.axisRulerOffsetFromBorder + this.bSplineDemo.lastTValueWhereCurveDefined * this.distMinToMaxXAxis, this.p5.height - this.distMinToMaxYAxis - this.axisRulerOffsetFromBorder, this.curveDomainBorderColor, 1);
+            this.axisRulerOffsetFromBorder + this.bSplineDemo.lastTValueWhereCurveDefined * this.distMinToMaxXAxis, this.p5.height - this._distMinToMaxYAxis - this.axisRulerOffsetFromBorder, this.curveDomainBorderColor, 1);
     }
 
-    private renderInfoText() {
+    protected renderInfoText() {
         this.p5.push();
         this.p5.textAlign(this.p5.CENTER);
         this.p5.text('Add more control points to the canvas on the left!\nThe B-spline basis functions will then show up here.', this.p5.width / 2, this.p5.height / 2);
