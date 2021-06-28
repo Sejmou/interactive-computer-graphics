@@ -9,7 +9,7 @@ import { addParagraphWithGivenContentToHtmlElementWithId } from '../../ts/util';
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';
-addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId, 'Get an intuition for Bézier curves (which are used in many graphics applications for drawing nice, smooth curves) interactively!');
+addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId, 'Get an intuition for Bézier curves (that are used in many graphics applications for drawing nice, smooth curves) interactively!');
 
 
 async function createDemo() {
