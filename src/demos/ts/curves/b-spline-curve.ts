@@ -1056,7 +1056,8 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
                 this._axisRulerOffsetFromBorder + knotVectorPositionsXAxis[i], this.p5.height - this._axisRulerOffsetFromBorder + this.rulerMarkerSize,
                 this.axisRulerAndLabelColor, 1);
 
-            //label
+            //label (draw only if current knot vector value is not overlapping with previous one)
+            if (knotVectorPositionsXAxis[i - 1] !== undefined && knotVectorPositionsXAxis[i - 1] == knotVectorPositionsXAxis[i]) continue;
             this.p5.push();
             this.p5.textAlign(this.p5.CENTER);
             renderTextWithSubscript(this.p5, `t_{${i}}`, this._axisRulerOffsetFromBorder + knotVectorPositionsXAxis[i], this.p5.height - this._axisRulerOffsetFromBorder / 3);
