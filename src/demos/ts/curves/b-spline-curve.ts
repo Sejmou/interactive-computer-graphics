@@ -701,10 +701,33 @@ export class DeBoorControlPointInfluenceVisualization extends ControlPointInflue
 
 export class KnotVectorControls implements MyObserver<DemoChange> {
     private knotInputElements: HTMLInputElement[] = [];
-    private tableContainer: HTMLDivElement | undefined;
+    private controlsContainer: HTMLDivElement;
+    private tableContainer: HTMLDivElement;
 
-    constructor(private bSplineDemo: BSplineDemo, private parentContainerId: string) {
+    constructor(private bSplineDemo: BSplineDemo, private parentContainerId: string, showLabel: boolean = true) {
         bSplineDemo.subscribe(this);
+
+        this.tableContainer = document.createElement('div');
+        this.tableContainer.id = 'knot-table-container';
+
+        this.controlsContainer = document.createElement('div');
+        this.controlsContainer.id = 'knot-controls-container';
+
+        const parentContainer = document.getElementById(this.parentContainerId);
+        if (!parentContainer) {
+            console.warn(`couldn't create table for knot vector, parent container id invalid!`);
+            return;
+        }
+
+        if (showLabel) {
+            const label = document.createElement('div');
+            label.innerText = 'knot vector:';
+            label.id = 'knot-controls-label';
+            this.controlsContainer.appendChild(label);
+        }
+        this.controlsContainer.appendChild(this.tableContainer);
+        parentContainer.appendChild(this.controlsContainer);
+
         this.updateKnotVectorDisplay();
     }
 
@@ -716,8 +739,11 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
 
     updateKnotVectorDisplay() {
         if (!this.bSplineDemo.valid) {
-            if (this.tableContainer) this.tableContainer.style.visibility = 'hidden';
+            this.controlsContainer.style.visibility = 'hidden';
             return;
+        }
+        else {
+            this.controlsContainer.style.removeProperty('visibility');
         }
 
         const headerRow = document.createElement('tr');
@@ -747,10 +773,8 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
             //this weird looking code allows us to display up to 2 digits (only if necessary) - we have to make it a string again in the end
             inputEl.value = (+(k.toFixed(2))).toString();
             inputEl.addEventListener('focus', () => inputEl.value = arr[i].toString());
-            inputEl.addEventListener('blur', () => {
-                updateValue();
-            });
-            
+            inputEl.addEventListener('blur', () => updateValue());
+
             inputEl.addEventListener('keydown', e => {
                 if (e.key == 'Enter') inputEl.blur();
             })
@@ -769,15 +793,7 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
             knotInputRow.appendChild(td);
         });
 
-        const parentContainer = document.getElementById(this.parentContainerId);
-        if (!parentContainer) {
-            console.warn(`couldn't create table for knot vector, parent container id invalid!`);
-            return;
-        }
-
-        if (this.tableContainer) parentContainer.removeChild(this.tableContainer);
-        this.tableContainer = document.createElement('div');
-        this.tableContainer.id = 'knot-table-container';
+        this.tableContainer.innerHTML = '';
 
         const table = document.createElement('table');
         table.appendChild(headerRow);
@@ -785,7 +801,6 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
         table.id = 'knot-table';
 
         this.tableContainer.appendChild(table);
-        parentContainer.appendChild(this.tableContainer);
 
         MathJax.typeset(knotHeadingIds);
     }

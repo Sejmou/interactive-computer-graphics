@@ -47,8 +47,8 @@ export class Sketch {
                 if (this.frameRate) p5Instance.frameRate(this.frameRate);
                 this._backgroundColor = this.createBGColor(p5Instance);
 
-                const calcCanvasWidth = this.calcCanvasWidth || ((p5: p5) => Math.min(p5.windowWidth, 800));
-                const calcCanvasHeight = this.calcCanvasHeight || ((p5: p5) => calcCanvasWidth(p5) * 0.75);
+                const calcCanvasWidth = this.calcCanvasWidth ?? ((p5: p5) => Math.min(p5.windowWidth, 800));
+                const calcCanvasHeight = this.calcCanvasHeight ?? ((p5: p5) => calcCanvasWidth(p5) * 0.75);
 
                 p5Instance.setup = () => {
                     const canvas = p5Instance.createCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));
@@ -105,7 +105,7 @@ export class Sketch {
                 };
 
                 p5Instance.windowResized = () => {
-                    console.log('resizing', p5Instance.width, p5Instance.height);
+                    // console.log('resizing', p5Instance.width, p5Instance.height);
                     p5Instance.resizeCanvas(calcCanvasWidth(p5Instance), calcCanvasHeight(p5Instance));
                     this.responsiveThings.forEach(r => r.canvasResized());
                 }

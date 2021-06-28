@@ -4,7 +4,7 @@
     margin-right: 10px;
 }
 
-#controls-container {
+#t-controls-container {
     gap: 20px;
 }
 
@@ -24,9 +24,12 @@
     overflow-x: auto;
     border: 1px solid #eee;
     border-radius: 4px;
-    margin-top: 0.5em;
     margin-bottom: 0.5em;
     padding: 0.25em;
+}
+
+#knot-controls-label {
+    margin-top: 1em;
 }
 
 #knot-table {

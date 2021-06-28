@@ -131,7 +131,7 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this.positionDisplayMode = 'relative to canvas';
 
         const controlsContainer = this.p5.createDiv();
-        this.controlsContainerId = 'controls-container';
+        this.controlsContainerId = 't-controls-container';
         controlsContainer.id(this.controlsContainerId);
         if (parentContainerId) controlsContainer.parent(parentContainerId);
         controlsContainer.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');

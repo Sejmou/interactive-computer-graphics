@@ -18,17 +18,19 @@ addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
 const basisFuncContainer = document.createElement('div');
 const basisFuncContainerId = 'b-spline-basis-function-visualization';
 basisFuncContainer.id = basisFuncContainerId;
-basisFuncContainer.className = 'flex-column center-cross-axis';
+basisFuncContainer.className = 'flex-column';
 document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', basisFuncContainer);
 
+const demoWrapperContainer = document.getElementById('demo-wrapper')!;
+
 async function createDemo() {
-    const sketch = new Sketch(demoContainerId);
+    const sketch = new Sketch(demoContainerId, p5 => Math.min(p5.windowWidth * 0.6, 800));
     await sketch.create();
     const nurbsDemo = sketch.add((p5, containerId) => new NURBSDemo(p5, containerId));
     nurbsDemo.showPointLabels = true;
 
     const influenceVis = sketch.add((p5) => new DeBoorControlPointInfluenceVisualization(p5, nurbsDemo, false));
-    new BooleanPropCheckbox<DeBoorControlPointInfluenceVisualization, BSplineDemo, DemoChange>({
+    new BooleanPropCheckbox<DeBoorControlPointInfluenceVisualization, NURBSDemo, DemoChange>({
         objectToModify: influenceVis,
         objectToSubscribeTo: nurbsDemo,
         labelText: 'show control point influence bars',
@@ -37,7 +39,7 @@ async function createDemo() {
         showCheckBoxIf: demo => demo.valid,
         parentContainerId: demoContainerId
     });
-    new BooleanPropCheckbox<BSplineDemo, BSplineDemo, DemoChange>({
+    new BooleanPropCheckbox<NURBSDemo, NURBSDemo, DemoChange>({
          objectToModify: nurbsDemo,
          objectToSubscribeTo: nurbsDemo,
          getCurrValOfPropToModify: demo => demo.showCurveDrawingVisualization,
@@ -49,19 +51,23 @@ async function createDemo() {
 
     //setting FPS to 0 causes sketch to instantiate p5 with noLoop() as last call in setup
     //this causes the sketch to only be redrawn when p5.redraw() is called, improving performance
-    const basisFuncSketch = new Sketch(basisFuncContainerId, undefined, undefined, undefined, 0);
+    const basisFuncSketch = new Sketch(basisFuncContainerId, (p5) => {
+        const width = Math.min(p5.windowWidth * 0.4 - 10 , 600);
+        basisFuncContainer.style.maxWidth = `${width}px`;
+        return width;
+    }, undefined, undefined, 0);
     await basisFuncSketch.create();
 
-    //the graphPlotter calls p5.redraw() whenever something relevant changes in the bSplineDemo
-    //the graphPlotter gets notified by the bSplineDemo via its update() method as it has subscribed to the DemoChanges of the bSplineDemo
+    //the graphPlotter calls p5.redraw() whenever something relevant changes in the NURBSDemo
+    //the graphPlotter gets notified by the NURBSDemo via its update() method as it has subscribed to the DemoChanges of the NURBSDemo
     const graphPlotter = basisFuncSketch.add(p5 => new BSplineGraphPlotter(p5, nurbsDemo));
 
-    //if the hover/drag state of a control point of the BSplineDemo changes, the graph has to be redrawn (hovered functions are drawn bold)
+    //if the hover/drag state of a control point of the NURBSDemo changes, the graph has to be redrawn (hovered functions are drawn bold)
     nurbsDemo.onHoverChange = () => graphPlotter.redraw();
     nurbsDemo.onDraggingChange = () => graphPlotter.redraw();
 
     //drawing line for current value of t on top of plot's canvas (onto new transparent canvas that is positioned above the plot's canvas)
-    const lineForTSketch = new Sketch(basisFuncContainerId, undefined, undefined, () => undefined);
+    const lineForTSketch = new Sketch(basisFuncContainerId, (p5) => Math.min(p5.windowWidth * 0.4 - 10, 600), undefined, () => undefined);
     await lineForTSketch.create();
     lineForTSketch.add(p5 => new LineAtTPlotter(p5, nurbsDemo, graphPlotter));
 
