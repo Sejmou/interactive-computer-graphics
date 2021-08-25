@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Touchable, Drawable, Draggable, Clickable } from './ui-interfaces';
+import { Touchable, Drawable, Draggable, Clickable } from './ui-utils';
 import { indexToLowercaseLetter } from "./util";
 import { DragVertex } from "./vertex";
 

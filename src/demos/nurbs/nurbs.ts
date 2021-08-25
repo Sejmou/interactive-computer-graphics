@@ -2,13 +2,13 @@ import './nurbs.scss';
 import { Sketch } from "../ts/sketch";
 import { CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/curves/b-spline-curve';
 import { DemoChange } from '../ts/curves/base-curve';
-import { addParagraphWithGivenContentToHtmlElementWithId, BooleanPropCheckbox } from '../ts/util';
+import { addTextAsParagraphToElement, BooleanPropCheckbox } from '../ts/util';
 import { ControlsForControlPointWeights, NURBSDemo, NURBSGraphPlotter } from "../ts/curves/nurbs-curve";
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';
 
-addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId,
+addTextAsParagraphToElement(descriptionContainerId,
     String.raw`Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight. Weights can be any given value.<br>
     Theoretically, even negative weights were possible, but this would result in weird behavior. Note that a weight of 0 essentially means that the control point is "deactivated".
     <br>Note: Unfortunately, I couldn't spend as much time on this demo as I wanted, thus there is <b style="color: red">a higher chance for errors.</b> However, the "core ideas" should be implemented correctly.`

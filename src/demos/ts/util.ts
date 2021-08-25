@@ -1,5 +1,7 @@
 import p5 from "p5";
-import { Drawable, MyObservable, MyObserver } from "./ui-interfaces";
+import { Drawable, MyObservable, MyObserver } from "./ui-utils";
+
+// ----------------------- p5 ------------------------
 
 /**
  * For some reason this is not defined in @types/p5...
@@ -44,24 +46,16 @@ export function drawSquare(p5: p5, pos: p5.Vector, color: p5.Color, sideLength: 
     p5.pop();
 }
 
-export function isCloseToZero(val: number) {
-    return Math.abs(val) < 1e-10;
-}
-
-export function directionVector(pointA: p5.Vector, pointB: p5.Vector) {
-    return p5.Vector.sub(pointB, pointA);
-}
-
-export function clamp(val: number, min: number, max: number) {
-    return Math.max(Math.min(val, Math.max(min, max)), Math.min(min, max));
-}
-
 export function drawCircle(p5Instance: p5, pos: p5.Vector, color: p5.Color, diameter: number) {
     p5Instance.push();
     p5Instance.noStroke();
     p5Instance.fill(color);
     p5Instance.circle(pos.x, pos.y, diameter);
     p5Instance.pop();
+}
+
+export function directionVector(pointA: p5.Vector, pointB: p5.Vector) {
+    return p5.Vector.sub(pointB, pointA);
 }
 
 //determinant can be interpreted as the oriented area of a parallelogram spanned by the two column vectors of a 2x2 matrix
@@ -74,15 +68,6 @@ export function triangleArea(...[a, b, c]: [p5.Vector, p5.Vector, p5.Vector]): n
     return (p5.Vector.cross(p5.Vector.sub(b, a), p5.Vector.sub(c, a)) as unknown as p5.Vector).mag() / 2;//bug in @types???
 }
 
-export function indexToLowercaseLetter(i: number): string {
-    return String.fromCharCode(i + 97);
-}
-
-export function parseColorString(rgb: string): [number, number, number, number] {
-    const [r, g, b, a] = rgb.replace(/[^\d,]/g, '').split(',').map(str => +str);
-    return [r, g, b, a];
-}
-
 export function renderTextWithDifferentColors(p5: p5, x: number, y: number, ...textAndColor: [string, p5.Color][]) {
     let posX = x;
     textAndColor.forEach(([text, color]) => {
@@ -93,6 +78,209 @@ export function renderTextWithDifferentColors(p5: p5, x: number, y: number, ...t
         posX += textWidth;
         p5.pop();
     });
+}
+
+/**
+ * 
+ * @param p5 
+ * @param text text which contains '{textWhichShouldBeSubscripted}'
+ * @param x 
+ * @param y 
+ */
+ export function renderTextWithSubscript(p5: p5, text: string, x: number, y: number) {
+    p5.push();
+    p5.textAlign(p5.LEFT, p5.CENTER);
+
+    let xOffset = 0;
+    let currCharIndex = 0;
+    let openingBracesIndex = text.indexOf('_{');
+    while (openingBracesIndex !== -1 && currCharIndex < text.length) {
+        const textBeforeSubscript = text.substring(currCharIndex, currCharIndex + openingBracesIndex);
+        p5.text(textBeforeSubscript, x + xOffset, y);
+        
+        currCharIndex += (openingBracesIndex + '_{'.length);
+        xOffset += p5.textWidth(textBeforeSubscript);
+
+        const closingBracesIndex = text.substring(currCharIndex).indexOf('}');
+        if (closingBracesIndex === -1) {
+            console.warn('invalid text with subscript:', text);
+            return;
+        }
+
+        const textInSubscript = text.substring(currCharIndex, currCharIndex + closingBracesIndex);
+        currCharIndex += closingBracesIndex + 1;
+
+        p5.text(textInSubscript, x + xOffset, y + p5.textDescent());
+        xOffset += p5.textWidth(textInSubscript);
+
+        openingBracesIndex = text.substring(currCharIndex).indexOf('_{');
+    }
+
+    p5.text(text.substring(currCharIndex), x + xOffset, y);
+
+    p5.pop();
+}
+
+export class FrameRateMonitor implements Drawable {
+    constructor(private p5: p5) { }
+
+    draw(): void {
+        this.p5.text(`FPS: ${this.p5.frameRate().toFixed(2)}`, 20, 20);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+// -------------------------------------------- math --------------------------------------------
+
+//https://stackoverflow.com/a/37716142/13727176
+// step 1: precomputed binomials
+const binomials = [
+    [1],
+    [1, 1],
+    [1, 2, 1],
+    [1, 3, 3, 1],
+    [1, 4, 6, 4, 1],
+    [1, 5, 10, 10, 5, 1],
+    [1, 6, 15, 20, 15, 6, 1],
+    [1, 7, 21, 35, 35, 21, 7, 1],
+    [1, 8, 28, 56, 70, 56, 28, 8, 1],
+    [1, 9, 36, 84, 126, 126, 84, 36, 9, 1],
+    [1, 10, 45, 120, 210, 252, 210, 120, 45, 10, 1],
+    [1, 11, 55, 165, 330, 462, 462, 330, 165, 55, 11, 1],
+    [1, 12, 66, 220, 495, 792, 924, 792, 495, 220, 66, 12, 1],
+    [1, 13, 78, 286, 715, 1287, 1716, 1716, 1287, 715, 286, 78, 13, 1],
+    [1, 14, 91, 364, 1001, 2002, 3003, 3432, 3003, 2002, 1001, 364, 91, 14, 1],
+    [1, 15, 105, 455, 1365, 3003, 5005, 6435, 6435, 5005, 3003, 1365, 455, 105, 15, 1],
+    [1, 16, 120, 560, 1820, 4368, 8008, 11440, 12870, 11440, 8008, 4368, 1820, 560, 120, 16, 1],
+    [1, 17, 136, 680, 2380, 6188, 12376, 19448, 24310, 24310, 19448, 12376, 6188, 2380, 680, 136, 17, 1],
+    [1, 18, 153, 816, 3060, 8568, 18564, 31824, 43758, 48620, 43758, 31824, 18564, 8568, 3060, 816, 153, 18, 1],
+    [1, 19, 171, 969, 3876, 11628, 27132, 50388, 75582, 92378, 92378, 75582, 50388, 27132, 11628, 3876, 969, 171, 19, 1],
+    [1, 20, 190, 1140, 4845, 15504, 38760, 77520, 125970, 167960, 184756, 167960, 125970, 77520, 38760, 15504, 4845, 1140, 190, 20, 1]
+];
+
+// step 2: a function that builds out the LUT if it needs to.
+export function binomial(n: number, k: number) {
+    while (n >= binomials.length) {
+        let s = binomials.length;
+        let nextRow = [];
+        nextRow[0] = 1;
+        for (let i = 1, prev = s - 1; i < s; i++) {
+            nextRow[i] = binomials[prev][i - 1] + binomials[prev][i];
+        }
+        nextRow[s] = 1;
+        binomials.push(nextRow);
+    }
+    return binomials[n][k];
+}
+
+export function isCloseToZero(val: number) {
+    return Math.abs(val) < 1e-10;
+}
+
+export function clamp(val: number, min: number, max: number) {
+    return Math.max(Math.min(val, Math.max(min, max)), Math.min(min, max));
+}
+
+
+// https://stackoverflow.com/a/175787/13727176
+export function isNumeric(str: string) {
+    return !isNaN(+str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)... wat does he mean lol?!
+    !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+}
+
+
+
+
+
+
+
+
+// ----------------------- Misc -------------------------
+
+export function indexToLowercaseLetter(i: number): string {
+    return String.fromCharCode(i + 97);
+}
+
+/**
+ * 
+ * @param noOfValues the desired length of the array
+ * @param begin first desired value in array (inclusive)
+ * @param end last desired value in array (inclusive)
+ * @returns 
+ */
+ export function createArrayOfEquidistantAscendingNumbersInRange(noOfValues: number, begin: number, end: number): number[] {
+    return [...Array(noOfValues).keys()].map(i => begin + (i / (noOfValues - 1)) * (end - begin));
+}
+
+/**
+ * Emulates Python's built-in range() function (stolen from https://stackoverflow.com/a/8273091/13727176)
+ * @param start the start of the range (if only parameter provided this the stop value (exclusive))
+ * @param stop the end of the range (exclusive)
+ * @param step the step size. If negative, the range starts at stop and ends at start (each value gets decremented by step)
+ * @returns an array with the desired range of numbers
+ */
+export function range(start: number, stop?: number, step?: number) {
+    if (stop == undefined) {
+        stop = start;
+        start = 0;
+    }
+
+    if (step == undefined) step = 1;
+
+    //invalid parameter combinations
+    if ((step > 0 && start >= stop) || (step < 0 && start <= stop)) {
+        return [];
+    }
+
+    let result = [];
+    for (let i = start; step > 0 ? i < stop : i > stop; i += step) {
+        result.push(i);
+    }
+
+    return result;
+};
+
+/**
+* Returns the index of the last element in the array where predicate is true, and -1
+* otherwise. Copied from https://stackoverflow.com/a/53187807/13727176.
+* @param array The source array to search in
+* @param predicate find calls predicate once for each element of the array, in descending
+* order, until it finds one where predicate returns true. If such an element is found,
+* findLastIndex immediately returns that element index. Otherwise, findLastIndex returns -1.
+*/
+export function findLastIndex<T>(array: Array<T>, predicate: (value: T, index: number, obj: T[]) => boolean): number {
+    let l = array.length;
+    while (l--) {
+        if (predicate(array[l], l, array))
+            return l;
+    }
+    return -1;
+}
+
+
+
+
+
+
+
+
+
+
+
+// --------------------------- Color ----------------------------
+
+export function parseColorString(rgb: string): [number, number, number, number] {
+    const [r, g, b, a] = rgb.replace(/[^\d,]/g, '').split(',').map(str => +str);
+    return [r, g, b, a];
 }
 
 
@@ -190,58 +378,9 @@ export function extractColorChannelsFromRGBAString(rgbaStr: string): { r: number
     }
 }
 
-// https://stackoverflow.com/a/175787/13727176
-export function isNumeric(str: string) {
-    return !isNaN(+str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)... wat does he mean lol?!
-        !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
-}
-
 
 export function randomHexColorCode() {
     return Math.floor(Math.random() * 16777215).toString(16);
-}
-
-
-
-//https://stackoverflow.com/a/37716142/13727176
-// step 1: precomputed binomials
-const binomials = [
-    [1],
-    [1, 1],
-    [1, 2, 1],
-    [1, 3, 3, 1],
-    [1, 4, 6, 4, 1],
-    [1, 5, 10, 10, 5, 1],
-    [1, 6, 15, 20, 15, 6, 1],
-    [1, 7, 21, 35, 35, 21, 7, 1],
-    [1, 8, 28, 56, 70, 56, 28, 8, 1],
-    [1, 9, 36, 84, 126, 126, 84, 36, 9, 1],
-    [1, 10, 45, 120, 210, 252, 210, 120, 45, 10, 1],
-    [1, 11, 55, 165, 330, 462, 462, 330, 165, 55, 11, 1],
-    [1, 12, 66, 220, 495, 792, 924, 792, 495, 220, 66, 12, 1],
-    [1, 13, 78, 286, 715, 1287, 1716, 1716, 1287, 715, 286, 78, 13, 1],
-    [1, 14, 91, 364, 1001, 2002, 3003, 3432, 3003, 2002, 1001, 364, 91, 14, 1],
-    [1, 15, 105, 455, 1365, 3003, 5005, 6435, 6435, 5005, 3003, 1365, 455, 105, 15, 1],
-    [1, 16, 120, 560, 1820, 4368, 8008, 11440, 12870, 11440, 8008, 4368, 1820, 560, 120, 16, 1],
-    [1, 17, 136, 680, 2380, 6188, 12376, 19448, 24310, 24310, 19448, 12376, 6188, 2380, 680, 136, 17, 1],
-    [1, 18, 153, 816, 3060, 8568, 18564, 31824, 43758, 48620, 43758, 31824, 18564, 8568, 3060, 816, 153, 18, 1],
-    [1, 19, 171, 969, 3876, 11628, 27132, 50388, 75582, 92378, 92378, 75582, 50388, 27132, 11628, 3876, 969, 171, 19, 1],
-    [1, 20, 190, 1140, 4845, 15504, 38760, 77520, 125970, 167960, 184756, 167960, 125970, 77520, 38760, 15504, 4845, 1140, 190, 20, 1]
-];
-
-// step 2: a function that builds out the LUT if it needs to.
-export function binomial(n: number, k: number) {
-    while (n >= binomials.length) {
-        let s = binomials.length;
-        let nextRow = [];
-        nextRow[0] = 1;
-        for (let i = 1, prev = s - 1; i < s; i++) {
-            nextRow[i] = binomials[prev][i - 1] + binomials[prev][i];
-        }
-        nextRow[s] = 1;
-        binomials.push(nextRow);
-    }
-    return binomials[n][k];
 }
 
 
@@ -249,104 +388,7 @@ export function randomColorHexString() {
     return '#' + Math.floor(Math.random() * 16777215).toString(16);
 }
 
-/**
- * 
- * @param p5 
- * @param text text which contains '{textWhichShouldBeSubscripted}'
- * @param x 
- * @param y 
- */
-export function renderTextWithSubscript(p5: p5, text: string, x: number, y: number) {
-    p5.push();
-    p5.textAlign(p5.LEFT, p5.CENTER);
-
-    let xOffset = 0;
-    let currCharIndex = 0;
-    let openingBracesIndex = text.indexOf('_{');
-    while (openingBracesIndex !== -1 && currCharIndex < text.length) {
-        const textBeforeSubscript = text.substring(currCharIndex, currCharIndex + openingBracesIndex);
-        p5.text(textBeforeSubscript, x + xOffset, y);
-        
-        currCharIndex += (openingBracesIndex + '_{'.length);
-        xOffset += p5.textWidth(textBeforeSubscript);
-
-        const closingBracesIndex = text.substring(currCharIndex).indexOf('}');
-        if (closingBracesIndex === -1) {
-            console.warn('invalid text with subscript:', text);
-            return;
-        }
-
-        const textInSubscript = text.substring(currCharIndex, currCharIndex + closingBracesIndex);
-        currCharIndex += closingBracesIndex + 1;
-
-        p5.text(textInSubscript, x + xOffset, y + p5.textDescent());
-        xOffset += p5.textWidth(textInSubscript);
-
-        openingBracesIndex = text.substring(currCharIndex).indexOf('_{');
-    }
-
-    p5.text(text.substring(currCharIndex), x + xOffset, y);
-
-    p5.pop();
-}
-
-/**
- * 
- * @param noOfValues the desired length of the array
- * @param begin first desired value in array (inclusive)
- * @param end last desired value in array (inclusive)
- * @returns 
- */
-export function createArrayOfEquidistantAscendingNumbersInRange(noOfValues: number, begin: number, end: number): number[] {
-    return [...Array(noOfValues).keys()].map(i => begin + (i / (noOfValues - 1)) * (end - begin));
-}
-
-/**
- * Emulates Python's built-in range() function (stolen from https://stackoverflow.com/a/8273091/13727176)
- * @param start the start of the range (if only parameter provided this the stop value (exclusive))
- * @param stop the end of the range (exclusive)
- * @param step the step size. If negative, the range starts at stop and ends at start (each value gets decremented by step)
- * @returns an array with the desired range of numbers
- */
-export function range(start: number, stop?: number, step?: number) {
-    if (stop == undefined) {
-        stop = start;
-        start = 0;
-    }
-
-    if (step == undefined) step = 1;
-
-    //invalid parameter combinations
-    if ((step > 0 && start >= stop) || (step < 0 && start <= stop)) {
-        return [];
-    }
-
-    let result = [];
-    for (let i = start; step > 0 ? i < stop : i > stop; i += step) {
-        result.push(i);
-    }
-
-    return result;
-};
-
-/**
-* Returns the index of the last element in the array where predicate is true, and -1
-* otherwise. Copied from https://stackoverflow.com/a/53187807/13727176.
-* @param array The source array to search in
-* @param predicate find calls predicate once for each element of the array, in descending
-* order, until it finds one where predicate returns true. If such an element is found,
-* findLastIndex immediately returns that element index. Otherwise, findLastIndex returns -1.
-*/
-export function findLastIndex<T>(array: Array<T>, predicate: (value: T, index: number, obj: T[]) => boolean): number {
-    let l = array.length;
-    while (l--) {
-        if (predicate(array[l], l, array))
-            return l;
-    }
-    return -1;
-}
-
-export function colorsTooSimilar(colorA: p5.Color, colorB: p5.Color) {
+export function areColorsTooSimilar(colorA: p5.Color, colorB: p5.Color) {
     let colAAsRGBAObj = extractColorChannelsFromRGBAString(colorA.toString());
     let colBAsRGBAObj = extractColorChannelsFromRGBAString(colorB.toString());
 
@@ -382,29 +424,31 @@ export function luminanceFromP5Color(color: p5.Color): number {
     return luminanceFromRGBAStr(rgbaStr);
 }
 
-export function addParagraphWithGivenContentToHtmlElementWithId(id: string, pContent: string): HTMLParagraphElement | undefined {
-    const element = document.getElementById(id);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ------------------------ DOM helpers ----------------------------
+export function addTextAsParagraphToElement(elementId: string, pContent: string): HTMLParagraphElement | undefined {
+    const element = document.getElementById(elementId);
     if (element) {
         const p = document.createElement('p');
         p.innerHTML = pContent;
         element.appendChild(p);
         return p;
     }
-    else console.warn(`HTML element with id ${id} not found`);
+    else console.warn(`HTML element with id ${elementId} not found`);
 }
-
-
-export class FrameRateMonitor implements Drawable {
-    constructor(private p5: p5) { }
-
-    draw(): void {
-        this.p5.text(`FPS: ${this.p5.frameRate().toFixed(2)}`, 20, 20);
-    }
-}
-
-
-
-
 
 export interface SettingsCheckboxConfig<T, U extends MyObservable<V>, V> {
     /**

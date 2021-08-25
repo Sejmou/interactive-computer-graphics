@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "./ui-interfaces";
+import { Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "./ui-utils";
 import { clamp, p5TouchPoint, renderTextWithSubscript } from "./util";
 import colors from '../../global-styles/color_exports.scss';
 

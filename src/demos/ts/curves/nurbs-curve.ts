@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { Sketch } from "../sketch";
-import { MyObserver } from "../ui-interfaces";
+import { MyObserver } from "../ui-utils";
 import { clamp, createArrayOfEquidistantAscendingNumbersInRange, drawCircle, drawLineVector, drawLineXYCoords, drawPointVector, drawSquare, renderTextWithSubscript } from "../util";
 import { DragVertex } from "../vertex";
 import { BasisFunctionData, BSplineDemo, BSplineGraphPlotter, CurveData } from "./b-spline-curve";

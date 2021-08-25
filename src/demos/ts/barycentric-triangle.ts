@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { Clickable, Drawable, Draggable, Touchable } from './ui-interfaces';
+import { Clickable, Drawable, Draggable, Touchable } from './ui-utils';
 import { DragPolygon } from './polygon';
 import { DragVertex } from './vertex';
 import { twoByTwoDeterminant, directionVector, drawLineVector, renderTextWithDifferentColors, parseColorString, lightenDarkenP5Color } from './util';

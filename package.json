@@ -4,7 +4,6 @@
   "description": "the code part of my bachelor thesis",
   "main": "dist/app.js",
   "scripts": {
-    "start": "webpack-dev-server",
     "dev": "webpack serve --config webpack.dev.js",
     "build": "webpack --config webpack.prod.js",
     "deploy": "npm run build && gh-pages -d dist"

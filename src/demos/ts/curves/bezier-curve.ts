@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { MyObserver } from '../ui-interfaces';
+import { MyObserver } from '../ui-utils';
 import { drawCircle, drawLineVector } from '../util';
 import { Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
 

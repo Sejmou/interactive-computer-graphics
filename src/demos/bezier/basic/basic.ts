@@ -1,15 +1,15 @@
 import './basic.scss';
 import { BezierDemo } from "../../ts/curves/bezier-curve";
 import { Sketch } from '../../ts/sketch';
-import { MyObserver } from '../../ts/ui-interfaces';
+import { MyObserver } from '../../ts/ui-utils';
 import { DemoChange } from '../../ts/curves/base-curve';
-import { addParagraphWithGivenContentToHtmlElementWithId } from '../../ts/util';
+import { addTextAsParagraphToElement } from '../../ts/util';
 
 
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';
-addParagraphWithGivenContentToHtmlElementWithId(descriptionContainerId, 'Get an intuition for Bézier curves (that are used in many graphics applications for drawing nice, smooth curves) interactively!');
+addTextAsParagraphToElement(descriptionContainerId, 'Get an intuition for Bézier curves (that are used in many graphics applications for drawing nice, smooth curves) interactively!');
 
 
 async function createDemo() {

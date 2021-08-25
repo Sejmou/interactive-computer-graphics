@@ -1,7 +1,7 @@
 import colors from "../../../global-styles/color_exports.scss";
 import p5 from "p5";
-import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "../ui-interfaces";
-import { colorsTooSimilar, createArrayOfEquidistantAscendingNumbersInRange, drawLineXYCoords, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from "../util";
+import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "../ui-utils";
+import { areColorsTooSimilar, createArrayOfEquidistantAscendingNumbersInRange, drawLineXYCoords, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, p5TouchPoint, randomColorHexString } from "../util";
 import { DragVertex } from "../vertex";
 
 export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged' | 'showCurveDrawingVisualizationChanged';
@@ -384,7 +384,7 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
             if (i > 0) prevColor = this.controlPoints[i - 1].color;
             if (i < this.controlPoints.length - 1) nextColor = this.controlPoints[i + 1].color;
 
-            while ((prevColor && colorsTooSimilar(color, prevColor)) || (nextColor && colorsTooSimilar(color, nextColor) || luminanceFromP5Color(color) > 180)) {
+            while ((prevColor && areColorsTooSimilar(color, prevColor)) || (nextColor && areColorsTooSimilar(color, nextColor) || luminanceFromP5Color(color) > 180)) {
                 if (prevColor) console.log(`color of previous control point: ${prevColor.toString()}`);
                 if (nextColor) console.log(`color of next control point: ${nextColor.toString()}`);
                 console.log(`current control point's color ${color.toString()} with luminance ${luminanceFromP5Color(color)} was too bright or too similar, finding better fit...`);
