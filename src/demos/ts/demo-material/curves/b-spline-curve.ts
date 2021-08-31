@@ -494,12 +494,6 @@ class BSplineVisualization extends CurveDrawingVisualization {
     }
 
     public draw(): void {
-        if (this.bSplineDemo.degree >= 2) {
-            //TODO: properly visualize recursive process for evaluating curve
-            // const points = this.bSplineDemo.controlPoints;
-            // points.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt.position, points[i + 1].position, this.color, this.bSplineDemo.baseLineWidth));
-        }
-
         if (!this.demo.valid) return;
 
         this.drawInfluenceOfCurrentlyActiveCtrlPt();
