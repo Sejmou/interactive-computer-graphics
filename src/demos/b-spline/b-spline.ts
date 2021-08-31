@@ -1,6 +1,6 @@
 import './b-spline.scss';
 import { Sketch } from "../ts/utils/sketch";
-import { BSplineDemo, BSplineGraphPlotter, CurveTypeControls, DeBoorControlPointInfluenceBarVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/demo-material/curves/b-spline-curve';
+import { BSplineDemo, BSplineGraphPlotter, CurveTypeControls, DeBoorControlPointInfluenceBarVisualization, KnotVectorControls, LineAtTPlotter, VisualizerForCurrentlyActiveBSplineControlPoint } from '../ts/demo-material/curves/b-spline-curve';
 import { DemoChange } from '../ts/demo-material/curves/base-curve';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
 
@@ -61,12 +61,13 @@ async function createDemo() {
     const bSplineDemo = sketch.add((p5, containerId) => new BSplineDemo(p5, containerId));
     bSplineDemo.showPointLabels = true;
 
-    const influenceVis = sketch.add((p5) => new DeBoorControlPointInfluenceBarVisualization(p5, bSplineDemo, false));
+    const influenceBarVis = sketch.add((p5) => new DeBoorControlPointInfluenceBarVisualization(p5, bSplineDemo, false));
+
     new BooleanPropCheckbox<BSplineDemo, DemoChange>({
         objectToSubscribeTo: bSplineDemo,
         labelText: 'show control point influence bars',
-        getCurrValOfPropToModify: () => influenceVis.visible,
-        onUserChangedCheckboxChecked: newVal => influenceVis.visible = newVal,
+        getCurrValOfPropToModify: () => influenceBarVis.visible,
+        onUserChangedCheckboxChecked: newVal => influenceBarVis.visible = newVal,
         shouldCheckboxBeVisible: demo => demo.valid,
         parentContainerId: demoContainerId
     });
@@ -77,6 +78,15 @@ async function createDemo() {
          shouldCheckboxBeVisible: demo => demo.valid,
          labelText: 'show curve evaluation visualization',
          parentContainerId: demoContainerId
+    });
+    new BooleanPropCheckbox<BSplineDemo, DemoChange>({
+        objectToSubscribeTo: bSplineDemo,
+        labelText: 'Show influence of hovered/dragged control point via line width',
+        tooltipText: 'The thicker the line, the more influence the control point has. If influence is 0, the line is also not drawn.',
+        getCurrValOfPropToModify: () => bSplineDemo.showInfluenceVisForCurrentlyActiveCtrlPt,
+        onUserChangedCheckboxChecked: newVal => bSplineDemo.showInfluenceVisForCurrentlyActiveCtrlPt = newVal,
+        shouldCheckboxBeVisible: demo => demo.valid,
+        parentContainerId: demoContainerId
     }); 
 
     //setting FPS to 0 causes sketch to instantiate p5 with noLoop() as last call in setup

@@ -5,6 +5,7 @@ import { areColorsTooSimilar, lightenDarkenColor, lightenDarkenP5Color, luminanc
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../utils/misc";
 import { drawLineXYCoords, p5TouchPoint } from "../../utils/p5";
 import { DragVertex } from "../../utils/vertex";
+import { VisualizerForCurrentlyActiveBSplineControlPoint } from "./b-spline-curve";
 
 export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged' | 'showCurveDrawingVisualizationChanged';
 
@@ -16,6 +17,8 @@ interface ControlPointColor {
 export abstract class CurveDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<DemoChange> {
     private curve: Curve | undefined;
     private curveDrawingVisualization: CurveDrawingVisualization | undefined;
+    private influenceVisForActiveCtrlPt?: InfluenceVisualizerForActiveControlPoint;
+    
 
     get tMin(): number {
         return this._tMin;
@@ -111,6 +114,11 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         return this._showCurveDrawingVisualization;
     };
 
+    showInfluenceVisForCurrentlyActiveCtrlPt = false;//TODO: maybe later add change events too
+    public get shouldDrawInfluenceVisForCurrentlyActiveCtrlPt() {
+        return this.showInfluenceVisForCurrentlyActiveCtrlPt && (this.hovering || this.dragging);
+    }
+
     private _positionDisplayMode: PositionDisplayMode = "absolute";
     public get positionDisplayMode(): PositionDisplayMode {
         return this._positionDisplayMode;
@@ -148,6 +156,10 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
 
     protected setCurveDrawingVisualization(vis: CurveDrawingVisualization) {
         this.curveDrawingVisualization = vis;
+    };
+
+    protected setInfluenceVisForActiveCtrlPt(vis: InfluenceVisualizerForActiveControlPoint) {
+        this.influenceVisForActiveCtrlPt = vis;
     };
 
     handleMousePressed(): void {
@@ -244,6 +256,7 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
 
         if (this.valid) {
             this.curve?.draw();
+            if (this.showInfluenceVisForCurrentlyActiveCtrlPt) this.influenceVisForActiveCtrlPt?.draw();
             if (this.showCurveDrawingVisualization) this.curveDrawingVisualization?.draw();
         }
         else this.displayMessage(this.curveInvalidMessage);
@@ -599,6 +612,17 @@ export abstract class CurveDrawingVisualization implements Drawable {
     }
 
     public abstract draw(): void;
+}
+
+
+export abstract class InfluenceVisualizerForActiveControlPoint implements Drawable {
+    constructor(private demo: CurveDemo) {}
+
+    draw(): void {
+        if (this.demo.shouldDrawInfluenceVisForCurrentlyActiveCtrlPt) this.drawInfluenceOfCurrentlyActiveCtrlPt();
+    }
+
+    protected abstract drawInfluenceOfCurrentlyActiveCtrlPt(): void;
 }
 
 

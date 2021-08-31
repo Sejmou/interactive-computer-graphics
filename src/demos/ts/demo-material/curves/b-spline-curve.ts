@@ -5,7 +5,7 @@ import { createArrayOfEquidistantAscendingNumbersInRange } from "../../utils/mis
 import { clamp } from "../../utils/math";
 import { drawCircle, drawLineVector, drawLineXYCoords, drawSquare, renderTextWithSubscript } from "../../utils/p5";
 import { DragVertex } from '../../utils/vertex';
-import { ControlPointInfluenceData, ControlPointInfluenceVisualization as ControlPointInfluenceBarVisualization, Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
+import { ControlPointInfluenceData, ControlPointInfluenceVisualization as ControlPointInfluenceBarVisualization, Curve, CurveDemo, CurveDrawingVisualization, DemoChange, InfluenceVisualizerForActiveControlPoint } from './base-curve';
 import colors from "../../../../global-styles/color_exports.scss";
 
 
@@ -219,8 +219,9 @@ export class BSplineDemo extends CurveDemo {
         this.updateKnotVectorAndBasisFunctions();
         this.notifyObservers('curveTypeChanged');
     }
+    
 
-    constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
+    constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number, showInfluenceVisForCurrentlyActiveCtrlPt = true) {
         const tMin = 0;
         const tMax = 1;
         super(p5, tMin, tMax, parentContainerId, baseAnimationSpeedMultiplier);
@@ -241,6 +242,7 @@ export class BSplineDemo extends CurveDemo {
 
         this.setCurve(new BSplineCurve(this.p5, this));
         this.setCurveDrawingVisualization(new BSplineVisualization(this.p5, this));
+        this.setInfluenceVisForActiveCtrlPt(new VisualizerForCurrentlyActiveBSplineControlPoint(this.p5, this));
         new DegreeControls(this.p5, this, this.controlsContainerId);
     }
 
@@ -466,11 +468,36 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
 
     public draw() {
         if (!this.demo.valid) return;
-        const points = this.evaluationSteps.map(t => this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(t));
+
+
+        const actualEvaluationSteps = this.getEvaluationStepsThatAreActuallyNeeded();
+
+        const points = actualEvaluationSteps.map(t => this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(t));
         if (this.bSplineDemo.degree === 0) {
             points.slice(0, -1).forEach(p => drawCircle(this.p5, p, this.color, this.demo.basePointDiameter * 1.25));
         } else {
             points.slice(0, -1).forEach((p, i) => drawLineVector(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2));
+        }
+    }
+
+    //lol what a name - sorry, I really only wanted to finish the project at this point
+    private getEvaluationStepsThatAreActuallyNeeded() {
+        if (!this.bSplineDemo.shouldDrawInfluenceVisForCurrentlyActiveCtrlPt) return this.evaluationSteps;
+        else {
+            return[];
+
+            //lol, all this complex logic is actually not needed
+            const knotVector = this.bSplineDemo.knotVector;
+            const activeCtrlPtIndex = this.bSplineDemo.controlPoints.findIndex(pt => pt.hovering || pt.dragging);
+            const i = activeCtrlPtIndex;
+            const p = this.bSplineDemo.degree;
+
+            //we don't want to draw that part of the line where the influence visualization for the active control point is drawn anyway
+            //From https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html we know:
+            //Basis function N_{i,p}(u) is non-zero on [u_i, u_{i+p+1}). Or, equivalently, N_{i,p}(u) is non-zero on p+1 knot spans [u_i, u_{i+1}), [u_{i+1}, u_{i+2}), ..., [u_{i+p}, u_{i+p+1}).
+            const lowerBoundOfTValuesToExclude = knotVector[Math.max(i, this.bSplineDemo.firstKnotIndexWhereCurveDefined)];
+            const upperBoundOfTValuesToExclude = knotVector[Math.min(i + p + 1, this.bSplineDemo.firstKnotIndexWhereCurveUndefined)];
+            return this.evaluationSteps.filter(t => t < lowerBoundOfTValuesToExclude || t > upperBoundOfTValuesToExclude);
         }
     }
 
@@ -484,9 +511,6 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
 class BSplineVisualization extends CurveDrawingVisualization {
     private knotMarkerColor: p5.Color = this.p5.color(150);
 
-    //used if reference to sketch is not given
-    private fallBackSketchBackgroundColor: p5.Color = this.p5.color(230);
-
     //storing bSplineDemo twice, once as Demo so that code of abstract class works and once as BSplineDemo so that we can use its specific subclass properties
     //if anyone reads my comments and knows a better solution: let me know about it (there probably is a better way to do what I want lol)
     constructor(p5: p5, private bSplineDemo: BSplineDemo, color?: p5.Color, colorOfPointOnCurve?: p5.Color, private sketch?: Sketch) {
@@ -495,8 +519,6 @@ class BSplineVisualization extends CurveDrawingVisualization {
 
     public draw(): void {
         if (!this.demo.valid) return;
-
-        this.drawInfluenceOfCurrentlyActiveCtrlPt();
 
         if (this.bSplineDemo.degree > 0) {
             this.drawKnotMarkers();
@@ -548,28 +570,6 @@ class BSplineVisualization extends CurveDrawingVisualization {
         tempPtsCreatedDuringEvaluation.forEach((iteration) => {
             iteration.slice(0, -1).forEach((pt, i) => drawLineVector(this.p5, pt, iteration[i + 1], this.color, this.bSplineDemo.baseLineWidth));
             iteration.forEach(pt => drawCircle(this.p5, pt, this.color, this.bSplineDemo.basePointDiameter));
-        });
-    }
-
-    private drawInfluenceOfCurrentlyActiveCtrlPt() {
-        const ctrlPts = this.bSplineDemo.controlPoints.slice();
-        const activeCtrlPtIndex = ctrlPts.findIndex(pt => pt.hovering || pt.dragging);
-        if (activeCtrlPtIndex == -1) return;
-        const i = activeCtrlPtIndex;
-        const activeCtrlPt = ctrlPts[i];
-        const p = this.bSplineDemo.degree;
-        const basisFunction = this.bSplineDemo.basisFunctions[p][activeCtrlPtIndex];
-        const knotVector = this.bSplineDemo.knotVector;
-
-        //from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html we know:
-        //Basis function N_{i,p}(u) is non-zero on [u_i, u_{i+p+1}). Or, equivalently, N_{i,p}(u) is non-zero on p+1 knot spans [u_i, u_{i+1}), [u_{i+1}, u_{i+2}), ..., [u_{i+p}, u_{i+p+1}).
-        const tValues = createArrayOfEquidistantAscendingNumbersInRange(100, knotVector[Math.max(i, this.bSplineDemo.firstKnotIndexWhereCurveDefined)], knotVector[Math.min(i + p + 1, this.bSplineDemo.firstKnotIndexWhereCurveUndefined)]);
-        const pointsAndActiveCtrlPtInfluence = tValues.map(t => ({ pos: this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(t), activeCtrlPtInfluence: basisFunction(t) }));
-        pointsAndActiveCtrlPtInfluence.slice(0, -1).forEach((p, i) => {
-            //draw line in sketch's background color to make "regular" black line disappear
-            drawLineVector(this.p5, p.pos, pointsAndActiveCtrlPtInfluence[i + 1].pos, this.sketch?.backgroundColor ?? this.fallBackSketchBackgroundColor, this.demo.baseLineWidth * 2);
-            //draw line that gets thicker the more influence the control point has on the shape of the curve
-            drawLineVector(this.p5, p.pos, pointsAndActiveCtrlPtInfluence[i + 1].pos, activeCtrlPt.color, this.demo.baseLineWidth * 2 * p.activeCtrlPtInfluence);
         });
     }
 }
@@ -687,6 +687,42 @@ export class DeBoorControlPointInfluenceBarVisualization extends ControlPointInf
                 controlPoint: c,
                 currentCtrlPtInfluence: () => this.bSplineDemo.basisFunctions[this.bSplineDemo.degree][i](this.bSplineDemo.t)
             }
+        });
+    }
+}
+
+
+
+
+
+export class VisualizerForCurrentlyActiveBSplineControlPoint extends InfluenceVisualizerForActiveControlPoint {
+    /**
+     * 
+     * @param p5 
+     * @param bSplineDemo 
+     * @param sketch needed to obtain the backgroundColor used so that we can render the influence visualization for the active ctrlPt using the correct background color
+     */
+    constructor(private p5: p5, private bSplineDemo: BSplineDemo) {
+        super(bSplineDemo);
+    }
+
+    protected drawInfluenceOfCurrentlyActiveCtrlPt() {
+        const ctrlPts = this.bSplineDemo.controlPoints.slice();
+        const activeCtrlPtIndex = ctrlPts.findIndex(pt => pt.hovering || pt.dragging);
+        if (activeCtrlPtIndex == -1) return;
+        const i = activeCtrlPtIndex;
+        const activeCtrlPt = ctrlPts[i];
+        const p = this.bSplineDemo.degree;
+        const basisFunction = this.bSplineDemo.basisFunctions[p][activeCtrlPtIndex];
+        const knotVector = this.bSplineDemo.knotVector;
+
+        //from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html we know:
+        //Basis function N_{i,p}(u) is non-zero on [u_i, u_{i+p+1}). Or, equivalently, N_{i,p}(u) is non-zero on p+1 knot spans [u_i, u_{i+1}), [u_{i+1}, u_{i+2}), ..., [u_{i+p}, u_{i+p+1}).
+        const tValues = createArrayOfEquidistantAscendingNumbersInRange(100, knotVector[Math.max(i, this.bSplineDemo.firstKnotIndexWhereCurveDefined)], knotVector[Math.min(i + p + 1, this.bSplineDemo.firstKnotIndexWhereCurveUndefined)]);
+        const pointsAndActiveCtrlPtInfluence = tValues.map(t => ({ pos: this.bSplineDemo.getPointOnCurveWithDeBoorsAlgorithm(t), activeCtrlPtInfluence: basisFunction(t) }));
+        pointsAndActiveCtrlPtInfluence.slice(0, -1).forEach((p, i) => {
+            //draw line that gets thicker the more influence the control point has on the shape of the curve
+            drawLineVector(this.p5, p.pos, pointsAndActiveCtrlPtInfluence[i + 1].pos, activeCtrlPt.color, this.bSplineDemo.baseLineWidth * 2 * p.activeCtrlPtInfluence);
         });
     }
 }
@@ -906,7 +942,7 @@ export interface CurveData {
 export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Responsive {
     private noOfStepsXAxis: number = 700;
     protected xValues: number[] = [];
-    
+
     //B-Spline basis functions should always be in range [0, 1]; for other functions this might not always be the case
     //e.g. weighted basis functions of NURBS curves, which are a generalization of the B-Spline curve
     protected minYValue = 0;

@@ -14,7 +14,7 @@ export function addTextAsParagraphToElement(elementId: string, pContent: string)
         console.warn(`HTML element with id ${elementId} not found`);
 }
 
-export interface SettingsCheckboxConfig<T extends MyObservable<any>> {
+export interface CheckboxConfig<T extends MyObservable<any>> {
     /**
      * the object whose changes should be listened to (for determining whether checkbox should be visible)
      */
@@ -42,6 +42,8 @@ export interface SettingsCheckboxConfig<T extends MyObservable<any>> {
      */
     shouldCheckboxBeVisible: (objectToSubscribeTo: T) => boolean;
 
+    tooltipText?: string;
+
     /**
      * The ID of the container where the checkBox should be created
      * 
@@ -66,8 +68,8 @@ export class BooleanPropCheckbox<T extends MyObservable<U>, U> implements MyObse
 
     private shouldCheckBoxBeVisible: (objectToSubscribeTo: T) => boolean;
 
-    constructor(config: SettingsCheckboxConfig<T>) {
-        const { objectToSubscribeTo, labelText, getCurrValOfPropToModify, onUserChangedCheckboxChecked, shouldCheckboxBeVisible, parentContainerId } = config;
+    constructor(config: CheckboxConfig<T>) {
+        const { objectToSubscribeTo, labelText, getCurrValOfPropToModify, onUserChangedCheckboxChecked, shouldCheckboxBeVisible, parentContainerId, tooltipText } = config;
 
         this.getCurrValOfPropToModify = getCurrValOfPropToModify;
         this.shouldCheckBoxBeVisible = shouldCheckboxBeVisible;
@@ -86,6 +88,10 @@ export class BooleanPropCheckbox<T extends MyObservable<U>, U> implements MyObse
         this.label.style.display = 'block';// label elements are inline by default, we don't want that
         this.label.appendChild(this.checkBox);
         this.label.appendChild(labelTextSpanEl);
+
+        if (tooltipText) {
+            this.label.setAttribute('title', tooltipText);
+        }
 
         this.checkBox.addEventListener('change', () => onUserChangedCheckboxChecked(this.checkBox.checked));
 
