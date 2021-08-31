@@ -62,21 +62,19 @@ async function createDemo() {
     bSplineDemo.showPointLabels = true;
 
     const influenceVis = sketch.add((p5) => new DeBoorControlPointInfluenceVisualization(p5, bSplineDemo, false));
-    new BooleanPropCheckbox<DeBoorControlPointInfluenceVisualization, BSplineDemo, DemoChange>({
-        objectToModify: influenceVis,
+    new BooleanPropCheckbox<BSplineDemo, DemoChange>({
         objectToSubscribeTo: bSplineDemo,
         labelText: 'show control point influence bars',
-        getCurrValOfPropToModify: influenceVis => influenceVis.visible,
-        setNewPropertyValue: (val, visualization) => visualization.visible = val,
-        showCheckBoxIf: demo => demo.valid,
+        getCurrValOfPropToModify: () => influenceVis.visible,
+        onUserChangedCheckboxChecked: newVal => influenceVis.visible = newVal,
+        shouldCheckboxBeVisible: demo => demo.valid,
         parentContainerId: demoContainerId
     });
-    new BooleanPropCheckbox<BSplineDemo, BSplineDemo, DemoChange>({
-         objectToModify: bSplineDemo,
+    new BooleanPropCheckbox<BSplineDemo, DemoChange>({
          objectToSubscribeTo: bSplineDemo,
-         getCurrValOfPropToModify: demo => demo.showCurveDrawingVisualization,
-         setNewPropertyValue: (val, demo) => demo.showCurveDrawingVisualization = val,
-         showCheckBoxIf: demo => demo.valid,
+         getCurrValOfPropToModify: () => bSplineDemo.showCurveDrawingVisualization,
+         onUserChangedCheckboxChecked: newVal => bSplineDemo.showCurveDrawingVisualization = newVal,
+         shouldCheckboxBeVisible: demo => demo.valid,
          labelText: 'show curve evaluation visualization',
          parentContainerId: demoContainerId
     }); 

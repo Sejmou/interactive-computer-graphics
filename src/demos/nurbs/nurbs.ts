@@ -32,21 +32,19 @@ async function createDemo() {
     nurbsDemo.showPointLabels = true;
 
     const influenceVis = sketch.add((p5) => new DeBoorControlPointInfluenceVisualization(p5, nurbsDemo, false));
-    new BooleanPropCheckbox<DeBoorControlPointInfluenceVisualization, NURBSDemo, DemoChange>({
-        objectToModify: influenceVis,
+    new BooleanPropCheckbox<NURBSDemo, DemoChange>({
         objectToSubscribeTo: nurbsDemo,
         labelText: 'show control point influence bars',
-        getCurrValOfPropToModify: influenceVis => influenceVis.visible,
-        setNewPropertyValue: (val, visualization) => visualization.visible = val,
-        showCheckBoxIf: demo => demo.valid,
+        getCurrValOfPropToModify: () => influenceVis.visible,
+        onUserChangedCheckboxChecked: newVal => influenceVis.visible = newVal,
+        shouldCheckboxBeVisible: demo => demo.valid,
         parentContainerId: demoContainerId
     });
-    new BooleanPropCheckbox<NURBSDemo, NURBSDemo, DemoChange>({
-         objectToModify: nurbsDemo,
+    new BooleanPropCheckbox<NURBSDemo, DemoChange>({
          objectToSubscribeTo: nurbsDemo,
-         getCurrValOfPropToModify: demo => demo.showCurveDrawingVisualization,
-         setNewPropertyValue: (val, demo) => demo.showCurveDrawingVisualization = val,
-         showCheckBoxIf: demo => demo.valid,
+         getCurrValOfPropToModify: () => nurbsDemo.showCurveDrawingVisualization,
+         onUserChangedCheckboxChecked: newVal => nurbsDemo.showCurveDrawingVisualization = newVal,
+         shouldCheckboxBeVisible: demo => demo.valid,
          labelText: 'show curve evaluation visualization',
          parentContainerId: demoContainerId
     });

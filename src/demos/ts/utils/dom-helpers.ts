@@ -14,16 +14,11 @@ export function addTextAsParagraphToElement(elementId: string, pContent: string)
         console.warn(`HTML element with id ${elementId} not found`);
 }
 
-export interface SettingsCheckboxConfig<T, U extends MyObservable<V>, V> {
+export interface SettingsCheckboxConfig<T extends MyObservable<any>> {
     /**
-     * the object whose boolean property should be toggled with the checkbox
+     * the object whose changes should be listened to (for determining whether checkbox should be visible)
      */
-    objectToModify: T;
-
-    /**
-     * the object whose changes should be listened to
-     */
-    objectToSubscribeTo: U;
+    objectToSubscribeTo: T;
 
     /**
      * the text of the label for the checkbox
@@ -31,70 +26,75 @@ export interface SettingsCheckboxConfig<T, U extends MyObservable<V>, V> {
     labelText: string;
 
     /**
-     * gets the current value of the object property that should be toggled by the checkbox
+     * gets the current value of the property that should be toggled by the checkbox
      */
-    getCurrValOfPropToModify: (objectToModify: T) => boolean;
+    getCurrValOfPropToModify: () => boolean;
 
     /**
-     * tells the checkbox whether it should be visible after it gets notified of an update
+     * defines what should happen if the user changed the checkbox state
+     */
+     onUserChangedCheckboxChecked: (newCheckedState: boolean) => void;
+
+    /**
      * Called whenever objectToSubscribeTo notifies the checkbox of a change
+     * Properties of the objectToSubscribeTo can then be checked to decide if the checkbox should still be shown
+     * Return true here whenever the checkbox should be visible and false otherwise
      */
-    showCheckBoxIf: (objectToSubscribeTo: U) => boolean;
-
-    /**
-     * sets the boolean property of the object that should be modified by this checkbox
-     */
-    setNewPropertyValue: (newValue: boolean, objectToModify: T) => void;
+    shouldCheckboxBeVisible: (objectToSubscribeTo: T) => boolean;
 
     /**
      * The ID of the container where the checkBox should be created
+     * 
+     * If not provided, checkbox is appended to body
      */
     parentContainerId?: string;
 }
 /**
- * Creates a checkbox that modifies a boolean property of some object listening for changes to some observable. (modified object and subscribed object can also be the same object!)
- * Automatically subscribes to the Observable, a function defining if the modified object's checkbox should be visible (after the observed object emits some change event) can also be provided
+ * Creates a checkbox on the page. The user can define what should happen when the checkbox is toggled.
+ * Also, the checkbox subscribes to an MyObservable. whenever it emits a change, the checkbox updates itself using a user-defined getter and checks whether it should be hidden (also using user-defined function)
+ * 
+ * 
+ * Note: This is quite a mindf*ck, I unfortunately realized how unnecessarily complicated this whole code is at the (temporary) end of this project (when I was about to hand in my Bachelor's thesis)
+ * Maybe someday I will find the time to look at this again, but I doubt it....
  */
+export class BooleanPropCheckbox<T extends MyObservable<U>, U> implements MyObserver<U> {
+    private objectToSubscribeTo: T;
+    private label: HTMLLabelElement;
+    private checkBox: HTMLInputElement;
 
-export class BooleanPropCheckbox<T, U extends MyObservable<V>, V> implements MyObserver<V> {
-    private form: HTMLFormElement;
-    private objectToModify: T;
-    private objectToSubscribeTo: U;
+    private getCurrValOfPropToModify: () => boolean;
 
-    private showCheckBoxIf: (objectToSubscribeTo: U) => boolean;
+    private shouldCheckBoxBeVisible: (objectToSubscribeTo: T) => boolean;
 
-    constructor(config: SettingsCheckboxConfig<T, U, V>) {
-        const { objectToModify, objectToSubscribeTo, labelText, getCurrValOfPropToModify, setNewPropertyValue, showCheckBoxIf, parentContainerId } = config;
-        this.objectToModify = objectToModify;
-        this.showCheckBoxIf = showCheckBoxIf;
+    constructor(config: SettingsCheckboxConfig<T>) {
+        const { objectToSubscribeTo, labelText, getCurrValOfPropToModify, onUserChangedCheckboxChecked, shouldCheckboxBeVisible, parentContainerId } = config;
+
+        this.getCurrValOfPropToModify = getCurrValOfPropToModify;
+        this.shouldCheckBoxBeVisible = shouldCheckboxBeVisible;
 
         this.objectToSubscribeTo = objectToSubscribeTo;
         this.objectToSubscribeTo.subscribe(this);
 
-        const formFieldName = 'field';
+        this.checkBox = document.createElement('input');
+        this.checkBox.type = 'checkbox';
+        this.checkBox.className = 'filled-in';// apply different Materialize style
+        this.checkBox.checked = getCurrValOfPropToModify();
+        const labelTextSpanEl = document.createElement('span');
+        labelTextSpanEl.innerText = labelText;
 
-        const checkBox = document.createElement('input');
-        checkBox.type = 'checkbox';
-        checkBox.name = formFieldName;
-        checkBox.checked = getCurrValOfPropToModify(this.objectToModify);
-        checkBox.className = 'filled-in';
-        const desc = document.createElement('span');
-        desc.innerText = labelText;
-        const label = document.createElement('label');
-        label.appendChild(checkBox);
-        label.appendChild(desc);
-        this.form = document.createElement('form');
-        this.form.appendChild(label);
-        this.form.addEventListener('change', () => {
-            setNewPropertyValue(new FormData(this.form).get(formFieldName) !== null, this.objectToModify);
-            checkBox.checked = getCurrValOfPropToModify(this.objectToModify);
-        });
-        this.updateCheckboxVisibility(this.showCheckBoxIf(this.objectToSubscribeTo));
+        this.label = document.createElement('label');
+        this.label.style.display = 'block';// label elements are inline by default, we don't want that
+        this.label.appendChild(this.checkBox);
+        this.label.appendChild(labelTextSpanEl);
+
+        this.checkBox.addEventListener('change', () => onUserChangedCheckboxChecked(this.checkBox.checked));
+
+        this.updateCheckboxVisibility(this.shouldCheckBoxBeVisible(this.objectToSubscribeTo));
 
         if (parentContainerId) {
             const parentContainer = document.getElementById(parentContainerId);
             if (parentContainer) {
-                parentContainer.appendChild(this.form);
+                parentContainer.appendChild(this.label);
                 return;
             }
             console.warn(`parent container with id '${parentContainerId}' for checkbox that sets '${labelText}' not found`);
@@ -102,17 +102,19 @@ export class BooleanPropCheckbox<T, U extends MyObservable<V>, V> implements MyO
         else {
             console.warn(`no parent container for checkbox that sets '${labelText}' provided`);
         }
-        document.body.appendChild(label);
+        document.body.appendChild(this.label);
     }
 
-    update(data: V): void {
-        this.updateCheckboxVisibility(this.showCheckBoxIf(this.objectToSubscribeTo));
+    // We should get the current values that we are interested in here, but we don't with the current code architecture...
+    // So the only thing we could do here would be to ignore certain changes for efficiency reasons, but who cares...
+    // TODO: clean up this mess some day when I'm wiser...
+    update(data: U): void {
+        this.checkBox.checked = this.getCurrValOfPropToModify();
+        this.updateCheckboxVisibility(this.shouldCheckBoxBeVisible(this.objectToSubscribeTo));
     }
 
     private updateCheckboxVisibility(visible: boolean) {
-        if (visible)
-            this.form.style.removeProperty('visibility');
-        else
-            this.form.style.visibility = 'hidden';
+        if (visible) this.label.style.removeProperty('visibility');
+        else this.label.style.visibility = 'hidden';
     }
 }
