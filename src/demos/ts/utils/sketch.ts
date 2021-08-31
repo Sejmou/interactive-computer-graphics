@@ -1,7 +1,10 @@
 import p5 from "p5";
 import { Clickable, Draggable, Drawable, isClickable, isDraggable, isResponsive, isTouchable, Responsive, Touchable } from "./ui";
 
-
+/**
+ * Utitility class, wrapping p5's createCanvas() in a dedicated Sketch class.
+ * It allows users to add new Drawables (classes implementing the custom Drawable interface used in this project) dynamically. 
+ */
 export class Sketch {
     private p5?: p5;
 
@@ -37,7 +40,8 @@ export class Sketch {
     private _backgroundColor: p5.Color | undefined;
 
     /**
-     * Creates the sketch; The promise this method returns has to resolve, otherwise add() will not work as p5 is not configured yet
+     * Creates the sketch; Once the promise this method returns has resolved, the Sketch is ready and add() can be called on it to add Drawables.
+     * At any moment before this, calling add() will not work as p5 is not configured yet!
      * 
      * @returns promise that resolves as soon as sketch was created (p5 instance is available to the sketch)
      */
@@ -118,6 +122,20 @@ export class Sketch {
         });
     }
 
+    /**
+     * This function can be used after create() has resolved.
+     * 
+     * Any Drawable can be created and added to this Sketch by supplying a creator function for it to this method. Its draw() method will then be called everytime the Sketch's canvas is rerendered.
+     * Per default, the framerate of the Sketch is 60 FPS, so draw() is then called 60 times a second.
+     * 
+     * If the Drawable provided also implements the Clickable, Touchable, Draggable or Responsive interface,
+     * the respective event handling functions of each interface will be called anytime the canvas receives those triggering events.
+     * 
+     * For example, if the added Drawable implements the Clickable interface, each click on the canvas will be forwarded to it by calling its handleMousePressed() method.
+     * 
+     * @param creatorFunction a function returning a new instance of the Drawable that should be added to the sketch
+     * @returns A reference to the created Drawable
+     */
     public add<T extends Drawable>(creatorFunction: (p5Instance: p5, parentContainerId?: string) => T): T {
         if (!this.p5) {
             throw Error(`couldn't add Drawable, p5 instance of sketch not created yet!`);
