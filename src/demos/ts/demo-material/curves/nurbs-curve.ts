@@ -1,10 +1,10 @@
 import p5 from "p5";
-import { Sketch } from "../utils/sketch";
-import { MyObserver } from "../utils/ui";
-import { createArrayOfEquidistantAscendingNumbersInRange } from "../utils/misc";
-import { clamp } from "../utils/math";
-import { drawCircle, drawLineVector, drawLineXYCoords, drawPointVector, drawSquare, renderTextWithSubscript } from "../utils/p5";
-import { DragVertex } from "../vertex";
+import { Sketch } from "../../utils/sketch";
+import { MyObserver } from "../../utils/ui";
+import { createArrayOfEquidistantAscendingNumbersInRange } from "../../utils/misc";
+import { clamp } from "../../utils/math";
+import { drawCircle, drawLineVector, drawLineXYCoords, drawPointVector, drawSquare, renderTextWithSubscript } from "../../utils/p5";
+import { DragVertex } from "../../utils/vertex";
 import { BasisFunctionData, BSplineDemo, BSplineGraphPlotter, CurveData } from "./b-spline-curve";
 import { Curve, CurveDrawingVisualization, DemoChange } from "./base-curve";
 

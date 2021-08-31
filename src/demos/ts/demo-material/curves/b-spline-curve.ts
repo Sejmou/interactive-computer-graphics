@@ -1,12 +1,12 @@
 import p5, { Vector } from 'p5';
-import { Sketch } from '../utils/sketch';
-import { Drawable, MyObserver, Responsive } from '../utils/ui';
-import { createArrayOfEquidistantAscendingNumbersInRange } from "../utils/misc";
-import { clamp } from "../utils/math";
-import { drawCircle, drawLineVector, drawLineXYCoords, drawSquare, renderTextWithSubscript } from "../utils/p5";
-import { DragVertex } from '../vertex';
+import { Sketch } from '../../utils/sketch';
+import { Drawable, MyObserver, Responsive } from '../../utils/ui';
+import { createArrayOfEquidistantAscendingNumbersInRange } from "../../utils/misc";
+import { clamp } from "../../utils/math";
+import { drawCircle, drawLineVector, drawLineXYCoords, drawSquare, renderTextWithSubscript } from "../../utils/p5";
+import { DragVertex } from '../../utils/vertex';
 import { ControlPointInfluenceData, ControlPointInfluenceVisualization as ControlPointInfluenceBarVisualization, Curve, CurveDemo, CurveDrawingVisualization, DemoChange } from './base-curve';
-import colors from '../../../global-styles/color_exports.scss';
+import colors from "../../../../global-styles/color_exports.scss";
 
 
 

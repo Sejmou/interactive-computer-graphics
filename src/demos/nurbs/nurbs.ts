@@ -1,9 +1,9 @@
 import './nurbs.scss';
 import { Sketch } from "../ts/utils/sketch";
-import { CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/curves/b-spline-curve';
-import { DemoChange } from '../ts/curves/base-curve';
+import { CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/demo-material/curves/b-spline-curve';
+import { DemoChange } from '../ts/demo-material/curves/base-curve';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
-import { ControlsForControlPointWeights, NURBSDemo, NURBSGraphPlotter } from "../ts/curves/nurbs-curve";
+import { ControlsForControlPointWeights, NURBSDemo, NURBSGraphPlotter } from "../ts/demo-material/curves/nurbs-curve";
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';

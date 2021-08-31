@@ -1,8 +1,8 @@
 import p5 from "p5";
-import { Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "./utils/ui";
-import { clamp } from "./utils/math";
-import { p5TouchPoint, renderTextWithSubscript } from "./utils/p5";
-import colors from '../../global-styles/color_exports.scss';
+import { Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "./ui";
+import { clamp } from "./math";
+import { p5TouchPoint, renderTextWithSubscript } from "./p5";
+import colors from "../../../global-styles/color_exports.scss";
 
 type AddOrRemove = 'add' | 'remove';
 

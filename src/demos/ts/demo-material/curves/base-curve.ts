@@ -1,10 +1,10 @@
-import colors from "../../../global-styles/color_exports.scss";
+import colors from "../../../../global-styles/color_exports.scss";
 import p5 from "p5";
-import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "../utils/ui";
-import { areColorsTooSimilar, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, randomColorHexString } from "../utils/color";
-import { createArrayOfEquidistantAscendingNumbersInRange } from "../utils/misc";
-import { drawLineXYCoords, p5TouchPoint } from "../utils/p5";
-import { DragVertex } from "../vertex";
+import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "../../utils/ui";
+import { areColorsTooSimilar, lightenDarkenColor, lightenDarkenP5Color, luminanceFromP5Color, randomColorHexString } from "../../utils/color";
+import { createArrayOfEquidistantAscendingNumbersInRange } from "../../utils/misc";
+import { drawLineXYCoords, p5TouchPoint } from "../../utils/p5";
+import { DragVertex } from "../../utils/vertex";
 
 export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged' | 'showCurveDrawingVisualizationChanged';
 

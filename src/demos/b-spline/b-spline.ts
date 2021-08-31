@@ -1,7 +1,7 @@
 import './b-spline.scss';
 import { Sketch } from "../ts/utils/sketch";
-import { BSplineDemo, BSplineGraphPlotter, CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/curves/b-spline-curve';
-import { DemoChange } from '../ts/curves/base-curve';
+import { BSplineDemo, BSplineGraphPlotter, CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/demo-material/curves/b-spline-curve';
+import { DemoChange } from '../ts/demo-material/curves/base-curve';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
 
 const demoContainerId = 'demo';
