@@ -5,8 +5,8 @@ import { createArrayOfEquidistantAscendingNumbersInRange } from "../../utils/mis
 import { clamp } from "../../utils/math";
 import { drawCircle, drawLineVector, drawLineXYCoords, drawPointVector, drawSquare, renderTextWithSubscript } from "../../utils/p5";
 import { DragVertex } from "../../utils/vertex";
-import { BasisFunctionData, BSplineDemo, BSplineGraphPlotter, CurveData } from "./b-spline-curve";
-import { Curve, CurveDrawingVisualization, DemoChange } from "./base-curve";
+import { BasisFunctionData, BSplineDemo, BSplineGraphPlotter, CurveData, DeBoorControlPointInfluenceBarVisualization } from "./b-spline-curve";
+import { ControlPointInfluenceData, Curve, CurveDrawingVisualization, DemoChange } from "./base-curve";
 
 
 
@@ -477,5 +477,35 @@ export class NURBSGraphPlotter extends BSplineGraphPlotter {
         this.p5.textAlign(this.p5.CENTER);
         this.p5.text('Add more control points to the canvas on the left!\nThe weighted and regular basis functions will then show up here.', this.p5.width / 2, this.p5.height / 2);
         this.p5.pop();
+    }
+}
+
+
+
+/**
+ * Visualization for the influence of the B-Spline's control points (de boor points) using bars
+ */
+ export class NURBSControlPointInfluenceBarVisualization extends DeBoorControlPointInfluenceBarVisualization implements MyObserver<DemoChange> {
+    private nurbsDemo: NURBSDemo;
+
+    constructor(p5: p5, nurbsDemo: NURBSDemo, visible: boolean = true) {
+        super(p5, nurbsDemo, visible);
+        this.nurbsDemo = nurbsDemo;
+        nurbsDemo.subscribe(this);
+    }
+
+    update(data: DemoChange): void {
+        if (data == 'controlPointsChanged' || data == 'degreeChanged' || data == 'knotVectorChanged' || data == 'rangeOfTChanged') this.updateInfluenceDataAndBars();
+    }
+
+    protected getCurrentControlPointInfluenceDataPoints(): ControlPointInfluenceData[] {
+        const getSumOfWeightedBasisFunctions = (t: number) => this.nurbsDemo.controlPoints.map((_, i) => this.nurbsDemo.weightedBasisFunctions[this.nurbsDemo.degree][i](t)).reduce((prev, curr) => prev + curr, 0);
+
+        return this.nurbsDemo.controlPoints.map((c, i) => {
+            return {
+                controlPoint: c,
+                currentCtrlPtInfluence: () => this.nurbsDemo.weightedBasisFunctions[this.nurbsDemo.degree][i](this.nurbsDemo.t) / getSumOfWeightedBasisFunctions(this.nurbsDemo.t)
+            }
+        });
     }
 }

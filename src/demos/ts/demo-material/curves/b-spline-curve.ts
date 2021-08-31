@@ -674,7 +674,7 @@ class DegreeControls implements MyObserver<DemoChange> {
 /**
  * Visualization for the influence of the B-Spline's control points (de boor points) using bars
  */
-export class DeBoorControlPointInfluenceVisualization extends ControlPointInfluenceBarVisualization implements MyObserver<DemoChange> {
+export class DeBoorControlPointInfluenceBarVisualization extends ControlPointInfluenceBarVisualization implements MyObserver<DemoChange> {
     private bSplineDemo: BSplineDemo;
 
     constructor(p5: p5, bSplineDemo: BSplineDemo, visible: boolean = true) {

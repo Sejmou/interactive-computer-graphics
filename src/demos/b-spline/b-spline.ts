@@ -1,6 +1,6 @@
 import './b-spline.scss';
 import { Sketch } from "../ts/utils/sketch";
-import { BSplineDemo, BSplineGraphPlotter, CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/demo-material/curves/b-spline-curve';
+import { BSplineDemo, BSplineGraphPlotter, CurveTypeControls, DeBoorControlPointInfluenceBarVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/demo-material/curves/b-spline-curve';
 import { DemoChange } from '../ts/demo-material/curves/base-curve';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
 
@@ -61,7 +61,7 @@ async function createDemo() {
     const bSplineDemo = sketch.add((p5, containerId) => new BSplineDemo(p5, containerId));
     bSplineDemo.showPointLabels = true;
 
-    const influenceVis = sketch.add((p5) => new DeBoorControlPointInfluenceVisualization(p5, bSplineDemo, false));
+    const influenceVis = sketch.add((p5) => new DeBoorControlPointInfluenceBarVisualization(p5, bSplineDemo, false));
     new BooleanPropCheckbox<BSplineDemo, DemoChange>({
         objectToSubscribeTo: bSplineDemo,
         labelText: 'show control point influence bars',

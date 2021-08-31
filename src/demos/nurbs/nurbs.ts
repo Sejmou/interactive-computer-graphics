@@ -1,9 +1,9 @@
 import './nurbs.scss';
 import { Sketch } from "../ts/utils/sketch";
-import { CurveTypeControls, DeBoorControlPointInfluenceVisualization, KnotVectorControls, LineAtTPlotter } from '../ts/demo-material/curves/b-spline-curve';
+import { CurveTypeControls, KnotVectorControls, LineAtTPlotter } from '../ts/demo-material/curves/b-spline-curve';
 import { DemoChange } from '../ts/demo-material/curves/base-curve';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
-import { ControlsForControlPointWeights, NURBSDemo, NURBSGraphPlotter } from "../ts/demo-material/curves/nurbs-curve";
+import { ControlsForControlPointWeights, NURBSControlPointInfluenceBarVisualization, NURBSDemo, NURBSGraphPlotter } from "../ts/demo-material/curves/nurbs-curve";
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';
@@ -11,7 +11,11 @@ const descriptionContainerId = 'demo-description';
 addTextAsParagraphToElement(descriptionContainerId,
     String.raw`Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight. Weights can be any given value.<br>
     Theoretically, even negative weights were possible, but this would result in weird behavior. Note that a weight of 0 essentially means that the control point is "deactivated".
-    <br>Note: Unfortunately, I couldn't spend as much time on this demo as I wanted, thus there is <b style="color: red">a higher chance for errors.</b> However, the "core ideas" should be implemented correctly.`
+    <br>
+    <br>Behind the scenes the adaptation of De Boors' algorithm that is used for evaluating/rendering a NURBS curve uses an additional, in this case, third dimension.
+    <br>The curve is then projected back onto the 2D plane. Unlike in the previous demos this process cannot be visualized in a visual manner.
+    <br>
+    <br>Anyway, try playing around with the control point weights. Observe how the "magnetic force" of any point becomes stronger/weaker if its weight is increased/decreased.`
 );
 
 // MathJax.typeset([`#${descriptionContainerId}`]);
@@ -31,7 +35,7 @@ async function createDemo() {
     const nurbsDemo = sketch.add((p5, containerId) => new NURBSDemo(p5, containerId));
     nurbsDemo.showPointLabels = true;
 
-    const influenceVis = sketch.add((p5) => new DeBoorControlPointInfluenceVisualization(p5, nurbsDemo, false));
+    const influenceVis = sketch.add((p5) => new NURBSControlPointInfluenceBarVisualization(p5, nurbsDemo, false));
     new BooleanPropCheckbox<NURBSDemo, DemoChange>({
         objectToSubscribeTo: nurbsDemo,
         labelText: 'show control point influence bars',
@@ -45,7 +49,7 @@ async function createDemo() {
          getCurrValOfPropToModify: () => nurbsDemo.showCurveDrawingVisualization,
          onUserChangedCheckboxChecked: newVal => nurbsDemo.showCurveDrawingVisualization = newVal,
          shouldCheckboxBeVisible: demo => demo.valid,
-         labelText: 'show curve evaluation visualization',
+         labelText: 'show point on curve',
          parentContainerId: demoContainerId
     });
 
