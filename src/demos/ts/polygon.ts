@@ -1,6 +1,6 @@
 import p5 from "p5";
-import { Touchable, Drawable, Draggable, Clickable } from './ui-utils';
-import { indexToLowercaseLetter } from "./util";
+import { Touchable, Drawable, Draggable, Clickable } from './utils/ui';
+import { indexToLowercaseLetter } from "./utils/misc";
 import { DragVertex } from "./vertex";
 
 export class Polygon implements Drawable {

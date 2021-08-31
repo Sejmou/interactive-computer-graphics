@@ -1,6 +1,6 @@
 import './bary.scss';
 import { BarycentricTriangle } from "../ts/barycentric-triangle";
-import { Sketch } from '../ts/sketch';
+import { Sketch } from '../ts/utils/sketch';
 
 const demoContainerId = 'demo';
 

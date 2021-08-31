@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Clickable, Draggable, Drawable, isClickable, isDraggable, isResponsive, isTouchable, Responsive, Touchable } from "./ui-utils";
+import { Clickable, Draggable, Drawable, isClickable, isDraggable, isResponsive, isTouchable, Responsive, Touchable } from "./ui";
 
 
 export class Sketch {
