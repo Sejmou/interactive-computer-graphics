@@ -219,7 +219,7 @@ export class BSplineDemo extends CurveDemo {
         this.updateKnotVectorAndBasisFunctions();
         this.notifyObservers('curveTypeChanged');
     }
-    
+
 
     constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number, showInfluenceVisForCurrentlyActiveCtrlPt = true) {
         const tMin = 0;
@@ -484,7 +484,7 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
     private getEvaluationStepsThatAreActuallyNeeded() {
         if (!this.bSplineDemo.shouldDrawInfluenceVisForCurrentlyActiveCtrlPt) return this.evaluationSteps;
         else {
-            return[];
+            return [];
 
             //lol, all this complex logic is actually not needed
             const knotVector = this.bSplineDemo.knotVector;
@@ -510,6 +510,8 @@ class BSplineCurve extends Curve implements MyObserver<DemoChange> {
 
 class BSplineVisualization extends CurveDrawingVisualization {
     private knotMarkerColor: p5.Color = this.p5.color(150);
+    private knotMarkerLabelColor = this.p5.color('#f400a3');
+    private knotMarkerLabelBackgroundColor = this.p5.color(255, 255, 255, 190);
 
     //storing bSplineDemo twice, once as Demo so that code of abstract class works and once as BSplineDemo so that we can use its specific subclass properties
     //if anyone reads my comments and knows a better solution: let me know about it (there probably is a better way to do what I want lol)
@@ -550,7 +552,25 @@ class BSplineVisualization extends CurveDrawingVisualization {
                 this.knotMarkerColor,
                 this.bSplineDemo.basePointDiameter * 0.75
             );
-            if (this.bSplineDemo.showPointLabels) renderTextWithSubscript(this.p5, `t=${+(this.bSplineDemo.knotVector[i].toFixed(2))}${multiplicity > 1 && ((arr[i + 1] && arr[i + 1] !== t) || arr[i + 1] == undefined) ? ` (${multiplicity}x)` : ''}`, knotPosition.x - 20, knotPosition.y - 10);
+            if (this.bSplineDemo.showPointLabels && this.bSplineDemo.knotVector[i] !== 0) {
+                const centerX = knotPosition.x - (multiplicity > 1 ? 60 : 40);
+                const centerY = knotPosition.y + 10;
+                const text = `t=${+(this.bSplineDemo.knotVector[i].toFixed(2))}${multiplicity > 1 && ((arr[i + 1] && arr[i + 1] !== t) || arr[i + 1] == undefined) ? ` (${multiplicity}x)` : ''}`;
+                const textWidth = this.p5.textWidth(text);
+
+                this.p5.push();
+                this.p5.fill(this.knotMarkerLabelBackgroundColor);
+                this.p5.noStroke();
+                this.p5.rectMode(this.p5.CENTER);
+                this.p5.rect(centerX + textWidth / 2, centerY, textWidth + 6, 18);
+                this.p5.pop();
+                renderTextWithSubscript(
+                    this.p5,
+                    text,
+                    centerX, centerY,
+                    this.knotMarkerLabelColor
+                );
+            }
         });
     }
 

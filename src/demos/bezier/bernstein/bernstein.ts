@@ -32,7 +32,7 @@ document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bern
 
 async function createDemo() {
     //override default sketch width for bezier sketch
-    const bezierSketchWidth = (p5: p5) => Math.min(0.55 * p5.windowWidth, 600);
+    const bezierSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.6, 800);
     //setting frame rate to 30 as steady 60 fps are not possible somehow (too many calculations?)
     const bezierSketch = new Sketch(demoContainerId, bezierSketchWidth, undefined, undefined, 30);
     await bezierSketch.create();

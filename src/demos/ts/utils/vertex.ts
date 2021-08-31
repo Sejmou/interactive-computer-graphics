@@ -28,6 +28,8 @@ export class Vertex implements Drawable {
      */
     public positionDisplayMode: PositionDisplayMode = 'relative to canvas';
 
+    private labelBackgroundColor = this.p5.color(255, 255, 255, 190);
+
     constructor(protected p5: p5, public position: p5.Vector, public label: string = '',
         public color: p5.Color = p5.color(255), protected radius: number = 5, public stroke: boolean = true, public showLabel: boolean = true, public showPosition: boolean = false) { }
 
@@ -39,10 +41,22 @@ export class Vertex implements Drawable {
         this.p5.fill(0);
         if (this.showLabel || this.showPosition) {
             const label = `${this.label && this.showLabel ? this.label + ' ' : ''}${this.showPosition ?
-                    this.positionDisplayMode === 'absolute' ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`
-                        : `(${(this.positionRelativeToCanvas.x).toFixed(2)}, ${(this.positionRelativeToCanvas.y).toFixed(2)})` : ''}`;
+                this.positionDisplayMode === 'absolute' ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`
+                    : `(${(this.positionRelativeToCanvas.x).toFixed(2)}, ${(this.positionRelativeToCanvas.y).toFixed(2)})` : ''}`;
+            const labelWidth = this.p5.textWidth(label);
             const labelPosX = this.position.x + 10;
             const labelPosY = this.position.y + 5;
+
+            // draw background box to make label more readable if crossing line
+            if (!this.showPosition) { // TODO: find reason why it looks wrong when using position too
+                this.p5.push();
+                this.p5.fill(this.labelBackgroundColor);
+                this.p5.noStroke();
+                this.p5.rectMode(this.p5.CENTER);
+                this.p5.rect(labelPosX + labelWidth / 4, labelPosY + 2, labelWidth / 2 + 6, 20, 5);
+                this.p5.pop();
+            }
+
             if (label.includes('_')) {//use subscript
                 renderTextWithSubscript(this.p5, label, labelPosX, labelPosY);
             } else {

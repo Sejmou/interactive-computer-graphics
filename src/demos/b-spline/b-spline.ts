@@ -56,7 +56,7 @@ document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', basi
 const demoWrapperContainer = document.getElementById('demo-wrapper')!;
 
 async function createDemo() {
-    const sketch = new Sketch(demoContainerId, p5 => Math.min(p5.windowWidth * 0.6, 800));
+    const sketch = new Sketch(demoContainerId, p5 => Math.min(p5.windowWidth * 0.6, 700));
     await sketch.create();
     const bSplineDemo = sketch.add((p5, containerId) => new BSplineDemo(p5, containerId));
     bSplineDemo.showPointLabels = true;

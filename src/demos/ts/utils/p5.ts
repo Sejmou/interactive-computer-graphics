@@ -85,9 +85,10 @@ export function renderTextWithDifferentColors(p5: p5, x: number, y: number, ...t
  * @param y
  */
 
-export function renderTextWithSubscript(p5: p5, text: string, x: number, y: number) {
+export function renderTextWithSubscript(p5: p5, text: string, x: number, y: number, color?: p5.Color) {
     p5.push();
     p5.textAlign(p5.LEFT, p5.CENTER);
+    if (color) p5.fill(color);
 
     let xOffset = 0;
     let currCharIndex = 0;
