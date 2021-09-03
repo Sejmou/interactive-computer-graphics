@@ -1,9 +1,14 @@
 import './nurbs.scss';
 import { Sketch } from "../ts/utils/sketch";
-import { CurveTypeControls, KnotVectorControls, LineAtTPlotter } from '../ts/demo-material/curves/b-spline-curve';
-import { DemoChange } from '../ts/demo-material/curves/base-curve';
+import { LineAtTPlotter } from "../ts/demo-material/curves/b-spline/line-at-t-plotter";
+import { CurveTypeControls } from "../ts/demo-material/curves/b-spline/curve-type-controls";
+import { KnotVectorControls } from "../ts/demo-material/curves/b-spline/knot-vector-controls";
+import { DemoChange } from '../ts/demo-material/curves/base/demo';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
-import { ControlsForControlPointWeights, NURBSControlPointInfluenceBarVisualization, NURBSDemo, NURBSGraphPlotter } from "../ts/demo-material/curves/nurbs-curve";
+import { NURBSDemo } from "../ts/demo-material/curves/nurbs/demo";
+import { NURBSControlPointInfluenceBarVisualization } from "../ts/demo-material/curves/nurbs/ctrl-pt-influence-vis";
+import { NURBSGraphPlotter } from "../ts/demo-material/curves/nurbs/graph-plotter";
+import { ControlsForControlPointWeights } from "../ts/demo-material/curves/nurbs/ctrl-pt-weight-controls";
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';

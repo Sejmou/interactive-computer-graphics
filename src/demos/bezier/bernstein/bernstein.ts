@@ -1,6 +1,6 @@
 import './bernstein.scss';
 import p5 from "p5";
-import { BezierDemo } from "../../ts/demo-material/curves/bezier-curve";
+import { BezierDemo } from "../../ts/demo-material/curves/bezier/demo";
 import { Sketch } from '../../ts/utils/sketch';
 import { Clickable, Draggable, Drawable, MyObservable, MyObserver, Touchable } from '../../ts/utils/ui';
 import { addTextAsParagraphToElement } from "../../ts/utils/dom-helpers";
@@ -9,7 +9,7 @@ import { binomial } from "../../ts/utils/math";
 import { drawLineXYCoords, p5TouchPoint, renderTextWithSubscript } from "../../ts/utils/p5";
 import colors from '../../../global-styles/color_exports.scss';
 import { DragVertex } from '../../ts/utils/vertex';
-import { DemoChange } from '../../ts/demo-material/curves/base-curve';
+import { DemoChange } from '../../ts/demo-material/curves/base/demo';
 
 
 const demoContainerId = 'demo';

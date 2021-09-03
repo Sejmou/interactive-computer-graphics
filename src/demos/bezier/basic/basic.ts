@@ -1,8 +1,8 @@
 import './basic.scss';
-import { BezierDemo } from "../../ts/demo-material/curves/bezier-curve";
+import { BezierDemo } from "../../ts/demo-material/curves/bezier/demo";
 import { Sketch } from '../../ts/utils/sketch';
 import { MyObserver } from '../../ts/utils/ui';
-import { DemoChange } from '../../ts/demo-material/curves/base-curve';
+import { DemoChange } from '../../ts/demo-material/curves/base/demo';
 import { addTextAsParagraphToElement } from "../../ts/utils/dom-helpers";
 
 
