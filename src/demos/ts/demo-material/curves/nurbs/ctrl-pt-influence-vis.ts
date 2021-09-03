@@ -1,8 +1,5 @@
 import p5 from "p5";
-import { MyObserver } from "../../../utils/ui";
-import { DeBoorControlPointInfluenceBarVisualization } from "../b-spline/ctrl-pt-influence-vis";
-import { DemoChange } from "../base/demo";
-import { ControlPointInfluenceData } from "../base/ctrl-pt-influence-vis";
+import { ControlPointInfluenceBarVisualization, ControlPointInfluenceData } from "../base/ctrl-pt-influence-vis";
 import { NURBSDemo } from "./demo";
 
 
@@ -10,18 +7,13 @@ import { NURBSDemo } from "./demo";
 /**
  * Visualization for the influence of the B-Spline's control points (de boor points) using bars
  */
-export class NURBSControlPointInfluenceBarVisualization extends DeBoorControlPointInfluenceBarVisualization implements MyObserver<DemoChange> {
+export class NURBSControlPointInfluenceBarVisualization extends ControlPointInfluenceBarVisualization {
     private nurbsDemo: NURBSDemo;
 
     constructor(p5: p5, nurbsDemo: NURBSDemo, visible: boolean = true) {
         super(p5, nurbsDemo, visible);
         this.nurbsDemo = nurbsDemo;
         nurbsDemo.subscribe(this);
-    }
-
-    update(data: DemoChange): void {
-        if (data == 'controlPointsChanged' || data == 'degreeChanged' || data == 'knotVectorChanged' || data == 'rangeOfTChanged')
-            this.updateInfluenceDataAndBars();
     }
 
     protected getCurrentControlPointInfluenceDataPoints(): ControlPointInfluenceData[] {

@@ -1,9 +1,9 @@
 import p5 from "p5";
-import { Clickable, Draggable, Drawable, Touchable } from "../../../utils/ui";
+import { Clickable, Draggable, Drawable, MyObserver, Touchable } from "../../../utils/ui";
 import { lightenDarkenP5Color } from "../../../utils/color";
 import { drawLineXYCoords, p5TouchPoint } from "../../../utils/p5";
 import { DragVertex } from "../../../utils/vertex";
-import { CurveDemo } from "./demo";
+import { CurveDemo, DemoChange } from "./demo";
 
 
 
@@ -15,7 +15,7 @@ export interface ControlPointInfluenceData {
     currentCtrlPtInfluence: () => number;
 }
 
-export abstract class ControlPointInfluenceVisualization implements Drawable, Draggable, Touchable, Clickable {
+export abstract class ControlPointInfluenceBarVisualization implements MyObserver<DemoChange>, Drawable, Draggable, Touchable, Clickable {
     private barBorderColor: p5.Color;
     private barHeight = 60;
     private barWidth = 30;
@@ -28,10 +28,15 @@ export abstract class ControlPointInfluenceVisualization implements Drawable, Dr
         this.barBorderColor = p5.color(120);
     }
 
+    update(data: DemoChange): void {
+        if (data == 'controlPointsChanged' || data == 'degreeChanged' || data == 'knotVectorChanged' || data == 'rangeOfTChanged')
+            this.updateInfluenceDataAndBars();
+    }
+
     /**
-     * Call this when reacting to relevant demo changes that require an update of the ctrlPtInfluenceDataPoints
+     * Called when reacting to relevant demo changes that require an update of the ctrlPtInfluenceDataPoints
      */
-    protected updateInfluenceDataAndBars() {
+    private updateInfluenceDataAndBars() {
         this.ctrlPtInfluenceDataPoints = this.getCurrentControlPointInfluenceDataPoints();
         //needed so that positions of influence bars don't reset if new vertices get added
         const ctrlPtsAndOffsetsOfInfluenceBars = this.influenceBars.map(b => ({ ctrlPt: b.assignedControlPoint, offsetX: b.offsetFromCtrlPtPosX, offsetY: b.offsetFromCtrlPtPosY }));
