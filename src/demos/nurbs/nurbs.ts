@@ -14,13 +14,15 @@ const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description';
 
 addTextAsParagraphToElement(descriptionContainerId,
-    String.raw`Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight. Weights can be any given value.<br>
-    Theoretically, even negative weights were possible, but this would result in weird behavior. Note that a weight of 0 essentially means that the control point is "deactivated".
+    `Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight.
+    <br>Weights can be any given value >= 0. Note that a weight of 0 essentially means that the control point is "deactivated".
     <br>
-    <br>Behind the scenes the adaptation of De Boors' algorithm that is used for evaluating/rendering a NURBS curve uses an additional, in this case, third dimension.
-    <br>The curve is then projected back onto the 2D plane. Unlike in the previous demos this process cannot be visualized in a visual manner.
+    <br>Try playing around with the control point weights. Observe how the "magnetic force" of any point becomes stronger/weaker if its weight is increased/decreased.
+    <br>Also have a look at the plot and notice how the basis function for each control point changes if you modify the weights.
+    <br>You can compare each weighted basis function (weight != 1) with the original one (weight = 1) that is displayed with a dotted line.
     <br>
-    <br>Anyway, try playing around with the control point weights. Observe how the "magnetic force" of any point becomes stronger/weaker if its weight is increased/decreased.`
+    <br>NURBS curves are evaluated/rendered with an adaptation of De Boor's Algorithm. It uses an additional, in this case, third dimension.
+    <br>The curve is then projected back onto the 2D plane. Unlike in the previous demos this process cannot be visualized in a visual manner.`
 );
 
 // MathJax.typeset([`#${descriptionContainerId}`]);
