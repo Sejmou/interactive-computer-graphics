@@ -5,6 +5,8 @@ import { DemoChange } from '../base/demo';
 import { CurveDrawingVisualization } from "../base/curve-drawing-vis";
 import { BezierDemo } from './demo';
 
+
+
 export class DeCasteljauVisualization extends CurveDrawingVisualization implements MyObserver<DemoChange> {
     private visible: boolean = false;
 
