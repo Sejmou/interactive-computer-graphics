@@ -1,6 +1,6 @@
 import './b-spline.scss';
 import { Sketch } from "../ts/utils/sketch";
-import { BSplineDemo } from '../ts/demo-material/curves/b-spline/b-spline-curve';
+import { BSplineDemo } from '../ts/demo-material/curves/b-spline/demo';
 import { LineAtTPlotter } from "../ts/demo-material/curves/b-spline/line-at-t-plotter";
 import { BSplineGraphPlotter } from "../ts/demo-material/curves/b-spline/graph-plotter";
 import { CurveTypeControls } from "../ts/demo-material/curves/b-spline/curve-type-controls";

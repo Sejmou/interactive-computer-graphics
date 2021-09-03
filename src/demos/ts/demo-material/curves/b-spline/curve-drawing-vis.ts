@@ -2,7 +2,7 @@ import p5 from 'p5';
 import { Sketch } from '../../../utils/sketch';
 import { drawCircle, drawLineVector, drawSquare, renderTextWithSubscript } from "../../../utils/p5";
 import { CurveDrawingVisualization } from "../base/curve-drawing-vis";
-import { BSplineDemo } from './b-spline-curve';
+import { BSplineDemo } from './demo';
 
 export class BSplineVisualization extends CurveDrawingVisualization {
     private knotMarkerColor: p5.Color = this.p5.color(150);
@@ -52,17 +52,21 @@ export class BSplineVisualization extends CurveDrawingVisualization {
                 this.bSplineDemo.basePointDiameter * 0.75
             );
             if (this.bSplineDemo.showPointLabels && this.bSplineDemo.knotVector[i] !== 0) {
+                //draw labels with semi-transparent white background (rectangle)
                 const centerX = knotPosition.x - (multiplicity > 1 ? 60 : 40);
                 const centerY = knotPosition.y + 10;
                 const text = `t=${+(this.bSplineDemo.knotVector[i].toFixed(2))}${multiplicity > 1 && ((arr[i + 1] && arr[i + 1] !== t) || arr[i + 1] == undefined) ? ` (${multiplicity}x)` : ''}`;
                 const textWidth = this.p5.textWidth(text);
 
+                //draw background
                 this.p5.push();
                 this.p5.fill(this.knotMarkerLabelBackgroundColor);
                 this.p5.noStroke();
                 this.p5.rectMode(this.p5.CENTER);
                 this.p5.rect(centerX + textWidth / 2, centerY, textWidth + 6, 18);
                 this.p5.pop();
+
+                //label
                 renderTextWithSubscript(
                     this.p5,
                     text,

@@ -1,6 +1,6 @@
 import p5 from 'p5';
 import { ControlPointInfluenceData, ControlPointInfluenceBarVisualization } from "../base/ctrl-pt-influence-vis";
-import { BSplineDemo } from './b-spline-curve';
+import { BSplineDemo } from './demo';
 
 
 

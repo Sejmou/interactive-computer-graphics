@@ -2,7 +2,7 @@ import p5 from 'p5';
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
 import { drawLineVector } from "../../../utils/p5";
 import { InfluenceVisualizerForActiveControlPoint } from "../base/active-ctrl-pt-influence-vis";
-import { BSplineDemo } from './b-spline-curve';
+import { BSplineDemo } from './demo';
 
 
 

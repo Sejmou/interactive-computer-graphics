@@ -75,6 +75,7 @@ export class BSplineDemo extends CurveDemo {
         const n = this.controlPoints.length - 1;
         const k = this.degree + 1;
         const m = n + k;
+        
         return this.knotVector.every((knot, i, knots) => knots[i + 1] ? knot <= knots[i + 1] : true) && this.knotVector.length == (m + 1);
     }
 

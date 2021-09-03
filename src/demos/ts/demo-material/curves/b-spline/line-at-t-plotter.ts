@@ -3,7 +3,7 @@ import { Drawable } from '../../../utils/ui';
 import { drawLineXYCoords } from "../../../utils/p5";
 import colors from "../../../../../global-styles/color_exports.scss";
 import { BSplineGraphPlotter } from './graph-plotter';
-import { BSplineDemo } from './b-spline-curve';
+import { BSplineDemo } from './demo';
 
 
 

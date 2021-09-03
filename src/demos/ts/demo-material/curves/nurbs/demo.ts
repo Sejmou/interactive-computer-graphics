@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { DragVertex } from "../../../utils/vertex";
-import { BasisFunctionData, BSplineDemo } from "../b-spline/b-spline-curve";
+import { BasisFunctionData, BSplineDemo } from "../b-spline/demo";
 import { NURBSVisualization } from "./curve-drawing-vis";
 import { NURBSCurve } from "./curve";
 

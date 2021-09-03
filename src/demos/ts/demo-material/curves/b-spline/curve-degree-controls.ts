@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { MyObserver } from '../../../utils/ui';
 import { DemoChange } from '../base/demo';
-import { BSplineDemo } from './b-spline-curve';
+import { BSplineDemo } from './demo';
 
 export class DegreeControls implements MyObserver<DemoChange> {
     private container: p5.Element;

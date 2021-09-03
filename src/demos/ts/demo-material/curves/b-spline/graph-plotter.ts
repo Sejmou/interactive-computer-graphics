@@ -4,7 +4,7 @@ import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/
 import { drawLineXYCoords, renderTextWithSubscript } from "../../../utils/p5";
 import { DragVertex } from '../../../utils/vertex';
 import { DemoChange } from '../base/demo';
-import { BSplineDemo } from './b-spline-curve';
+import { BSplineDemo } from './demo';
 
 
 

@@ -59,6 +59,15 @@ async function createDemo() {
          labelText: 'show point on curve',
          parentContainerId: demoContainerId
     });
+    new BooleanPropCheckbox<NURBSDemo, DemoChange>({
+        objectToSubscribeTo: nurbsDemo,
+        labelText: 'Show influence of hovered/dragged control point via line width',
+        tooltipText: 'The thicker the line, the more influence the control point has. If influence is 0, the line is also not drawn.',
+        getCurrValOfPropToModify: () => nurbsDemo.showInfluenceVisForCurrentlyActiveCtrlPt,
+        onUserChangedCheckboxChecked: newVal => nurbsDemo.showInfluenceVisForCurrentlyActiveCtrlPt = newVal,
+        shouldCheckboxBeVisible: demo => demo.valid,
+        parentContainerId: demoContainerId
+    }); 
 
     //setting FPS to 0 causes sketch to instantiate p5 with noLoop() as last call in setup
     //this causes the sketch to only be redrawn when p5.redraw() is called, improving performance

@@ -1,7 +1,7 @@
 import { MyObserver } from '../../../utils/ui';
 import { clamp } from "../../../utils/math";
 import { DemoChange } from '../base/demo';
-import { BSplineDemo } from './b-spline-curve';
+import { BSplineDemo } from './demo';
 
 
 

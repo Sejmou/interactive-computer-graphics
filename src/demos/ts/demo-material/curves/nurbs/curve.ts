@@ -17,8 +17,15 @@ export class NURBSCurve extends Curve implements MyObserver<DemoChange> {
     }
 
     public draw() {
-        if (!this.demo.valid)
+        if (!this.nurbsDemo.valid) return;
+        
+        if (this.nurbsDemo.shouldDrawInfluenceVisForCurrentlyActiveCtrlPt) {
+            // we want to draw only the influence of the currently active control point
+            // (i.e. only draw segments along the line (parameter t) where it has an influence - the more influence the thicker the line)
+            // the visualizer for the influence of the currently active control point already does that, so don't do anything here
             return;
+        }
+        
         const points = this.evaluationSteps.map(t => this.nurbsDemo.getPointOnCurveUsingDeBoorWithCtrlPtWeights(t));
         if (this.nurbsDemo.degree === 0) {
             points.slice(0, -1).forEach(p => drawCircle(this.p5, p, this.color, this.demo.basePointDiameter * 1.25));

@@ -1,6 +1,6 @@
 import { MyObserver } from '../../../utils/ui';
 import { DemoChange } from '../base/demo';
-import { BSplineDemo, CurveType } from './b-spline-curve';
+import { BSplineDemo, CurveType } from './demo';
 
 
 

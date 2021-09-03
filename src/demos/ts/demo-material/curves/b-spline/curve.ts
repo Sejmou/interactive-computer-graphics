@@ -3,7 +3,7 @@ import { MyObserver } from '../../../utils/ui';
 import { drawCircle, drawLineVector } from "../../../utils/p5";
 import { DemoChange } from '../base/demo';
 import { Curve } from "../base/curve";
-import { BSplineDemo } from './b-spline-curve';
+import { BSplineDemo } from './demo';
 
 export class BSplineCurve extends Curve implements MyObserver<DemoChange> {
     //storing bSplineDemo twice, once as Demo so that code of abstract class works and once as BSplineDemo so that we can use its specific subclass properties
