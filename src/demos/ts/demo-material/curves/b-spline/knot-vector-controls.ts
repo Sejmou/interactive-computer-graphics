@@ -73,6 +73,18 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
                 const min = arr[i - 1] ?? 0;
                 const max = arr[i + 1] ?? Number.MAX_VALUE;
                 const value = clamp(+inputEl.value, min, max);
+
+                //edge case: at max. half of the knotVector entries may be the same number!
+                const knotVectorCopy = this.bSplineDemo.knotVector.slice();
+                knotVectorCopy[i] = value;
+                const knotVectorWithChange = knotVectorCopy;
+                if (moreThanHalfSameNumber(knotVectorWithChange)) {
+                    alert('It is not allowed for more than half of the knot vector to contain the same number!');
+                    //reset value
+                    inputEl.value = this.bSplineDemo.knotVector[i].toString();
+                    return;
+                };
+
                 this.bSplineDemo.scheduleKnotValueChange(i, value);
                 inputEl.value = value.toString();
             };
@@ -112,4 +124,26 @@ export class KnotVectorControls implements MyObserver<DemoChange> {
 
         MathJax.typeset(knotHeadingIds);
     }
+}
+
+
+function moreThanHalfSameNumber(arr: number[]) {
+    //edge case
+    let currentNumber = arr[0];
+    let currentCounterForSameNumber = 1;
+    let maxAmountOfSameNumber = 1;
+    for (let i = 1; i < arr.length; i++) {
+        if (arr[i] !== currentNumber) {
+            currentNumber = arr[i];
+            currentCounterForSameNumber = 1;
+        }
+        else {
+            currentCounterForSameNumber++;
+            if (currentCounterForSameNumber > maxAmountOfSameNumber) {
+                maxAmountOfSameNumber = currentCounterForSameNumber;
+            }
+        }
+    }
+    
+    return maxAmountOfSameNumber > arr.length / 2;
 }
