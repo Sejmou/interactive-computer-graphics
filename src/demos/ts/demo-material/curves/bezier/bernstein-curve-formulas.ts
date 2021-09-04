@@ -1,6 +1,5 @@
 import { Drawable, MyObserver } from '../../../utils/ui';
 import { BernsteinPolynomialVisualization, BernsteinPolynomialChange } from './bernstein-influence-vis';
-import { descriptionParagraph } from '../../../../bezier/bernstein/bernstein';
 
 export class BernsteinCurveFormulas implements Drawable, MyObserver<BernsteinPolynomialChange> {
     private textBoxContainer: HTMLDivElement;
@@ -8,29 +7,29 @@ export class BernsteinCurveFormulas implements Drawable, MyObserver<BernsteinPol
     private bezierCurveEquation: HTMLSpanElement;
     private id: string = 'bernstein-polynomials';
 
-    private set visible(visible: boolean) {
+    private set bernsteinPolynomialsVisible(visible: boolean) {
         this.textBoxContainer.style.display = visible ? 'block' : 'none';
         if (visible) {
             const n = this.bernsteinVis.bernsteinPolynomialDataPoints.length - 1;
             const controlPoints = this.bernsteinVis.bernsteinPolynomialDataPoints.map(d => d.controlPoint);
             this.bezierCurveEquation.innerHTML =
-                String.raw`<br>For the current set of control points the formula is: \[ C(t) = `
+                String.raw`<p>For the current set of control points the Bézier curve formula is: \[ C(t) = `
                 + controlPoints.map((c, i) => String.raw`${i == 0 ? '' : ' + '}b_{${i},${n}} \cdot ${c.label}`).join('')
-                + String.raw` \]`;
+                + String.raw` \]</p>`;
             MathJax.typeset([`#${this.id}`, `#${this.bezierCurveEquation.id}`]);
         }
         else
-            this.bezierCurveEquation.innerText = '';
+            this.bezierCurveEquation.innerHTML = '<p>Add at least two control points to see the Bézier curve equation.</p>';
     }
 
-    constructor(private bernsteinVis: BernsteinPolynomialVisualization, demoContainerId: string) {
+    constructor(private bernsteinVis: BernsteinPolynomialVisualization, curveFormulaContainer: HTMLElement, bernsteinPolynomialFormulasContainer: HTMLElement) {
         this.textBoxContainer = document.createElement('div');
         this.textBoxContainer.id = this.id;
         this.bezierCurveEquation = document.createElement('span');
         this.bezierCurveEquation.id = 'bezier-curve-equation';
 
-        descriptionParagraph?.appendChild(this.bezierCurveEquation);
-        document.getElementById(demoContainerId)?.appendChild(this.textBoxContainer);
+        curveFormulaContainer.appendChild(this.bezierCurveEquation);
+        bernsteinPolynomialFormulasContainer.appendChild(this.textBoxContainer);
 
         this.setupTextContainersForCurrBernsteinPolynomials();
 
@@ -38,6 +37,8 @@ export class BernsteinCurveFormulas implements Drawable, MyObserver<BernsteinPol
     }
 
     draw(): void {
+        // each time the canvas with the curve updates, draw() is called on it, also calling this function -> we have to update the polynomial values as t might have changed
+        // so, we kinda abuse draw() here as we don't draw onto the canvas at all lol
         this.bernsteinVis.bernsteinPolynomialDataPoints.forEach((d, i) => this.containersForBernsteinPolynomialValues[i].innerText = d.bernsteinPolynomialFunction(this.bernsteinVis.t).toFixed(2)
         );
     }
@@ -69,6 +70,6 @@ export class BernsteinCurveFormulas implements Drawable, MyObserver<BernsteinPol
             this.textBoxContainer.appendChild(div);
         });
 
-        this.visible = this.textBoxContainer.innerHTML.length > 0;
+        this.bernsteinPolynomialsVisible = this.textBoxContainer.innerHTML.length > 0;
     }
 }

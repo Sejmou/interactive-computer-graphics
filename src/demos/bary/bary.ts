@@ -4,7 +4,7 @@ import { Sketch } from '../ts/utils/sketch';
 import { addTextAsParagraphToElement } from '../ts/utils/dom-helpers';
 
 const demoContainerId = 'demo';
-const descriptionContainerId = 'demo-description';
+const descriptionContainerId = 'demo-description-container';
 
 addTextAsParagraphToElement(descriptionContainerId, 
     `Move the point on this triangle around and notice how the coefficients of the three points in the equation below change.

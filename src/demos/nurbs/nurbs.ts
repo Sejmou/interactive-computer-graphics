@@ -11,7 +11,7 @@ import { NURBSGraphPlotter } from "../ts/demo-material/curves/nurbs/graph-plotte
 import { ControlsForControlPointWeights } from "../ts/demo-material/curves/nurbs/ctrl-pt-weight-controls";
 
 const demoContainerId = 'demo';
-const descriptionContainerId = 'demo-description';
+const descriptionContainerId = 'demo-description-container';
 
 addTextAsParagraphToElement(descriptionContainerId,
     `Compared to B-Splines, NURBS add yet another tool for shaping the curve: Each control point now has a weight.

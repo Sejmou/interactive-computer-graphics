@@ -8,7 +8,7 @@ import { addTextAsParagraphToElement } from "../../ts/utils/dom-helpers";
 
 
 const demoContainerId = 'demo';
-const descriptionContainerId = 'demo-description';
+const descriptionContainerId = 'demo-description-container';
 addTextAsParagraphToElement(descriptionContainerId, 'Get an intuition for Bézier curves (that are used in many graphics applications for drawing nice, smooth curves) interactively!');
 
 

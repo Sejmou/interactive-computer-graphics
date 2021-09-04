@@ -2,16 +2,14 @@ import { MyObservable, MyObserver } from "./ui";
 
 // ------------------------ DOM helpers ----------------------------
 
-export function addTextAsParagraphToElement(elementId: string, pContent: string): HTMLParagraphElement | undefined {
+export function addTextAsParagraphToElement(elementId: string, pContent: string) {
     const element = document.getElementById(elementId);
     if (element) {
         const p = document.createElement('p');
         p.innerHTML = pContent;
         element.appendChild(p);
-        return p;
     }
-    else
-        console.warn(`HTML element with id ${elementId} not found`);
+    else console.warn(`HTML element with id ${elementId} not found`);
 }
 
 export interface CheckboxConfig<T extends MyObservable<any>> {

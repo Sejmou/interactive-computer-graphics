@@ -9,12 +9,18 @@ import { ControlPointInfluenceVisualization } from '../../ts/demo-material/curve
 
 
 const demoContainerId = 'demo';
-const descriptionContainerId = 'demo-description';
+const descriptionContainerId = 'demo-description-container';
+const descriptionContainer = document.getElementById(descriptionContainerId)!;
 
-export const descriptionParagraph = addTextAsParagraphToElement(descriptionContainerId,
-    String.raw`In math terms, a Bézier curve of degree \(n\) is expressed as \[ C(t) = \sum_{i=0}^{n}{b_{i,n}(t) \cdot P_{i}}. \]
-Each \( b_{i,n}(t) \) is the <b>Bernstein polynomial</b> of \(P_i\), a particular control point of the Bézier curve. \( P_i \) is a 2D vector \( (x, y)\).<br>The Bernstein polynomial represents the 'influence' of the control point on the shape of the Bézier curve for the current value of \(t\).`
-    );
+addTextAsParagraphToElement(descriptionContainerId,
+    String.raw`In math terms, a Bézier curve of degree \(n\) can be expressed as \[ C(t) = \sum_{i=0}^{n}{b_{i,n}(t) \cdot P_{i}}. \]
+Each \( b_{i,n}(t) \) is the <b>Bernstein polynomial</b> of \(P_i\), a particular control point of the Bézier curve. \( P_i \) is a 2D vector \( (x, y)\).
+<br>The Bernstein polynomial represents the 'influence' of the control point on the shape of the Bézier curve for the current value of \(t\).`
+);
+
+addTextAsParagraphToElement(descriptionContainerId,
+    String.raw`The formula for computing each Bernstein polynomial is \[ b_{i,n} = \binom{n}{i} \cdot t^{i} \cdot (1-t)^{n - i} \]`
+);
 
 MathJax.typeset([`#${descriptionContainerId}`]);
 
@@ -28,7 +34,7 @@ document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bern
 
 async function createDemo() {
     //override default sketch width for bezier sketch
-    const bezierSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.6, 800);
+    const bezierSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.6, 700);
     //setting frame rate to 30 as steady 60 fps are not possible somehow (too many calculations?)
     const bezierSketch = new Sketch(demoContainerId, bezierSketchWidth, undefined, undefined, 30);
     await bezierSketch.create();
@@ -44,7 +50,7 @@ async function createDemo() {
     const bernsteinVis = bernsteinVisSketch.add((p5) => new BernsteinPolynomialVisualization(p5, bezierDemo));
 
     //this isn't actually added to the canvas or anything, however it needs to be updated every time t of bezier demo changes -> easiest solution: update on every draw() by adding to sketch
-    bernsteinVisSketch.add(() => new BernsteinCurveFormulas(bernsteinVis, bernsteinGraphContainerId));
+    bernsteinVisSketch.add(() => new BernsteinCurveFormulas(bernsteinVis, descriptionContainer, bernsteinGraphContainer));
 
     bezierSketch.add((p5) => new ControlPointInfluenceVisualization(p5, bernsteinVis));
 

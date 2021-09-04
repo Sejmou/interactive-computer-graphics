@@ -10,7 +10,7 @@ import { DemoChange } from '../ts/demo-material/curves/base/demo';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
 
 const demoContainerId = 'demo';
-const descriptionContainerId = 'demo-description';
+const descriptionContainerId = 'demo-description-container';
 
 addTextAsParagraphToElement(descriptionContainerId,
     String.raw`B-Spline curves are a generalization of Bèzier curves with two very practical properties compared to Bézier curves:<br>
