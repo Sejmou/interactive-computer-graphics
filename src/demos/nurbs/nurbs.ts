@@ -5,10 +5,10 @@ import { KnotVectorControls } from "../ts/demo-material/curves/b-spline/knot-vec
 import { DemoChange } from '../ts/demo-material/curves/base/demo';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
 import { NURBSDemo } from "../ts/demo-material/curves/nurbs/demo";
-import { NURBSControlPointInfluenceBarVisualization } from "../ts/demo-material/curves/nurbs/ctrl-pt-influence-vis";
 import { NURBSGraphPlotter } from "../ts/demo-material/curves/nurbs/graph-plotter";
 import { ControlsForControlPointWeights } from "../ts/demo-material/curves/nurbs/ctrl-pt-weight-controls";
 import { LineAtTPlotter } from '../ts/demo-material/curves/base/line-at-t-plotter';
+import { ControlPointInfluenceBarVisualization } from '../ts/demo-material/curves/base/ctrl-pt-influence-vis';
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description-container';
@@ -42,7 +42,7 @@ async function createDemo() {
     const nurbsDemo = sketch.add((p5, containerId) => new NURBSDemo(p5, containerId));
     nurbsDemo.showPointLabels = true;
 
-    const influenceVis = sketch.add((p5) => new NURBSControlPointInfluenceBarVisualization(p5, nurbsDemo, false));
+    const influenceVis = sketch.add((p5) => new ControlPointInfluenceBarVisualization(p5, nurbsDemo, false));
     new BooleanPropCheckbox<NURBSDemo, DemoChange>({
         objectToSubscribeTo: nurbsDemo,
         labelText: 'show control point influence bars',

@@ -4,10 +4,10 @@ import { BezierDemo } from "../../ts/demo-material/curves/bezier/demo";
 import { Sketch } from '../../ts/utils/sketch';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../../ts/utils/dom-helpers";
 import { BernsteinCurveFormulas } from '../../ts/demo-material/curves/bezier/bernstein-curve-formulas';
-import { BernsteinPolynomialInfluenceBarVisualization } from '../../ts/demo-material/curves/bezier/ctrl-pt-influence-vis';
 import { DemoChange } from '../../ts/demo-material/curves/base/demo';
 import { BernsteinGraphPlotter } from '../../ts/demo-material/curves/bezier/graph-plotter';
 import { LineAtTPlotter } from '../../ts/demo-material/curves/base/line-at-t-plotter';
+import { ControlPointInfluenceBarVisualization } from '../../ts/demo-material/curves/base/ctrl-pt-influence-vis';
 
 
 
@@ -46,7 +46,7 @@ async function createDemo() {
     bezierDemo.showPointLabels = true;
     bezierDemo.showPointPositions = true;
 
-    const bernsteinInfluenceBarVis = bezierSketch.add(p5 => new BernsteinPolynomialInfluenceBarVisualization(p5, bezierDemo, false));
+    const bernsteinInfluenceBarVis = bezierSketch.add(p5 => new ControlPointInfluenceBarVisualization(p5, bezierDemo, false));
     new BooleanPropCheckbox<BezierDemo, DemoChange>({
         objectToSubscribeTo: bezierDemo,
         labelText: 'show control point influence bars',

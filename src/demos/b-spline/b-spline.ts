@@ -4,10 +4,10 @@ import { BSplineDemo } from '../ts/demo-material/curves/b-spline/demo';
 import { BSplineGraphPlotter } from "../ts/demo-material/curves/b-spline/graph-plotter";
 import { CurveTypeControls } from "../ts/demo-material/curves/b-spline/curve-type-controls";
 import { KnotVectorControls } from "../ts/demo-material/curves/b-spline/knot-vector-controls";
-import { DeBoorControlPointInfluenceBarVisualization } from "../ts/demo-material/curves/b-spline/ctrl-pt-influence-vis";
 import { DemoChange } from '../ts/demo-material/curves/base/demo';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
 import { LineAtTPlotter } from '../ts/demo-material/curves/base/line-at-t-plotter';
+import { ControlPointInfluenceBarVisualization } from '../ts/demo-material/curves/base/ctrl-pt-influence-vis';
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description-container';
@@ -66,7 +66,7 @@ async function createDemo() {
     const bSplineDemo = sketch.add((p5, containerId) => new BSplineDemo(p5, containerId));
     bSplineDemo.showPointLabels = true;
 
-    const influenceBarVis = sketch.add((p5) => new DeBoorControlPointInfluenceBarVisualization(p5, bSplineDemo, false));
+    const influenceBarVis = sketch.add((p5) => new ControlPointInfluenceBarVisualization(p5, bSplineDemo, false));
 
     new BooleanPropCheckbox<BSplineDemo, DemoChange>({
         objectToSubscribeTo: bSplineDemo,

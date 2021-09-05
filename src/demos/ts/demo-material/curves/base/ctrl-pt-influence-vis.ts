@@ -12,7 +12,7 @@ export interface ControlPointInfluenceData {
     currentCtrlPtInfluence: () => number;
 }
 
-export abstract class ControlPointInfluenceBarVisualization implements MyObserver<DemoChange>, Drawable, Draggable, Touchable, Clickable {
+export class ControlPointInfluenceBarVisualization implements MyObserver<DemoChange>, Drawable, Draggable, Touchable, Clickable {
     private barBorderColor: p5.Color;
     private barHeight = 60;
     private barWidth = 30;
@@ -46,7 +46,17 @@ export abstract class ControlPointInfluenceBarVisualization implements MyObserve
         });
     }
 
-    protected abstract getCurrentControlPointInfluenceDataPoints(): ControlPointInfluenceData[];
+    protected getCurrentControlPointInfluenceDataPoints(): ControlPointInfluenceData[] {
+        const ctrlPtInfluenceFns = this.demo.ctrlPtInfluenceFunctions;
+
+        //we need this as ctrlPtInfluence has to always be normalized (in interval [0, 1]) for influence bar
+        const sumOfInfluenceFns = ctrlPtInfluenceFns.reduce((f, prev) => (t: number) => f(t) + prev(t), () => 0); 
+
+        return this.demo.ctrlPtInfluenceFunctionData.map(d => ({
+            controlPoint: d.controlPoint,
+            currentCtrlPtInfluence: () => d.influenceFunction(this.demo.t) / sumOfInfluenceFns(this.demo.t)
+        }));
+    };
 
     draw(): void {
         if (!this.demo.valid || !this.visible) return;
