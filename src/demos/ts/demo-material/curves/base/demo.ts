@@ -11,6 +11,17 @@ import { InfluenceVisualizerForActiveControlPoint } from "./active-ctrl-pt-influ
 
 export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged' | 'showCurveDrawingVisualizationChanged' | 'basisFunctionsChanged';
 
+/**
+ * Associates each curve control point with its "influence function" (a term I came up with myself, not used in literature afaik) that defines how much that control point contributes to the shape of the curve for the current value of t
+ * 
+ * "Control point influence functions" may be Bézier polynomials (Bézier), B-Spline basis functions or weighted basis functions (NURBS)
+ */
+export interface ControlPointInfluenceFunctionData {
+    controlPoint: DragVertex;
+    influenceFunction: (t: number) => number;
+    influenceFunctionAsLaTeXString: string;
+}
+
 interface ControlPointColor {
     color: p5.Color,
     taken: boolean
@@ -71,6 +82,19 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     public get controlPoints(): readonly DragVertex[] {
         return this._controlPoints;
     }
+
+    /**
+     * 
+     */
+     public abstract get basisFunctions(): ((t: number) => number)[];
+
+    /**
+     * 
+     */
+    public abstract get basisFunctionsAsLaTeXString(): string[];
+
+    public abstract get basisFunctionData(): ControlPointInfluenceFunctionData[];
+
 
     private _basePointDiameter: number;
     public get basePointDiameter(): number {

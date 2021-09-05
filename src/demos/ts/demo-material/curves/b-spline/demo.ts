@@ -1,12 +1,11 @@
 import p5, { Vector } from 'p5';
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
 import { clamp } from "../../../utils/math";
-import { CurveDemo } from '../base/demo';
+import { ControlPointInfluenceFunctionData, CurveDemo } from '../base/demo';
 import { BSplineCurve } from './curve';
 import { BSplineVisualization } from './curve-drawing-vis';
 import { DegreeControls } from './curve-degree-controls';
 import { VisualizerForCurrentlyActiveBSplineControlPoint } from './active-ctrl-pt-influence-vis';
-
 
 
 export interface BasisFunctionData {
@@ -91,20 +90,21 @@ export class BSplineDemo extends CurveDemo {
         return `${errors.join('\n')}`;
     };
 
-    private _basisFunctionData: BasisFunctionData[][];
+    private _basisFunctionData: ControlPointInfluenceFunctionData[];
+
     /**
      * A spline function of order n is a piecewise polynomial function of degree n-1 in a variable x.
      * B-splines of order n are basis functions for spline functions of the same order defined over the same knots,
      * meaning that all possible spline functions can be built from a linear combination of B-splines, and there is only one unique combination for each spline function.
      */
     public get basisFunctions() {
-        return this._basisFunctionData.map(j => j.map(d => d.basisFunction));
+        return this._basisFunctionData.map(d =>  d.influenceFunction);
     }
     /**
      * The B-Spline curve's basis functions as an array of arrays of LaTeX strings
      */
     public get basisFunctionsAsLaTeXString() {
-        return this._basisFunctionData.map(j => j.map(d => d.basisFunctionAsLaTeXString));
+        return this._basisFunctionData.map(d => d.influenceFunctionAsLaTeXString);
     }
 
     public get basisFunctionData() {
@@ -308,7 +308,7 @@ export class BSplineDemo extends CurveDemo {
         else return createArrayOfEquidistantAscendingNumbersInRange(m + 1, this.tMin, this.tMax);
     }
 
-    private createBasisFunctions() {
+    private createBasisFunctions(): ControlPointInfluenceFunctionData[] {
         //basis functions (also known as N_{i,k}): retrieved using recursive Cox-de Boor formula
         //iterating over control points P_0 to P_i and k (j goes from 0 to k) - bad explanation lol
 
@@ -361,7 +361,11 @@ export class BSplineDemo extends CurveDemo {
         }
 
         //console.log(newBasisFunctionData);
-        return newBasisFunctionData;
+        return newBasisFunctionData[this.degree].map((d, i) => ({
+            controlPoint: this.controlPoints[i],
+            influenceFunction: d.basisFunction,
+            influenceFunctionAsLaTeXString: d.basisFunctionAsLaTeXString
+        }));
     }
 
     /**
@@ -369,13 +373,12 @@ export class BSplineDemo extends CurveDemo {
      * This method is less efficient than De Boor's algorithm as basis funcitons that are guaranteed to be zero are still computed/evaluated
      * Note:  doesn't check if p is valid, also returns garbage if curve is not defined for given t!
      * 
-     * @param p the degree of the basis functions (or simply the degree of the curve)
      * @param t the point where the curve should be evaluated (independent variable of the curve equation formula)
      * @returns point on the curve (or garbage if the curve is not defined at the provided value for t)
      */
-    public getPointOnCurveByEvaluatingBasisFunctions(p: number, t: number) {
+    public getPointOnCurveByEvaluatingBasisFunctions(t: number) {
         return this.controlPoints.map(pt => pt.position).reduce(
-            (prev, curr, i) => Vector.add(prev, Vector.mult(curr, this.basisFunctions[p][i](t))), this.p5.createVector(0, 0)
+            (prev, curr, i) => Vector.add(prev, Vector.mult(curr, this.basisFunctions[i](t))), this.p5.createVector(0, 0)
         );
     }
 

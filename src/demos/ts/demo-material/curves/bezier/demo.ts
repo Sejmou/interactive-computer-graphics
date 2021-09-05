@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { CurveDemo } from '../base/demo';
+import { ControlPointInfluenceFunctionData, CurveDemo } from '../base/demo';
 import { BezierCurve } from './curve';
 import { DeCasteljauVisualization } from './curve-drawing-vis';
 
@@ -10,6 +10,16 @@ export class BezierDemo extends CurveDemo {
     public lastTValueWhereCurveDefined;
     public get valid() {
         return this.controlPoints.length > 0;
+    }
+
+    public get basisFunctions(): ((t: number) => number)[] {
+        throw new Error('Method not implemented.');
+    }
+    public get basisFunctionsAsLaTeXString(): string[] {
+        throw new Error('Method not implemented.');
+    }
+    public get basisFunctionData(): ControlPointInfluenceFunctionData[] {
+        throw new Error('Method not implemented.');
     }
 
     constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {

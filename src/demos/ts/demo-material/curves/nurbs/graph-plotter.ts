@@ -22,19 +22,20 @@ export class NURBSGraphPlotter extends BSplineGraphPlotter {
     protected computeCurves() {
         this.minYValue = 0;
         this.maxYValue = 0;
-        if (!this.nurbsDemo || !this.nurbsDemo.valid)
-            return;
-        //compute bSplineCurves
+        if (!this.nurbsDemo || !this.nurbsDemo.valid) return;
+
+        //compute B-Spline curves
         super.computeCurves();
+
+        //compute NURBS curves
         if (this.xValues.length < 1)
             return;
         const ctrlPts = this.nurbsDemo.controlPoints;
         const weightedBasisFunctions = this.nurbsDemo.weightedBasisFunctions;
-        const degree = this.nurbsDemo.degree;
 
         this.NURBSDataPoints = ctrlPts.map((pt, i) => ({
             yValues: this.xValues.map(x => {
-                const yVal = weightedBasisFunctions[degree][i](x);
+                const yVal = weightedBasisFunctions[i](x);
                 if (yVal < this.minYValue)
                     this.minYValue = yVal;
                 if (yVal > this.maxYValue)

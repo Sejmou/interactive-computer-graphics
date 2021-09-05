@@ -20,7 +20,7 @@ export class DeBoorControlPointInfluenceBarVisualization extends ControlPointInf
         return this.bSplineDemo.controlPoints.map((c, i) => {
             return {
                 controlPoint: c,
-                currentCtrlPtInfluence: () => this.bSplineDemo.basisFunctions[this.bSplineDemo.degree][i](this.bSplineDemo.t)
+                currentCtrlPtInfluence: () => this.bSplineDemo.basisFunctions[i](this.bSplineDemo.t)
             };
         });
     }

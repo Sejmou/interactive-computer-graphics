@@ -19,13 +19,13 @@ export class NURBSDemo extends BSplineDemo {
         this.oldCtrlPts = this.controlPoints.slice();
     }
 
-    private weightedBasisFunctionData: BasisFunctionData[][] = [[]];
+    private weightedBasisFunctionData: BasisFunctionData[] = [];
     public get weightedBasisFunctions() {
-        return this.weightedBasisFunctionData.map(j => j.map(d => d.basisFunction));
+        return this.weightedBasisFunctionData.map(d => d.basisFunction);
     }
 
     public get weightedBasisFunctionsAsLaTeXString() {
-        return this.weightedBasisFunctionData.map(j => j.map(d => d.basisFunctionAsLaTeXString));
+        return this.weightedBasisFunctionData.map(d => d.basisFunctionAsLaTeXString);
     }
 
     private scheduledCtrlPtWeightChanges: { i: number, newVal: number }[] = [];
@@ -70,22 +70,20 @@ export class NURBSDemo extends BSplineDemo {
     }
 
     private updateWeightedBasisFunctions() {
-        let newWeightedBasisFunctionData: BasisFunctionData[][] = [];
-        for (let j = 0; j < this.basisFunctionData.length; j++) {
-            const basisFuncs = this.basisFunctionData[j].map(d => d.basisFunction);
-            const weightedBasisFuncSum = (x: number) => basisFuncs.reduce((prev, curr) => prev + curr(x), 0);
-            newWeightedBasisFunctionData[j] = basisFuncs.map((f, i) => ({
-                basisFunction: (x: number) => (f(x) * this.controlPoints[i].position.z) / weightedBasisFuncSum(x),
-                basisFunctionAsLaTeXString: ''
-            }));
-        }
+        let newWeightedBasisFunctionData: BasisFunctionData[] = [];
+        const basisFuncs = this.basisFunctions;
+        const weightedBasisFuncSum = (x: number) => basisFuncs.reduce((prev, curr) => prev + curr(x), 0);
+        newWeightedBasisFunctionData = basisFuncs.map((f, i) => ({
+            basisFunction: (x: number) => (f(x) * this.controlPoints[i].position.z) / weightedBasisFuncSum(x),
+            basisFunctionAsLaTeXString: 'TODO: add this'
+        }));
 
         this.weightedBasisFunctionData = newWeightedBasisFunctionData;
     }
 
-    getPointOnCurveByEvaluatingWeightedBasisFunctions(p: number, t: number) {
+    getPointOnCurveByEvaluatingWeightedBasisFunctions(t: number) {
         return this.controlPoints.map(pt => pt.position).reduce(
-            (prev, curr, i) => p5.Vector.add(prev, p5.Vector.mult(curr, this.weightedBasisFunctions[p][i](t))), this.p5.createVector(0, 0)
+            (prev, curr, i) => p5.Vector.add(prev, p5.Vector.mult(curr, this.weightedBasisFunctions[i](t))), this.p5.createVector(0, 0)
         );
     }
 
