@@ -1,13 +1,13 @@
 import './b-spline.scss';
 import { Sketch } from "../ts/utils/sketch";
 import { BSplineDemo } from '../ts/demo-material/curves/b-spline/demo';
-import { LineAtTPlotter } from "../ts/demo-material/curves/b-spline/line-at-t-plotter";
 import { BSplineGraphPlotter } from "../ts/demo-material/curves/b-spline/graph-plotter";
 import { CurveTypeControls } from "../ts/demo-material/curves/b-spline/curve-type-controls";
 import { KnotVectorControls } from "../ts/demo-material/curves/b-spline/knot-vector-controls";
 import { DeBoorControlPointInfluenceBarVisualization } from "../ts/demo-material/curves/b-spline/ctrl-pt-influence-vis";
 import { DemoChange } from '../ts/demo-material/curves/base/demo';
 import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
+import { LineAtTPlotter } from '../ts/demo-material/curves/base/line-at-t-plotter';
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description-container';
