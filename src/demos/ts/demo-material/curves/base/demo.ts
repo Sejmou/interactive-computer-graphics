@@ -368,8 +368,8 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this.notifyObservers('controlPointsChanged');
     }
 
-    //overriden by subclasses, if necessary
-    protected additionalCtrlPtAmountChangeHandling() { }
+    //implemented by subclasses, if necessary
+    protected abstract additionalCtrlPtAmountChangeHandling(): void;
 
 
     //Control point color picking

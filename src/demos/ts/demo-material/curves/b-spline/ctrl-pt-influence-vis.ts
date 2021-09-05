@@ -13,7 +13,6 @@ export class DeBoorControlPointInfluenceBarVisualization extends ControlPointInf
     constructor(p5: p5, bSplineDemo: BSplineDemo, visible: boolean = true) {
         super(p5, bSplineDemo, visible);
         this.bSplineDemo = bSplineDemo;
-        bSplineDemo.subscribe(this);
     }
 
     protected getCurrentControlPointInfluenceDataPoints(): ControlPointInfluenceData[] {

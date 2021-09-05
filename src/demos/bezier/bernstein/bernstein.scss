@@ -1,5 +1,17 @@
 @import "../../demo.scss";
 
+//this is a hack to render two canvases on top of each other (one renders the graphs and is rarely updated,
+//the other renders the line at the current value of t and gets updated every 60 frames)
+#bernstein-graph-container {
+    position: relative;
+
+    canvas:not(:first-child) {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}
+
 #bernstein-polynomials {
     border: 1px solid grey;
     border-radius: 2px;

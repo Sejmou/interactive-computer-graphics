@@ -2,10 +2,13 @@ import './bernstein.scss';
 import p5 from "p5";
 import { BezierDemo } from "../../ts/demo-material/curves/bezier/demo";
 import { Sketch } from '../../ts/utils/sketch';
-import { addTextAsParagraphToElement } from "../../ts/utils/dom-helpers";
-import { BernsteinPolynomialVisualization } from '../../ts/demo-material/curves/bezier/bernstein-influence-vis';
+import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../../ts/utils/dom-helpers";
 import { BernsteinCurveFormulas } from '../../ts/demo-material/curves/bezier/bernstein-curve-formulas';
 import { BernsteinPolynomialInfluenceBarVisualization } from '../../ts/demo-material/curves/bezier/ctrl-pt-influence-vis';
+import { DemoChange } from '../../ts/demo-material/curves/base/demo';
+import { BernsteinGraphPlotter } from '../../ts/demo-material/curves/bezier/graph-plotter';
+import { LineAtTPlotter } from '../../ts/demo-material/curves/bezier/line-at-t-plotter';
+
 
 
 const demoContainerId = 'demo';
@@ -26,7 +29,7 @@ MathJax.typeset([`#${descriptionContainerId}`]);
 
 //add container for bernstein polynomial visualization
 const bernsteinGraphContainer = document.createElement('div');
-const bernsteinGraphContainerId = 'bernstein-visualization';
+const bernsteinGraphContainerId = 'bernstein-graph-container';
 bernsteinGraphContainer.id = bernsteinGraphContainerId;
 bernsteinGraphContainer.className = 'flex-column center-cross-axis';
 document.getElementById(demoContainerId)!.insertAdjacentElement('afterend', bernsteinGraphContainer);
@@ -43,16 +46,37 @@ async function createDemo() {
     bezierDemo.showPointLabels = true;
     bezierDemo.showPointPositions = true;
 
+    const bernsteinInfluenceBarVis = bezierSketch.add(p5 => new BernsteinPolynomialInfluenceBarVisualization(p5, bezierDemo, false));
+    new BooleanPropCheckbox<BezierDemo, DemoChange>({
+        objectToSubscribeTo: bezierDemo,
+        labelText: 'show control point influence bars',
+        getCurrValOfPropToModify: () => bernsteinInfluenceBarVis.visible,
+        onUserChangedCheckboxChecked: newVal => {
+            bernsteinInfluenceBarVis.visible = newVal;
+            console.log(newVal);
+            console.log(bernsteinInfluenceBarVis.visible);
+        },
+        shouldCheckboxBeVisible: demo => demo.valid,
+        parentContainerId: demoContainerId
+    });
+
     const bernsteinVisSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.35, 400);
     const bernsteinVisSketchHeight = bernsteinVisSketchWidth;
-    const bernsteinVisSketch = new Sketch(bernsteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight, () => undefined, 30);
-    await bernsteinVisSketch.create();
-    const bernsteinVis = bernsteinVisSketch.add((p5) => new BernsteinPolynomialVisualization(p5, bezierDemo));
+    const bernsteinGraphSketch = new Sketch(bernsteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight, () => undefined, 0);
+    await bernsteinGraphSketch.create();
 
-    //this isn't actually added to the canvas or anything, however it needs to be updated every time t of bezier demo changes -> easiest solution: update on every draw() by adding to sketch
-    bernsteinVisSketch.add(() => new BernsteinCurveFormulas(bernsteinVis, descriptionContainer, bernsteinGraphContainer));
+    const bernsteinGraphPlotter = bernsteinGraphSketch.add((p5) => new BernsteinGraphPlotter(p5, bezierDemo));
+    //if the hover/drag state of a control point of the BezierDemo changes, the graph has to be redrawn (hovered functions are drawn bold)
+    bezierDemo.onHoverChange = () => bernsteinGraphPlotter.redraw();
+    bezierDemo.onDraggingChange = () => bernsteinGraphPlotter.redraw();
 
-    bezierSketch.add((p5) => new BernsteinPolynomialInfluenceBarVisualization(p5, bernsteinVis));
+    //drawing line for current value of t on top of plot's canvas (onto new transparent canvas that is positioned above the graph plot's canvas)
+    const lineForTSketch = new Sketch(bernsteinGraphContainerId, bernsteinVisSketchWidth, bernsteinVisSketchHeight, () => undefined);
+    await lineForTSketch.create();
+    lineForTSketch.add(p5 => new LineAtTPlotter(p5, bezierDemo, bernsteinGraphPlotter));
+
+    //this class instance isn't actually added to the canvas or anything, however it needs to be updated every time t of bezier demo changes -> easiest solution: update on every draw() by adding to sketch
+    bezierSketch.add(() => new BernsteinCurveFormulas(bezierDemo, descriptionContainer, bernsteinGraphContainer));
 
     document.querySelector('#cover')?.remove();
 }

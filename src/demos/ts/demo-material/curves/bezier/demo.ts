@@ -1,4 +1,5 @@
 import p5 from 'p5';
+import { binomial } from '../../../utils/math';
 import { ControlPointInfluenceFunctionData, CurveDemo } from '../base/demo';
 import { BezierCurve } from './curve';
 import { DeCasteljauVisualization } from './curve-drawing-vis';
@@ -12,14 +13,43 @@ export class BezierDemo extends CurveDemo {
         return this.controlPoints.length > 0;
     }
 
+    private bernsteinPolynomialData: ControlPointInfluenceFunctionData[];
+
     public get ctrlPtInfluenceFunctions(): ((t: number) => number)[] {
-        throw new Error('Method not implemented.');
+        return this.bernsteinPolynomialData.map(d => d.influenceFunction);
     }
     public get ctrlPtInfluenceFuncsAsLaTeXStrings(): string[] {
-        throw new Error('Method not implemented.');
+        return this.bernsteinPolynomialData.map(d => d.influenceFunctionAsLaTeXString);
     }
     public get ctrlPtInfluenceFunctionData(): ControlPointInfluenceFunctionData[] {
-        throw new Error('Method not implemented.');
+        return this.bernsteinPolynomialData;
+    }
+
+    protected additionalCtrlPtAmountChangeHandling(): void {
+        this.updateBernsteinPolynomials();
+    }
+
+    private updateBernsteinPolynomials() {
+        if (this.controlPoints.length < 2) {
+            this.bernsteinPolynomialData = [];
+            this.notifyObservers('ctrlPtInfluenceFunctionsChanged');
+            return;
+        }
+
+        const ctrlPts = this.controlPoints;
+        const n = ctrlPts.length - 1;
+        
+        this.bernsteinPolynomialData = ctrlPts.map((pt, i) => {
+            const bernsteinPolynomialFunction = (t: number) => binomial(n, i) * Math.pow(t, i) * Math.pow((1 - t), n - i);
+            const bernsteinPolynomialFunctionAsLaTeXString = String.raw`\( b_{${i},${n}} = \binom{${n}}{${i}} \cdot t^{${i}} \cdot (1-t)^{${n - i}} = \)`;
+
+            return {
+                controlPoint: pt,
+                influenceFunction: bernsteinPolynomialFunction,
+                influenceFunctionAsLaTeXString: bernsteinPolynomialFunctionAsLaTeXString
+            };
+        });
+        this.notifyObservers('ctrlPtInfluenceFunctionsChanged');
     }
 
     constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
@@ -31,6 +61,7 @@ export class BezierDemo extends CurveDemo {
 
         this.firstTValueWhereCurveDefined = this.tMin;
         this.lastTValueWhereCurveDefined = this.tMax;
+        this.bernsteinPolynomialData = [];
 
         this.setCurve(new BezierCurve(this.p5, this));
         this.setCurveDrawingVisualization(new DeCasteljauVisualization(this.p5, this));

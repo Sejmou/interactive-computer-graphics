@@ -23,6 +23,7 @@ export abstract class ControlPointInfluenceBarVisualization implements MyObserve
 
     constructor(private p5: p5, private demo: CurveDemo, public visible: boolean = true) {
         this.barBorderColor = p5.color(120);
+        this.demo.subscribe(this);
     }
 
     update(data: DemoChange): void {
@@ -48,8 +49,8 @@ export abstract class ControlPointInfluenceBarVisualization implements MyObserve
     protected abstract getCurrentControlPointInfluenceDataPoints(): ControlPointInfluenceData[];
 
     draw(): void {
-        if (!this.demo.valid || !this.visible)
-            return;
+        if (!this.demo.valid || !this.visible) return;
+        console.log(this.visible);
         this.influenceBars.forEach(b => b.draw());
         if (this.influenceBars.length > 1)
             this.drawSummaryBar();
