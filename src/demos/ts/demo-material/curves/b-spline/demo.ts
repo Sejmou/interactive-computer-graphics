@@ -266,6 +266,7 @@ export class BSplineDemo extends CurveDemo {
         this.updateBasisFunctions();
         this.scheduledKnotValueChanges = [];
         this.notifyObservers('knotVectorChanged');
+        this.notifyObservers('basisFunctionsChanged');
     }
 
     private updateKnotVector() {

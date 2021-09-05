@@ -9,7 +9,7 @@ import { Curve } from "./curve";
 import { CurveDrawingVisualization } from "./curve-drawing-vis";
 import { InfluenceVisualizerForActiveControlPoint } from "./active-ctrl-pt-influence-vis";
 
-export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged' | 'showCurveDrawingVisualizationChanged';
+export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged' | 'showCurveDrawingVisualizationChanged' | 'basisFunctionsChanged';
 
 interface ControlPointColor {
     color: p5.Color,

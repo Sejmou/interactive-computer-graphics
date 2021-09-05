@@ -7,9 +7,6 @@ import { CurveDemo, DemoChange } from "./demo";
 
 
 
-
-
-
 export interface ControlPointInfluenceData {
     controlPoint: DragVertex;
     currentCtrlPtInfluence: () => number;
@@ -29,8 +26,7 @@ export abstract class ControlPointInfluenceBarVisualization implements MyObserve
     }
 
     update(data: DemoChange): void {
-        if (data == 'controlPointsChanged' || data == 'degreeChanged' || data == 'knotVectorChanged' || data == 'rangeOfTChanged')
-            this.updateInfluenceDataAndBars();
+        if (data == 'basisFunctionsChanged') this.updateInfluenceDataAndBars();
     }
 
     /**
