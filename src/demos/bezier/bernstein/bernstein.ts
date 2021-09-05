@@ -5,7 +5,7 @@ import { Sketch } from '../../ts/utils/sketch';
 import { addTextAsParagraphToElement } from "../../ts/utils/dom-helpers";
 import { BernsteinPolynomialVisualization } from '../../ts/demo-material/curves/bezier/bernstein-influence-vis';
 import { BernsteinCurveFormulas } from '../../ts/demo-material/curves/bezier/bernstein-curve-formulas';
-import { ControlPointInfluenceVisualization } from '../../ts/demo-material/curves/bezier/ctrl-pt-influence-vis';
+import { BernsteinPolynomialInfluenceBarVisualization } from '../../ts/demo-material/curves/bezier/ctrl-pt-influence-vis';
 
 
 const demoContainerId = 'demo';
@@ -52,7 +52,7 @@ async function createDemo() {
     //this isn't actually added to the canvas or anything, however it needs to be updated every time t of bezier demo changes -> easiest solution: update on every draw() by adding to sketch
     bernsteinVisSketch.add(() => new BernsteinCurveFormulas(bernsteinVis, descriptionContainer, bernsteinGraphContainer));
 
-    bezierSketch.add((p5) => new ControlPointInfluenceVisualization(p5, bernsteinVis));
+    bezierSketch.add((p5) => new BernsteinPolynomialInfluenceBarVisualization(p5, bernsteinVis));
 
     document.querySelector('#cover')?.remove();
 }

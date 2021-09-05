@@ -6,7 +6,7 @@ import { BernsteinPolynomialVisualization, BernsteinPolynomialChange, BernsteinP
 
 
 
-export class ControlPointInfluenceVisualization implements Drawable, MyObserver<BernsteinPolynomialChange>, Draggable, Touchable, Clickable {
+export class BernsteinPolynomialInfluenceBarVisualization implements Drawable, MyObserver<BernsteinPolynomialChange>, Draggable, Touchable, Clickable {
     private barBorderColor: p5.Color;
     private barHeight = 60;
     private barWidth = 30;
