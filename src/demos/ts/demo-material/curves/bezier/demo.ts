@@ -10,7 +10,7 @@ export class BezierDemo extends CurveDemo {
     public firstTValueWhereCurveDefined;
     public lastTValueWhereCurveDefined;
     public get valid() {
-        return this.controlPoints.length > 0;
+        return this.controlPoints.length > 1;
     }
 
     private bernsteinPolynomialData: ControlPointInfluenceFunctionData[];
@@ -23,6 +23,10 @@ export class BezierDemo extends CurveDemo {
     }
     public get ctrlPtInfluenceFunctionData(): ControlPointInfluenceFunctionData[] {
         return this.bernsteinPolynomialData;
+    }
+
+    get curveInvalidMessage() {
+        return '';
     }
 
     protected additionalCtrlPtAmountChangeHandling(): void {

@@ -7,7 +7,7 @@ import { BernsteinCurveFormulas } from '../../ts/demo-material/curves/bezier/ber
 import { BernsteinPolynomialInfluenceBarVisualization } from '../../ts/demo-material/curves/bezier/ctrl-pt-influence-vis';
 import { DemoChange } from '../../ts/demo-material/curves/base/demo';
 import { BernsteinGraphPlotter } from '../../ts/demo-material/curves/bezier/graph-plotter';
-import { LineAtTPlotter } from '../../ts/demo-material/curves/bezier/line-at-t-plotter';
+import { LineAtTPlotter } from '../../ts/demo-material/curves/base/line-at-t-plotter';
 
 
 

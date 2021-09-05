@@ -50,7 +50,6 @@ export abstract class ControlPointInfluenceBarVisualization implements MyObserve
 
     draw(): void {
         if (!this.demo.valid || !this.visible) return;
-        console.log(this.visible);
         this.influenceBars.forEach(b => b.draw());
         if (this.influenceBars.length > 1)
             this.drawSummaryBar();
