@@ -26,7 +26,7 @@ export abstract class ControlPointInfluenceBarVisualization implements MyObserve
     }
 
     update(data: DemoChange): void {
-        if (data == 'basisFunctionsChanged') this.updateInfluenceDataAndBars();
+        if (data == 'ctrlPtInfluenceFunctionsChanged') this.updateInfluenceDataAndBars();
     }
 
     /**

@@ -17,12 +17,13 @@ export class NURBSControlPointInfluenceBarVisualization extends ControlPointInfl
     }
 
     protected getCurrentControlPointInfluenceDataPoints(): ControlPointInfluenceData[] {
-        const getSumOfWeightedBasisFunctions = (t: number) => this.nurbsDemo.controlPoints.map((_, i) => this.nurbsDemo.weightedBasisFunctions[i](t)).reduce((prev, curr) => prev + curr, 0);
+        //needed as value for ctrlPtInfluence has to be in range [0, 1]
+        const getSumOfWeightedBasisFunctions = (t: number) => this.nurbsDemo.controlPoints.map((_, i) => this.nurbsDemo.ctrlPtInfluenceFunctions[i](t)).reduce((prev, curr) => prev + curr, 0);
 
         return this.nurbsDemo.controlPoints.map((c, i) => {
             return {
                 controlPoint: c,
-                currentCtrlPtInfluence: () => this.nurbsDemo.weightedBasisFunctions[i](this.nurbsDemo.t) / getSumOfWeightedBasisFunctions(this.nurbsDemo.t)
+                currentCtrlPtInfluence: () => this.nurbsDemo.ctrlPtInfluenceFunctions[i](this.nurbsDemo.t) / getSumOfWeightedBasisFunctions(this.nurbsDemo.t)
             };
         });
     }

@@ -31,7 +31,7 @@ export class NURBSGraphPlotter extends BSplineGraphPlotter {
         if (this.xValues.length < 1)
             return;
         const ctrlPts = this.nurbsDemo.controlPoints;
-        const weightedBasisFunctions = this.nurbsDemo.weightedBasisFunctions;
+        const weightedBasisFunctions = this.nurbsDemo.ctrlPtInfluenceFunctions;
 
         this.NURBSDataPoints = ctrlPts.map((pt, i) => ({
             yValues: this.xValues.map(x => {

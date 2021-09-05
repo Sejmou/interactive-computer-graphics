@@ -12,13 +12,13 @@ export class BezierDemo extends CurveDemo {
         return this.controlPoints.length > 0;
     }
 
-    public get basisFunctions(): ((t: number) => number)[] {
+    public get ctrlPtInfluenceFunctions(): ((t: number) => number)[] {
         throw new Error('Method not implemented.');
     }
-    public get basisFunctionsAsLaTeXString(): string[] {
+    public get ctrlPtInfluenceFuncsAsLaTeXStrings(): string[] {
         throw new Error('Method not implemented.');
     }
-    public get basisFunctionData(): ControlPointInfluenceFunctionData[] {
+    public get ctrlPtInfluenceFunctionData(): ControlPointInfluenceFunctionData[] {
         throw new Error('Method not implemented.');
     }
 

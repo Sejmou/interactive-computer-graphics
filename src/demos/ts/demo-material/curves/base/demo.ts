@@ -9,7 +9,7 @@ import { Curve } from "./curve";
 import { CurveDrawingVisualization } from "./curve-drawing-vis";
 import { InfluenceVisualizerForActiveControlPoint } from "./active-ctrl-pt-influence-vis";
 
-export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged' | 'showCurveDrawingVisualizationChanged' | 'basisFunctionsChanged';
+export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged' | 'showCurveDrawingVisualizationChanged' | 'ctrlPtInfluenceFunctionsChanged';
 
 /**
  * Associates each curve control point with its "influence function" (a term I came up with myself, not used in literature afaik) that defines how much that control point contributes to the shape of the curve for the current value of t
@@ -86,14 +86,14 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     /**
      * 
      */
-     public abstract get basisFunctions(): ((t: number) => number)[];
+     public abstract get ctrlPtInfluenceFunctions(): ((t: number) => number)[];
 
     /**
      * 
      */
-    public abstract get basisFunctionsAsLaTeXString(): string[];
+    public abstract get ctrlPtInfluenceFuncsAsLaTeXStrings(): string[];
 
-    public abstract get basisFunctionData(): ControlPointInfluenceFunctionData[];
+    public abstract get ctrlPtInfluenceFunctionData(): ControlPointInfluenceFunctionData[];
 
 
     private _basePointDiameter: number;

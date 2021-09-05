@@ -26,7 +26,7 @@ export class VisualizerForCurrentlyActiveBSplineControlPoint extends InfluenceVi
         const i = activeCtrlPtIndex;
         const activeCtrlPt = ctrlPts[i];
         const p = this.bSplineDemo.degree;
-        const basisFunction = this.bSplineDemo.basisFunctions[activeCtrlPtIndex];
+        const basisFunction = this.bSplineDemo.ctrlPtInfluenceFunctions[activeCtrlPtIndex];
         const knotVector = this.bSplineDemo.knotVector;
 
         //from https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/B-spline/bspline-basis.html we know:

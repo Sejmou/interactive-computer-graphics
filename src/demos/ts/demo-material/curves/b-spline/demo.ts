@@ -97,19 +97,23 @@ export class BSplineDemo extends CurveDemo {
      * B-splines of order n are basis functions for spline functions of the same order defined over the same knots,
      * meaning that all possible spline functions can be built from a linear combination of B-splines, and there is only one unique combination for each spline function.
      */
-    public get basisFunctions() {
+    public get ctrlPtInfluenceFunctions() {
         return this._basisFunctionData.map(d =>  d.influenceFunction);
     }
     /**
      * The B-Spline curve's basis functions as an array of arrays of LaTeX strings
      */
-    public get basisFunctionsAsLaTeXString() {
+    public get ctrlPtInfluenceFuncsAsLaTeXStrings() {
         return this._basisFunctionData.map(d => d.influenceFunctionAsLaTeXString);
     }
 
-    public get basisFunctionData() {
+    public get ctrlPtInfluenceFunctionData() {
         return this._basisFunctionData;
     }
+
+    protected get basisFunctions() {
+        return this._basisFunctionData.map(d =>  d.influenceFunction);
+    } 
 
     /**
      * Let *p* the *degree* of the B-spline curve. For a clamped B-spline curve, the first and *p* and last *p* control points are the same (have the same position).
@@ -266,7 +270,7 @@ export class BSplineDemo extends CurveDemo {
         this.updateBasisFunctions();
         this.scheduledKnotValueChanges = [];
         this.notifyObservers('knotVectorChanged');
-        this.notifyObservers('basisFunctionsChanged');
+        this.notifyObservers('ctrlPtInfluenceFunctionsChanged');
     }
 
     private updateKnotVector() {
@@ -378,7 +382,7 @@ export class BSplineDemo extends CurveDemo {
      */
     public getPointOnCurveByEvaluatingBasisFunctions(t: number) {
         return this.controlPoints.map(pt => pt.position).reduce(
-            (prev, curr, i) => Vector.add(prev, Vector.mult(curr, this.basisFunctions[i](t))), this.p5.createVector(0, 0)
+            (prev, curr, i) => Vector.add(prev, Vector.mult(curr, this.ctrlPtInfluenceFunctions[i](t))), this.p5.createVector(0, 0)
         );
     }
 

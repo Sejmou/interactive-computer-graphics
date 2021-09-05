@@ -94,7 +94,7 @@ export class BSplineGraphPlotter implements Drawable, MyObserver<DemoChange>, Re
             this.bSplineDataPoints = [];
             return;
         }
-        const basisFunctions = this.bSplineDemo.basisFunctions;
+        const basisFunctions = this.bSplineDemo.ctrlPtInfluenceFunctions;
 
         this.xValues = createArrayOfEquidistantAscendingNumbersInRange(this.noOfStepsXAxis, this.bSplineDemo.tMin, this.bSplineDemo.tMax);
 
