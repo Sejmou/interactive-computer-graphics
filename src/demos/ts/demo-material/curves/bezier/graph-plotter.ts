@@ -1,4 +1,5 @@
 import { drawLineXYCoords } from "../../../utils/p5";
+import { DemoChange } from "../base/demo";
 import { CtrlPtInfluenceFuncGraphPlotter } from "../base/graph-plotter";
 
 
@@ -33,5 +34,4 @@ export class BernsteinGraphPlotter extends CtrlPtInfluenceFuncGraphPlotter {
         this.p5.text('1', this.axisRulerOffsetFromBorder + steps * rulerMarkerIncrementX, this.p5.height - this.axisRulerOffsetFromBorder / 2);
         this.p5.pop();
     }
-
 }

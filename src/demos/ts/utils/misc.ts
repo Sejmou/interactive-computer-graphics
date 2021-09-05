@@ -61,3 +61,19 @@ export function findLastIndex<T>(array: Array<T>, predicate: (value: T, index: n
     }
     return -1;
 }
+
+/**
+ * Finds max number in a numbers array
+ * 
+ * Wrote this because Math.max(...numbers) didn't work for whatever weird reason...
+ * 
+ * @param numbers 
+ * @returns 
+ */
+export function findMaxNumber(numbers: number[]) {
+    let currMax = Number.MIN_VALUE;
+    numbers.forEach(num => {
+        if (num > currMax) currMax = num;
+    });
+    return currMax;
+}

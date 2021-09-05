@@ -1,6 +1,6 @@
 import p5 from 'p5';
 import { Drawable, MyObserver, Responsive } from '../../../utils/ui';
-import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
+import { createArrayOfEquidistantAscendingNumbersInRange, findMaxNumber } from "../../../utils/misc";
 import { drawLineXYCoords, renderTextWithSubscript } from "../../../utils/p5";
 import { DragVertex } from '../../../utils/vertex';
 import { CurveDemo, DemoChange } from './demo';
@@ -22,7 +22,6 @@ export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, MyObs
     protected noOfStepsXAxis = 700;
     protected xValues: number[] = [];
 
-    // set this to the range of ctrlPt influence function values
     protected minYValue = 0;
     protected maxYValue = 1;
 
@@ -54,7 +53,11 @@ export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, MyObs
         return this._axisRulerAndLabelColor;
     };
     private _axisRulerAndLabelColor: p5.Color;
-    private rulerMarkerSize: number;
+
+    protected get rulerMarkerSize() {
+        return this._rulerMarkerSize;
+    };
+    private _rulerMarkerSize: number;
 
     private curveDomainBorderColor: p5.Color;
 
@@ -62,7 +65,7 @@ export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, MyObs
 
     constructor(protected p5: p5, private demo: CurveDemo) {
         this._axisRulerOffsetFromBorder = this.p5.width / 15;
-        this.rulerMarkerSize = this._axisRulerOffsetFromBorder * 0.075;
+        this._rulerMarkerSize = this._axisRulerOffsetFromBorder * 0.075;
 
         this._distMinToMaxXAxis = this.p5.width - this._axisRulerOffsetFromBorder * 1.5;
         this._distMinToMaxYAxis = this.p5.height - this._axisRulerOffsetFromBorder * 1.5;
@@ -76,7 +79,7 @@ export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, MyObs
 
     canvasResized(): void {
         this._axisRulerOffsetFromBorder = this.p5.width / 15;
-        this.rulerMarkerSize = this._axisRulerOffsetFromBorder * 0.075;
+        this._rulerMarkerSize = this._axisRulerOffsetFromBorder * 0.075;
 
         this._distMinToMaxXAxis = this.p5.width - this._axisRulerOffsetFromBorder * 1.5;
         this._distMinToMaxYAxis = this.p5.height - this._axisRulerOffsetFromBorder * 1.5;
@@ -108,10 +111,22 @@ export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, MyObs
 
         this.xValues = createArrayOfEquidistantAscendingNumbersInRange(this.noOfStepsXAxis, this.demo.tMin, this.demo.tMax);
 
-        this.dataPoints = ctrlPtInfluenceFnData.map((d, i) => ({
-            yValues: this.xValues.map(x => d.influenceFunction(x)),
-            controlPoint: d.controlPoint
-        }));
+        let maxYValues: number[] = [];
+
+        this.dataPoints = ctrlPtInfluenceFnData.map(d => {
+            const yValues = this.xValues.map(x => d.influenceFunction(x));
+            //maxYValues.push(Math.max(...yValues));// this doesn't work, don't know why - in browser console it's fine...
+            maxYValues.push(findMaxNumber(yValues));
+            console.log('max Y', findMaxNumber(yValues));
+
+            return {
+                yValues: this.xValues.map(x => d.influenceFunction(x)),
+                controlPoint: d.controlPoint
+            }
+        });
+
+        this.maxYValue = findMaxNumber(maxYValues);
+        console.log(findMaxNumber(maxYValues))
     };
 
     draw(): void {
@@ -157,13 +172,13 @@ export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, MyObs
         this.drawRulerMarkersAndLabelsYAxis();
     }
 
-    protected abstract  drawRulerMarkersAndLabelsXAxis(): void;
+    protected abstract drawRulerMarkersAndLabelsXAxis(): void;
 
     private drawRulerMarkersAndLabelsYAxis() {
         const steps = 10;
         const rulerMarkerIncrementY = this._distMinToMaxYAxis / steps;
         for (let i = 1; i <= steps; i++) {
-            drawLineXYCoords(this.p5, this._axisRulerOffsetFromBorder - (i === steps / 2 || i === steps ? this.rulerMarkerSize * 2 : this.rulerMarkerSize), this.p5.height - this._axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
+            drawLineXYCoords(this.p5, this._axisRulerOffsetFromBorder - (i === steps / 2 || i === steps ? this._rulerMarkerSize * 2 : this._rulerMarkerSize), this.p5.height - this._axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
                 this._axisRulerOffsetFromBorder, this.p5.height - this._axisRulerOffsetFromBorder - i * rulerMarkerIncrementY,
                 this._axisRulerAndLabelColor, 1);
         }

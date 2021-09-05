@@ -95,6 +95,7 @@ export class NURBSDemo extends BSplineDemo {
             influenceFunction: d.basisFunction,
             influenceFunctionAsLaTeXString: d.basisFunctionAsLaTeXString
         }));
+        this.notifyObservers('ctrlPtInfluenceFunctionsChanged');
     }
 
     getPointOnCurveByEvaluatingWeightedBasisFunctions(t: number) {

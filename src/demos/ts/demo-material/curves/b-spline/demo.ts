@@ -111,9 +111,19 @@ export class BSplineDemo extends CurveDemo {
         return this._basisFunctionData;
     }
 
+
+    // ugly, but I need the basis functions without weights for the NURBS demo. The NURBS demo overrides the above getters for ctrlPtInfluenceData stuff, so I have to store the regular basisFunction getters separately
+    // So I copied the getters from aboce and renamend them
     protected get basisFunctions() {
         return this._basisFunctionData.map(d =>  d.influenceFunction);
-    } 
+    }
+     public get basisFunctionsAsLaTeXStrings() {
+        return this._basisFunctionData.map(d => d.influenceFunctionAsLaTeXString);
+    }
+
+    public get basisFunctionData() {
+        return this._basisFunctionData;
+    }
 
     /**
      * Let *p* the *degree* of the B-spline curve. For a clamped B-spline curve, the first and *p* and last *p* control points are the same (have the same position).
@@ -269,16 +279,16 @@ export class BSplineDemo extends CurveDemo {
         this.updateKnotVector();
         this.updateBasisFunctions();
         this.scheduledKnotValueChanges = [];
-        this.notifyObservers('knotVectorChanged');
-        this.notifyObservers('ctrlPtInfluenceFunctionsChanged');
     }
 
     private updateKnotVector() {
         this._knotVector = this.createKnotVector();
+        this.notifyObservers('knotVectorChanged');
     }
 
     protected updateBasisFunctions() {
         this._basisFunctionData = this.createBasisFunctions();
+        this.notifyObservers('ctrlPtInfluenceFunctionsChanged');
     }
 
     private createKnotVector() {

@@ -6,7 +6,7 @@ import { NURBSDemo } from "./demo";
 
 
 export class NURBSGraphPlotter extends BSplineGraphPlotter {
-    private NURBSDataPoints: CurveData[] = [];
+    private bSplineDataPoints: CurveData[] = [];
 
     protected get yAxisLabel() {
         return this._yAxisLabel;
@@ -20,51 +20,27 @@ export class NURBSGraphPlotter extends BSplineGraphPlotter {
     }
 
     protected computeCurves() {
-        this.minYValue = 0;
-        this.maxYValue = 0;
         if (!this.nurbsDemo || !this.nurbsDemo.valid) return;
 
-        //compute B-Spline curves
-        super.computeCurves();
-
         //compute NURBS curves
-        if (this.xValues.length < 1)
-            return;
-        const ctrlPts = this.nurbsDemo.controlPoints;
-        const weightedBasisFunctions = this.nurbsDemo.ctrlPtInfluenceFunctions;
+        super.computeCurves();
+        console.log('max Y', this.maxYValue);
 
-        this.NURBSDataPoints = ctrlPts.map((pt, i) => ({
-            yValues: this.xValues.map(x => {
-                const yVal = weightedBasisFunctions[i](x);
-                if (yVal < this.minYValue)
-                    this.minYValue = yVal;
-                if (yVal > this.maxYValue)
-                    this.maxYValue = yVal;
-                return yVal;
-            }),
-            controlPoint: pt
+        
+        if (this.xValues.length < 1) return;
+
+        //compute B-Spline curves for comparison
+        const basisFnDataWithoutWeights = this.nurbsDemo.basisFunctionData;
+        this.bSplineDataPoints = basisFnDataWithoutWeights.map(d => ({
+            yValues: this.xValues.map(x => d.influenceFunction(x)),
+            controlPoint: d.controlPoint
         }));
     }
 
 
     protected drawCurves() {
-        //draw regular B-Spline curves dotted
-        this.bSplineDataPoints.forEach(d => {
-            const pointColor = d.controlPoint.color;
-            const pointThickness = (d.controlPoint.hovering || d.controlPoint.dragging) ? 4 : 1.5;
-
-            d.yValues.forEach((y, i) => {
-                if (i % 7 < 6)
-                    return;
-                const x = this.xValues[i] / (this.nurbsDemo.tMax - this.nurbsDemo.tMin);
-                const x1 = x * this.distMinToMaxXAxis + this.axisRulerOffsetFromBorder;
-                const y1 = this.p5.height - this.axisRulerOffsetFromBorder - this.normalize(y) * this.distMinToMaxYAxis;
-                drawPointVector(this.p5, this.p5.createVector(x1, y1), pointColor, pointThickness);
-            });
-        });
-
         //draw weighted basis function curves in regular fashion
-        this.NURBSDataPoints.forEach(d => {
+        this.dataPoints.forEach(d => {
             const lineColor = d.controlPoint.color;
             const lineThickness = (d.controlPoint.hovering || d.controlPoint.dragging) ? 4 : 1.5;
 
@@ -82,6 +58,20 @@ export class NURBSGraphPlotter extends BSplineGraphPlotter {
             });
         });
 
+        //draw regular B-Spline curves dotted
+        this.bSplineDataPoints.forEach(d => {
+            const pointColor = d.controlPoint.color;
+            const pointThickness = (d.controlPoint.hovering || d.controlPoint.dragging) ? 4 : 1.5;
+
+            d.yValues.forEach((y, i) => {
+                if (i % 7 < 6)
+                    return;
+                const x = this.xValues[i] / (this.nurbsDemo.tMax - this.nurbsDemo.tMin);
+                const x1 = x * this.distMinToMaxXAxis + this.axisRulerOffsetFromBorder;
+                const y1 = this.p5.height - this.axisRulerOffsetFromBorder - this.normalize(y) * this.distMinToMaxYAxis;
+                drawPointVector(this.p5, this.p5.createVector(x1, y1), pointColor, pointThickness);
+            });
+        });
     }
 
     private normalize(yVal: number) {
