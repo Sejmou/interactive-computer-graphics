@@ -2,10 +2,10 @@ import p5, { Vector } from 'p5';
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
 import { clamp } from "../../../utils/math";
 import { ControlPointInfluenceFunctionData, CurveDemo } from '../base/demo';
-import { BSplineCurve } from './curve';
 import { BSplineVisualization } from './curve-drawing-vis';
 import { DegreeControls } from './curve-degree-controls';
 import { InfluenceVisualizerForActiveControlPoint } from '../base/active-ctrl-pt-influence-vis';
+import { Curve } from '../base/curve';
 
 
 export interface BasisFunctionData {
@@ -254,7 +254,6 @@ export class BSplineDemo extends CurveDemo {
         this._basisFunctionData = [];
         this.updateKnotVectorAndBasisFunctions();
 
-        this.setCurve(new BSplineCurve(this.p5, this));
         this.setCurveDrawingVisualization(new BSplineVisualization(this.p5, this));
         new DegreeControls(this.p5, this, this.controlsContainerId);
     }
@@ -473,6 +472,10 @@ export class BSplineDemo extends CurveDemo {
             pt: ptsPerIteration[h][ctrlPtIndex],
             tempPtsCreatedDuringEvaluation: ptsPerIteration
         };
+    }
+
+    protected initCurve(): Curve {
+        return new Curve(this.p5, this);
     }
 
     protected initInfluenceVisForActiveCtrlPt(): InfluenceVisualizerForActiveControlPoint {

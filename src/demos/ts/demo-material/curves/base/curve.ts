@@ -1,13 +1,15 @@
 import p5 from "p5";
-import { Drawable } from "../../../utils/ui";
+import { Drawable, MyObserver } from "../../../utils/ui";
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
-import { CurveDemo } from "./demo";
+import { CurveDemo, DemoChange } from "./demo";
+import { BSplineDemo } from "../b-spline/demo";
+import { drawCircle, drawLineVector } from "../../../utils/p5";
 
 
 
-export abstract class Curve implements Drawable {
+export class Curve implements Drawable, MyObserver<DemoChange> {
     /**
-     * Signifies on how many steps of t the bezier curve will be evaluated.
+     * Signifies on how many steps of t the curve will be evaluated.
      * The less steps the less smooth the curve becomes.
      */
     public get noOfEvaluationSteps(): number {
@@ -44,5 +46,26 @@ export abstract class Curve implements Drawable {
         return createArrayOfEquidistantAscendingNumbersInRange(this.noOfEvaluationSteps, this.demo.firstTValueWhereCurveDefined, this.demo.lastTValueWhereCurveDefined);
     }
 
-    public abstract draw(): void;
+    public draw() {
+        if (!this.demo.valid) return;
+        
+        if (this.demo.shouldDrawInfluenceVisForCurrentlyActiveCtrlPt) {
+            // we want to draw only the influence of the currently active control point
+            // (i.e. only draw segments along the line (parameter t) where it has an influence - the more influence the thicker the line)
+            // the visualizer for the influence of the currently active control point already does that, so don't do anything here
+            return;
+        }
+        
+        const points = this.evaluationSteps.map(t => this.demo.getPointOnCurve(t));
+        if (this.demo instanceof BSplineDemo && this.demo.degree === 0) {
+            points.slice(0, -1).forEach(p => drawCircle(this.p5, p, this.color, this.demo.basePointDiameter * 1.25));
+        } else {
+            points.slice(0, -1).forEach((p, i) => drawLineVector(this.p5, p, points[i + 1], this.color, this.demo.baseLineWidth * 2));
+        }
+    }
+
+    update(data: DemoChange): void {
+        if (data === 'rangeOfTChanged' || 'knotVectorChanged' || 'degreeChanged')
+            this.evaluationSteps = this.calculateEvaluationSteps();
+    }
 }

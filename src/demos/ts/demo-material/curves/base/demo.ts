@@ -28,7 +28,22 @@ interface ControlPointColor {
 }
 
 export abstract class CurveDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<DemoChange> {
-    private curve: Curve | undefined;
+    private _curve?: Curve;
+
+    private get curve() {
+        if (!this._influenceVisForActiveCtrlPt) this._curve = this.initCurve();
+        return this._curve;
+    }
+
+    /**
+     * I had issues with the order of initializations in the constructor of this abstract base class and its subclasses.
+     * The base class can't set the curve directly, as the curve actually needs the subclass instance and not the base class (had compiler errors too)
+     * 
+     * So, inheriting concrete classes should create an instance of Curve here, passing themselves as constructor param
+     */
+    protected abstract initCurve(): Curve;
+
+
     private curveDrawingVisualization: CurveDrawingVisualization | undefined;
 
 
@@ -203,10 +218,6 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
 
         this.controlsForT = new ControlsForParameterT(p5, this, this.controlsContainerId, baseAnimationSpeedMultiplier);
     }
-
-    protected setCurve(curve: Curve) {
-        this.curve = curve;
-    };
 
     protected setCurveDrawingVisualization(vis: CurveDrawingVisualization) {
         this.curveDrawingVisualization = vis;

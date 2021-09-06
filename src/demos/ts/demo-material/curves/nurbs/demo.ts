@@ -2,9 +2,9 @@ import p5 from "p5";
 import { DragVertex } from "../../../utils/vertex";
 import { BasisFunctionData, BSplineDemo } from "../b-spline/demo";
 import { NURBSVisualization } from "./curve-drawing-vis";
-import { NURBSCurve } from "./curve";
 import { ControlPointInfluenceFunctionData } from "../base/demo";
 import { InfluenceVisualizerForActiveControlPoint } from "../base/active-ctrl-pt-influence-vis";
+import { Curve } from "../base/curve";
 
 
 
@@ -16,7 +16,6 @@ export class NURBSDemo extends BSplineDemo {
 
     constructor(p5: p5, parentContainerId?: string, baseAnimationSpeedMultiplier?: number) {
         super(p5, parentContainerId, baseAnimationSpeedMultiplier);
-        this.setCurve(new NURBSCurve(this.p5, this));
         this.setCurveDrawingVisualization(new NURBSVisualization(this.p5, this));
         this.oldCtrlPts = this.controlPoints.slice();
     }
@@ -35,6 +34,10 @@ export class NURBSDemo extends BSplineDemo {
         return this.weightedBasisFunctionData;
     }
 
+    
+    public get ctrlPtWeights(): number[] {
+        return this.controlPoints.map(pt => pt.position.z);
+    }
 
     private scheduledCtrlPtWeightChanges: { i: number, newVal: number }[] = [];
 
@@ -176,6 +179,10 @@ export class NURBSDemo extends BSplineDemo {
         ptToReturn.y /= ptToReturn.z;
 
         return ptToReturn;
+    }
+
+    protected initCurve(): Curve {
+        return new Curve(this.p5, this);
     }
 
     protected initInfluenceVisForActiveCtrlPt(): InfluenceVisualizerForActiveControlPoint {
