@@ -4,6 +4,9 @@ import { DemoChange, CurveDemo } from "./demo";
 
 
 
+/**
+ * Gives the user the ability to modify the value of the curve parameter t with a slider and also animate things with play/rewind buttons (controlling animation + animation speed)
+ */
 export class ControlsForParameterT implements MyObserver<DemoChange> {
     private baseAnimationSpeedPerFrame = 0.005;
 

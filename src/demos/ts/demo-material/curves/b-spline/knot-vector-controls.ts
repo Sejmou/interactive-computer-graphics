@@ -5,7 +5,9 @@ import { BSplineDemo } from './demo';
 
 
 
-
+/**
+ * Allows the user to modify the entries of the knot vector of a BSplineDemo
+ */
 export class KnotVectorControls implements MyObserver<DemoChange> {
     private knotInputElements: HTMLInputElement[] = [];
     private controlsContainer: HTMLDivElement;

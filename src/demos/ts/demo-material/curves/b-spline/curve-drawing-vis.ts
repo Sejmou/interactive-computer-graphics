@@ -4,6 +4,11 @@ import { drawCircle, drawLineVector, drawSquare, renderTextWithSubscript } from 
 import { CurveDrawingVisualization } from "../base/curve-drawing-vis";
 import { BSplineDemo } from './demo';
 
+
+
+/**
+ * Visualizes De Boors's algorithm for evaluating/rendering B-Spline curves (uses B-Spline basis functions)
+ */
 export class BSplineVisualization extends CurveDrawingVisualization {
     private knotMarkerColor: p5.Color = this.p5.color(150);
     private knotMarkerLabelColor = this.p5.color('#f400a3');

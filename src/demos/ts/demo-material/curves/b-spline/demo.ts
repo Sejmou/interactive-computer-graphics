@@ -74,7 +74,7 @@ export class BSplineDemo extends CurveDemo {
         const n = this.controlPoints.length - 1;
         const k = this.degree + 1;
         const m = n + k;
-        
+
         return this.knotVector.every((knot, i, knots) => knots[i + 1] ? knot <= knots[i + 1] : true) && this.knotVector.length == (m + 1);
     }
 
@@ -98,7 +98,7 @@ export class BSplineDemo extends CurveDemo {
      * meaning that all possible spline functions can be built from a linear combination of B-splines, and there is only one unique combination for each spline function.
      */
     public get ctrlPtInfluenceFunctions() {
-        return this._basisFunctionData.map(d =>  d.influenceFunction);
+        return this._basisFunctionData.map(d => d.influenceFunction);
     }
     /**
      * The B-Spline curve's basis functions as an array of arrays of LaTeX strings
@@ -115,9 +115,9 @@ export class BSplineDemo extends CurveDemo {
     // ugly, but I need the basis functions without weights for the NURBS demo. The NURBS demo overrides the above getters for ctrlPtInfluenceData stuff, so I have to store the regular basisFunction getters separately
     // So I copied the getters from aboce and renamend them
     protected get basisFunctions() {
-        return this._basisFunctionData.map(d =>  d.influenceFunction);
+        return this._basisFunctionData.map(d => d.influenceFunction);
     }
-     public get basisFunctionsAsLaTeXStrings() {
+    public get basisFunctionsAsLaTeXStrings() {
         return this._basisFunctionData.map(d => d.influenceFunctionAsLaTeXString);
     }
 
@@ -223,7 +223,15 @@ export class BSplineDemo extends CurveDemo {
 
     private scheduledKnotValueChanges: { i: number, newVal: number }[];
 
+
     private _curveType: CurveType;
+    /**
+     * Defines what type of curve should be created whenever the user adds or removes a control point.
+     * 
+     * Supported curve types: open B-Spline, clamped B-Spline, and emulation of Bézier curves (then the degree is hardcoded to always be # of control points - 1)
+     * 
+     * The demo modifies the knot vector (and, in case of emulated Bézier, the curve degree) accordingly on each control points array length change.
+     */
     public get curveType(): CurveType {
         return this._curveType;
     };

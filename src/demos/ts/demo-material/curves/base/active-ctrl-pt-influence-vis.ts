@@ -9,6 +9,11 @@ import { CurveDemo } from "./demo";
 
 
 
+/**
+ * Whenever a control point of a curve demo is active - hovered or dragged - (and this visualizer should be drawn), this visualizer draws the influence of the control point onto the line
+ * 
+ * The line gets the color of the active control point and becomes thicker or more narrow across the range for the curve parameter t, depending on how much influence the control point has (depends on the value of its "influence function", for example Bernstein polynomial of a Bézier curve control point)
+ */
 export class InfluenceVisualizerForActiveControlPoint implements Drawable {
 
     constructor(private p5: p5, private demo: CurveDemo) { }

@@ -1,17 +1,9 @@
 import p5 from 'p5';
 import { drawLineXYCoords, renderTextWithSubscript } from "../../../utils/p5";
-import { DragVertex } from '../../../utils/vertex';
 import { BSplineDemo } from './demo';
 import { CtrlPtInfluenceFuncGraphPlotter } from '../base/graph-plotter';
-import { DemoChange } from '../base/demo';
 
 
-
-
-export interface CurveData {
-    yValues: number[];
-    controlPoint: DragVertex;
-}
 
 export class BSplineGraphPlotter extends CtrlPtInfluenceFuncGraphPlotter {
     private bSplineDemo: BSplineDemo;

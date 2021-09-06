@@ -27,6 +27,13 @@ interface ControlPointColor {
     taken: boolean
 }
 
+/**
+ * Base class for each curve demo. Handles the array of control points (also makes sure each control point gets a unique color that is distinguishable from that of its immediate neighbors).
+ * 
+ * Requires an instance of Curve that draws the curve presented in the demo. Instances of CurveDrawingVisualization and InfluenceVisualizerForActiveControlPoint also have to be provided and are drawn if needed (showCurveDrawingVisualization, showInfluenceVisForCurrentlyActiveCtrlPt).
+ * 
+ * Control point labels (P_0, ...., P_n) can be toggled on/off. The control point positions can also be displayed, if desired (in pixel coordinates or normalized coordinates).
+ */
 export abstract class CurveDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<DemoChange> {
     private _curve?: Curve;
 

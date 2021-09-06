@@ -5,6 +5,11 @@ import { DragVertex } from '../utils/vertex';
 import { parseColorString, lightenDarkenP5Color } from "../utils/color";
 import { twoByTwoDeterminant, directionVector, drawLineVector, renderTextWithDifferentColors } from "../utils/p5";
 
+
+
+/**
+ * A triangle demonstrating barycentric coordinates. A point can be moved across the triangle surface (and also beyond). The coefficients, or barycentric coordinates, (u,v,w) update accordingly.
+ */
 export class BarycentricTriangle implements Drawable, Clickable, Touchable, Draggable {
     private pointInsideTriangle: PointOnTriangleSurface;
     private triangle: DragPolygon;

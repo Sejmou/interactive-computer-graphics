@@ -4,7 +4,9 @@ import { CurveDrawingVisualization } from "../base/curve-drawing-vis";
 import { NURBSDemo } from "./demo";
 
 
-
+/**
+ * Visualizes De Boors's algorithm for evaluating/rendering NURBS curves (uses weighted basis functions)
+ */
 export class NURBSVisualization extends CurveDrawingVisualization {
     private knotMarkerColor: p5.Color = this.p5.color(150);
     private knotMarkerLabelColor = this.p5.color('#f400a3');

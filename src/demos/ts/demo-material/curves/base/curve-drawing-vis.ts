@@ -5,6 +5,9 @@ import { CurveDemo } from "./demo";
 
 
 
+/**
+ * Visualizes how the curve of the curve demo is rendered onto the screen (e.g. for Bézier curves it demonstrates De Casteljau's algorithm)
+ */
 export abstract class CurveDrawingVisualization implements Drawable {
     protected color: p5.Color;
     protected colorOfPointOnCurve: p5.Color;

@@ -6,7 +6,9 @@ import { CurveDrawingVisualization } from "../base/curve-drawing-vis";
 import { BezierDemo } from './demo';
 
 
-
+/**
+ * Visualizes De Casteljau's algorithm for evaluating/rendering Bézier curves
+ */
 export class DeCasteljauVisualization extends CurveDrawingVisualization implements MyObserver<DemoChange> {
     private visible: boolean = false;
 

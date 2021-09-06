@@ -12,6 +12,11 @@ export interface ControlPointInfluenceData {
     currentCtrlPtInfluence: () => number;
 }
 
+/**
+ * Draws bars next to the control points that encode how much influence each control point has on the overall shape of the curve (for the current value of the curve parameter t).
+ * 
+ * If a bar is empty, the control point doesn't affect the shape of the curve for the current t, if it is full the position of the point on the curve is equal to the control point position.
+ */
 export class ControlPointInfluenceBarVisualization implements MyObserver<DemoChange>, Drawable, Draggable, Touchable, Clickable {
     private barBorderColor: p5.Color;
     private barHeight = 60;

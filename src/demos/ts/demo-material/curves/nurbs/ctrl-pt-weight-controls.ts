@@ -5,6 +5,9 @@ import { NURBSDemo } from "./demo";
 
 
 
+/**
+ * Allows the user to change the weight associated with each control point of a NURBSDemo -> demo modifies weighted basis functions accordingly 
+ */
 export class ControlsForControlPointWeights implements MyObserver<DemoChange> {
     private ctrlPtWeightInputElements: HTMLInputElement[] = [];
     private tableContainer: HTMLDivElement;

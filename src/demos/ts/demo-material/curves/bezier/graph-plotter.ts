@@ -1,9 +1,11 @@
 import { drawLineXYCoords } from "../../../utils/p5";
-import { DemoChange } from "../base/demo";
 import { CtrlPtInfluenceFuncGraphPlotter } from "../base/graph-plotter";
 
 
 
+/**
+ * Plots Bernstein polynomials of a Bézier Curve
+ */
 export class BernsteinGraphPlotter extends CtrlPtInfluenceFuncGraphPlotter {
     protected ctrlPtInfluenceFunctionsName: string = 'Bernstein polynomials';
     protected yAxisLabel: string = 'b_{i,n}';

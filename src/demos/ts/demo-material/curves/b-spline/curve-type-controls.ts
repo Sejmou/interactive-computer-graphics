@@ -5,6 +5,9 @@ import { BSplineDemo, CurveType } from './demo';
 
 
 
+/**
+ * Allows the user to change, what type of curve should be created whenever the user adds or removes a control point (depending on the choice, the BSplineDemo modifies the knot vector accordingly on each controlpoints array length change)
+ */
 export class CurveTypeControls implements MyObserver<DemoChange> {
     private radioButtons: HTMLInputElement[] = [];
     private checkBoxForm: HTMLFormElement;

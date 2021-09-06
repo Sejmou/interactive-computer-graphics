@@ -7,6 +7,9 @@ import { drawCircle, drawLineVector } from "../../../utils/p5";
 
 
 
+/**
+ * Draws the curve of the respective CurveDemo, using it getPointOnCurve() function to find the points on the curve across the range of the curve parameter t.
+ */
 export class Curve implements Drawable, MyObserver<DemoChange> {
     /**
      * Signifies on how many steps of t the curve will be evaluated.

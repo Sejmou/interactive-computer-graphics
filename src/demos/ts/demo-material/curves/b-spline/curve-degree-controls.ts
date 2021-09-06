@@ -3,6 +3,11 @@ import { MyObserver } from '../../../utils/ui';
 import { DemoChange } from '../base/demo';
 import { BSplineDemo } from './demo';
 
+
+
+/**
+ * Allows the user to change the degree of the BsplineDemo
+ */
 export class DegreeControls implements MyObserver<DemoChange> {
     private container: p5.Element;
     private degreeText: p5.Element;

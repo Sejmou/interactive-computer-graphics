@@ -1,10 +1,14 @@
 import p5 from "p5";
 import { drawLineXYCoords, drawPointVector } from "../../../utils/p5";
-import { BSplineGraphPlotter, CurveData } from "../b-spline/graph-plotter";
+import { BSplineGraphPlotter } from "../b-spline/graph-plotter";
+import { CurveData } from "../base/graph-plotter";
 import { NURBSDemo } from "./demo";
 
 
 
+/**
+ * Plots weighted basis functions of NURBS curve (and basis functions without weights, for comparison)
+ */
 export class NURBSGraphPlotter extends BSplineGraphPlotter {
     private bSplineDataPoints: CurveData[] = [];
 

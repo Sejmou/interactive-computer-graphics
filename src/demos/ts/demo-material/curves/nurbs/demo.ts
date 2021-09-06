@@ -8,6 +8,9 @@ import { Curve } from "../base/curve";
 
 
 
+/**
+ * Main difference to BSplineDemo: control point weights!
+ */
 export class NURBSDemo extends BSplineDemo {
     /**
      * storing ctrlPts after update in here in order to be able to recognize if a ctrlPt is new -> we then have to initialize its weight (in {@link updateCtrlPtWeights()} )
