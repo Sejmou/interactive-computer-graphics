@@ -7,6 +7,9 @@ import { DeCasteljauVisualization } from './curve-drawing-vis';
 
 
 
+/**
+ * Showcases the way Bézier curves work
+ */
 export class BezierDemo extends CurveDemo {
     public firstTValueWhereCurveDefined;
     public lastTValueWhereCurveDefined;

@@ -2,6 +2,12 @@ import { Drawable, MyObserver } from '../../../utils/ui';
 import { DemoChange } from '../base/demo';
 import { BezierDemo } from './demo';
 
+
+
+
+/**
+ * Renders the current Bézier curve formula (sum of Bernstein polynomials of each control point multiplied by control point positions) + the formula for each Bernstein polynomial and their current values
+ */
 export class BernsteinCurveFormulas implements Drawable, MyObserver<DemoChange> {
     private textBoxContainer: HTMLDivElement;
     private containersForBernsteinPolynomialValues: HTMLDivElement[] = [];

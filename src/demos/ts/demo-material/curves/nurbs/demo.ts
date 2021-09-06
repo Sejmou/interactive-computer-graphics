@@ -9,7 +9,7 @@ import { Curve } from "../base/curve";
 
 
 /**
- * Main difference to BSplineDemo: control point weights!
+ * Main difference to BSplineDemo: control point weights -> weighted basis functions!
  */
 export class NURBSDemo extends BSplineDemo {
     /**
