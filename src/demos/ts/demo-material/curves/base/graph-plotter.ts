@@ -117,7 +117,6 @@ export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, MyObs
             const yValues = this.xValues.map(x => d.influenceFunction(x));
             //maxYValues.push(Math.max(...yValues));// this doesn't work, don't know why - in browser console it's fine...
             maxYValues.push(findMaxNumber(yValues));
-            console.log('max Y', findMaxNumber(yValues));
 
             return {
                 yValues: this.xValues.map(x => d.influenceFunction(x)),
@@ -126,7 +125,6 @@ export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, MyObs
         });
 
         this.maxYValue = findMaxNumber(maxYValues);
-        console.log(findMaxNumber(maxYValues))
     };
 
     draw(): void {

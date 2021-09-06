@@ -30,8 +30,23 @@ interface ControlPointColor {
 export abstract class CurveDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<DemoChange> {
     private curve: Curve | undefined;
     private curveDrawingVisualization: CurveDrawingVisualization | undefined;
-    private influenceVisForActiveCtrlPt?: InfluenceVisualizerForActiveControlPoint;
-    
+
+
+    private _influenceVisForActiveCtrlPt?: InfluenceVisualizerForActiveControlPoint;
+
+    private get influenceVisForActiveCtrlPt() {
+        if (!this._influenceVisForActiveCtrlPt) this._influenceVisForActiveCtrlPt = this.initInfluenceVisForActiveCtrlPt();
+        return this._influenceVisForActiveCtrlPt;
+    }
+
+    /**
+     * I had issues with the order of initializations in the constructor of this abstract base class and its subclasses.
+     * The base class can't set the influenceVisForActiveCtrlPt directly, as the influenceVisForActiveCtrlPt actually needs the subclass instance and not the base class (had compiler errors too)
+     * 
+     * So, inheriting concrete classes should create an instance of InfluenceVisualizerForActiveControlPoint here, passing themselves as constructor param
+     */
+    protected abstract initInfluenceVisForActiveCtrlPt(): InfluenceVisualizerForActiveControlPoint;
+
 
     get tMin(): number {
         return this._tMin;
@@ -74,6 +89,7 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     protected controlsContainerId: string;
 
     protected _controlPoints: DragVertex[] = [];
+
     /**
      * The control points of the curve.
      * Others should only be able to read data from the control points, but not change them directly.
@@ -84,15 +100,26 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     }
 
     /**
+     * Gets a point on the curve using whatever algorithm the concrete curve uses for finding it (e.g. DeCasteljau for Bézier curves, De Boors's Algorithm for B-Spline curves)
      * 
+     * @param t the curve parameter (has to be between the curve's tMin and tMax)
      */
-     public abstract get ctrlPtInfluenceFunctions(): ((t: number) => number)[];
+    public abstract getPointOnCurve(t: number): p5.Vector;
 
     /**
-     * 
+     * The functions defining how much influence each control point has on the curve (e.g. Bernstein polynomials for Bézier curves, B-Spline basis functions). Summing all influence functions for a particular (valid) value of t together results in the point on the curve. Array length should be exactly the number of control points (as long as influence functions are defined/curve is valid)
+     */
+    public abstract get ctrlPtInfluenceFunctions(): ((t: number) => number)[];
+
+    /**
+     * The formulas for the influence functions (see ctrlPtInfluenceFunctions) as LaTeX strings. Array length should be exactly the number of control points (as long as influence functions are defined/curve is valid)
      */
     public abstract get ctrlPtInfluenceFuncsAsLaTeXStrings(): string[];
 
+    /**
+     * Combines all data related to the functions defining how much influence each control point has on the curve (e.g. Bernstein polynomials for Bézier curves, B-Spline basis functions).
+     * Array length should be exactly the number of control points (as long as influence functions are defined/curve is valid)
+     */
     public abstract get ctrlPtInfluenceFunctionData(): ControlPointInfluenceFunctionData[];
 
 
@@ -166,12 +193,13 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this.showPointPositions = false;
         this.positionDisplayMode = 'relative to canvas';
 
+        // this.influenceVisForActiveCtrlPt = new InfluenceVisualizerForActiveControlPoint(this.p5, this);
+
         const controlsContainer = this.p5.createDiv();
         this.controlsContainerId = 't-controls-container';
         controlsContainer.id(this.controlsContainerId);
         if (parentContainerId) controlsContainer.parent(parentContainerId);
         controlsContainer.class('flex-row center-cross-axis disable-dbl-tap-zoom prevent-text-select');
-
 
         this.controlsForT = new ControlsForParameterT(p5, this, this.controlsContainerId, baseAnimationSpeedMultiplier);
     }
@@ -182,10 +210,6 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
 
     protected setCurveDrawingVisualization(vis: CurveDrawingVisualization) {
         this.curveDrawingVisualization = vis;
-    };
-
-    protected setInfluenceVisForActiveCtrlPt(vis: InfluenceVisualizerForActiveControlPoint) {
-        this.influenceVisForActiveCtrlPt = vis;
     };
 
     handleMousePressed(): void {
@@ -295,7 +319,7 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     }
 
     /**
-     * shown in the middle of the canvas when the this.valid is false
+     * shown in the middle of the canvas when the curve is invalid
      */
     protected get curveInvalidMessage() {
         return 'The curve is invalid/undefined';
@@ -309,6 +333,12 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this.p5.pop();
     }
 
+    /**
+     * Adds a new control point after the provided control point. Updates this.controlPoints accordingly.
+     * 
+     * @param element control point after which a new control point should be added
+     * @returns 
+     */
     addElementAfter(element: DragVertex): void {
         const i = this.controlPoints.findIndex(e => e === element);
         if (i === -1) {
@@ -368,7 +398,9 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this.notifyObservers('controlPointsChanged');
     }
 
-    //implemented by subclasses, if necessary
+    /**
+     * implemented by subclasses, if necessary
+     */
     protected abstract additionalCtrlPtAmountChangeHandling(): void;
 
 
@@ -428,10 +460,10 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
             while ((prevColor && areColorsTooSimilar(color, prevColor)) || (nextColor && areColorsTooSimilar(color, nextColor) || luminanceFromP5Color(color) > 180)) {
                 if (prevColor) console.log(`color of previous control point: ${prevColor.toString()}`);
                 if (nextColor) console.log(`color of next control point: ${nextColor.toString()}`);
-                console.log(`current control point's color ${color.toString()} with luminance ${luminanceFromP5Color(color)} was too bright or too similar, finding better fit...`);
+                //console.log(`current control point's color ${color.toString()} with luminance ${luminanceFromP5Color(color)} was too bright or too similar, finding better fit...`);
 
                 color = this.p5.color(randomColorHexString());
-                console.log(`new color: ${color.toString()} (luminance: ${luminanceFromP5Color(color)})`);
+                //console.log(`new color: ${color.toString()} (luminance: ${luminanceFromP5Color(color)})`);
             }
 
             return color;
@@ -449,6 +481,10 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this.observers = this.observers.filter(o => o !== observer);
     }
 
+    /**
+     * Notifies observers that a particular property of the curve changed
+     * @param change The change that occured
+     */
     notifyObservers(change: DemoChange): void {
         this.observers.forEach(o => o.update(change));
     }

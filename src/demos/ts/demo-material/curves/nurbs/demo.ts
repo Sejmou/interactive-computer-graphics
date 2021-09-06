@@ -4,6 +4,7 @@ import { BasisFunctionData, BSplineDemo } from "../b-spline/demo";
 import { NURBSVisualization } from "./curve-drawing-vis";
 import { NURBSCurve } from "./curve";
 import { ControlPointInfluenceFunctionData } from "../base/demo";
+import { InfluenceVisualizerForActiveControlPoint } from "../base/active-ctrl-pt-influence-vis";
 
 
 
@@ -98,6 +99,10 @@ export class NURBSDemo extends BSplineDemo {
         this.notifyObservers('ctrlPtInfluenceFunctionsChanged');
     }
 
+    getPointOnCurve(t: number) {
+        return this.getPointOnCurveUsingDeBoorWithCtrlPtWeights(t);
+    }
+
     getPointOnCurveByEvaluatingWeightedBasisFunctions(t: number) {
         return this.controlPoints.map(pt => pt.position).reduce(
             (prev, curr, i) => p5.Vector.add(prev, p5.Vector.mult(curr, this.ctrlPtInfluenceFunctions[i](t))), this.p5.createVector(0, 0)
@@ -171,5 +176,9 @@ export class NURBSDemo extends BSplineDemo {
         ptToReturn.y /= ptToReturn.z;
 
         return ptToReturn;
+    }
+
+    protected initInfluenceVisForActiveCtrlPt(): InfluenceVisualizerForActiveControlPoint {
+        return new InfluenceVisualizerForActiveControlPoint(this.p5, this);
     }
 }

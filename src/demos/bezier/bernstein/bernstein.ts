@@ -50,15 +50,22 @@ async function createDemo() {
     new BooleanPropCheckbox<BezierDemo, DemoChange>({
         objectToSubscribeTo: bezierDemo,
         labelText: 'show control point influence bars',
+        tooltipText: 'If the bar is full, then (for the current value of t) this control point is the only one that influences the point position - the point on the curve is equal to the control point position',
         getCurrValOfPropToModify: () => bernsteinInfluenceBarVis.visible,
-        onUserChangedCheckboxChecked: newVal => {
-            bernsteinInfluenceBarVis.visible = newVal;
-            console.log(newVal);
-            console.log(bernsteinInfluenceBarVis.visible);
-        },
+        onUserChangedCheckboxChecked: newVal => bernsteinInfluenceBarVis.visible = newVal,
         shouldCheckboxBeVisible: demo => demo.valid,
         parentContainerId: demoContainerId
     });
+
+    new BooleanPropCheckbox<BezierDemo, DemoChange>({
+        objectToSubscribeTo: bezierDemo,
+        labelText: 'Show influence of hovered/dragged control point via line width',
+        tooltipText: 'The thicker the line, the more influence the control point has. Note that even if you cannot see a line anymore, the control point influence (Bernstein polynomial) might not be 0, but very, very close to 0',
+        getCurrValOfPropToModify: () => bezierDemo.showInfluenceVisForCurrentlyActiveCtrlPt,
+        onUserChangedCheckboxChecked: newVal => bezierDemo.showInfluenceVisForCurrentlyActiveCtrlPt = newVal,
+        shouldCheckboxBeVisible: demo => demo.valid,
+        parentContainerId: demoContainerId
+    }); 
 
     const bernsteinVisSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.35, 400);
     const bernsteinVisSketchHeight = bernsteinVisSketchWidth;

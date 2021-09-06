@@ -5,7 +5,7 @@ import { ControlPointInfluenceFunctionData, CurveDemo } from '../base/demo';
 import { BSplineCurve } from './curve';
 import { BSplineVisualization } from './curve-drawing-vis';
 import { DegreeControls } from './curve-degree-controls';
-import { VisualizerForCurrentlyActiveBSplineControlPoint } from './active-ctrl-pt-influence-vis';
+import { InfluenceVisualizerForActiveControlPoint } from '../base/active-ctrl-pt-influence-vis';
 
 
 export interface BasisFunctionData {
@@ -256,7 +256,6 @@ export class BSplineDemo extends CurveDemo {
 
         this.setCurve(new BSplineCurve(this.p5, this));
         this.setCurveDrawingVisualization(new BSplineVisualization(this.p5, this));
-        this.setInfluenceVisForActiveCtrlPt(new VisualizerForCurrentlyActiveBSplineControlPoint(this.p5, this));
         new DegreeControls(this.p5, this, this.controlsContainerId);
     }
 
@@ -382,6 +381,10 @@ export class BSplineDemo extends CurveDemo {
         }));
     }
 
+    getPointOnCurve(t: number) {
+        return this.getPointOnCurveWithDeBoorsAlgorithm(t);
+    }
+
     /**
      * Returns a point on the B-Spline curve for given p and t using the basis functions computed via Cox-de Boor recursion formula.
      * This method is less efficient than De Boor's algorithm as basis funcitons that are guaranteed to be zero are still computed/evaluated
@@ -470,5 +473,9 @@ export class BSplineDemo extends CurveDemo {
             pt: ptsPerIteration[h][ctrlPtIndex],
             tempPtsCreatedDuringEvaluation: ptsPerIteration
         };
+    }
+
+    protected initInfluenceVisForActiveCtrlPt(): InfluenceVisualizerForActiveControlPoint {
+        return new InfluenceVisualizerForActiveControlPoint(this.p5, this);
     }
 }

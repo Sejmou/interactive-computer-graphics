@@ -24,10 +24,10 @@ export class NURBSGraphPlotter extends BSplineGraphPlotter {
 
         //compute NURBS curves
         super.computeCurves();
-        console.log('max Y', this.maxYValue);
-
         
-        if (this.xValues.length < 1) return;
+        //if NURBS curves were computed, we want to also compute B-Spline curves for comparison
+        //if we have no dataPoints, we know that the NURBS curves were not computed, so we cancel
+        if (this.dataPoints.length < 1) return;
 
         //compute B-Spline curves for comparison
         const basisFnDataWithoutWeights = this.nurbsDemo.basisFunctionData;

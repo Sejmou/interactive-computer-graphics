@@ -1,5 +1,6 @@
 import p5 from 'p5';
 import { binomial } from '../../../utils/math';
+import { InfluenceVisualizerForActiveControlPoint } from '../base/active-ctrl-pt-influence-vis';
 import { ControlPointInfluenceFunctionData, CurveDemo } from '../base/demo';
 import { BezierCurve } from './curve';
 import { DeCasteljauVisualization } from './curve-drawing-vis';
@@ -11,6 +12,24 @@ export class BezierDemo extends CurveDemo {
     public lastTValueWhereCurveDefined;
     public get valid() {
         return this.controlPoints.length > 1;
+    }
+
+    getPointOnCurve(t: number) {
+        return this.findPointOnCurveWithDeCasteljau(this.controlPoints.map(ctrlPt => ctrlPt.position), t);
+    }
+
+    protected initInfluenceVisForActiveCtrlPt(): InfluenceVisualizerForActiveControlPoint {
+        return new InfluenceVisualizerForActiveControlPoint(this.p5, this);
+    }
+
+    private findPointOnCurveWithDeCasteljau(ctrlPtPositions: p5.Vector[], t: number): p5.Vector {
+        if (ctrlPtPositions.length === 1)
+            return ctrlPtPositions[0];
+        let ctrlPtsForNextIter = ctrlPtPositions.slice(0, -1).map((v, i) => {
+            const lerpCurrAndNextAtT = p5.Vector.lerp(v, ctrlPtPositions[i + 1], t) as unknown as p5.Vector; //again, fail in @types/p5???
+            return lerpCurrAndNextAtT;
+        });
+        return this.findPointOnCurveWithDeCasteljau(ctrlPtsForNextIter, t);
     }
 
     private bernsteinPolynomialData: ControlPointInfluenceFunctionData[];
