@@ -18,7 +18,7 @@ addTextAsParagraphToElement(descriptionContainerId,
 );
 
 addTextAsParagraphToElement(descriptionContainerId,
-    String.raw`B-Spline curves can be expressed mathematically using the formula \[ C(t) = \sum_{i=0}^{n}{N_{i,p}(t) \cdot P_{i}}. \]
+    String.raw`B-Spline curves can be expressed mathematically using the formula \[ S(t) = \sum_{i=0}^{n}{N_{i,p}(t) \cdot P_{i}}. \]
 where \(p\) is the degree of the curve and \( k = p + 1 \) is its order. The \(N_{i,p}(t)\) are the <em>basis functions</em> of the B-Spline curve. The \(P_{i}\) are the curve's \(n + 1\) control points, sometimes called <em>de Boor points</em>.`
 );
 

@@ -3,8 +3,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
     entry: {
         index: './src/index/index.ts',
-        bezierBasic: './src/demos/bezier/basic/basic.ts',
-        bezierBernstein: './src/demos/bezier/bernstein/bernstein.ts',
+        bezier: './src/demos/bezier/bezier.ts',
+        bernstein: './src/demos/bernstein/bernstein.ts',
         bSpline: './src/demos/b-spline/b-spline.ts',
         bary: './src/demos/bary/bary.ts',
         nurbs: './src/demos/nurbs/nurbs.ts'
@@ -26,7 +26,7 @@ module.exports = {
             favicon: "favicon.ico",
             template: 'src/demos/demo.ejs',
             filename: 'bezier-curve.html',// don't forget this! otherwise plugin would emit to index.html!
-            chunks: ['bezierBasic'],
+            chunks: ['bezier'],
             title: 'Bézier Curve Demo (Interactive Computer Graphics)',
             heading: 'Bézier Curves'
         }),
@@ -34,7 +34,7 @@ module.exports = {
             favicon: "favicon.ico",
             template: 'src/demos/demo.ejs',
             filename: 'bezier-bernstein.html',// don't forget this! otherwise plugin would emit to index.html!
-            chunks: ['bezierBernstein'],
+            chunks: ['bernstein'],
             title: 'Bézier Curves and Bernstein Polynomials Demo (Interactive Computer Graphics)',
             heading: 'Bézier Curves and Bernstein Polynomials',
         }),
@@ -65,7 +65,10 @@ module.exports = {
     ],
     module: {
         rules: [
-            { test: /\.ts$/, use: 'awesome-typescript-loader' },
+            { 
+                test: /\.ts$/,
+                use: 'awesome-typescript-loader'
+            },
             //getting imgs to work with my config was a shit ton of work, digging through lots of SO threads and GitHub issues
             //this finally helped me: https://stackoverflow.com/a/48242662/13727176
             {

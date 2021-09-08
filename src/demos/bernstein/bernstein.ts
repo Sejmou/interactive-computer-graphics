@@ -1,13 +1,13 @@
 import './bernstein.scss';
 import p5 from "p5";
-import { BezierDemo } from "../../ts/demo-material/curves/bezier/demo";
-import { Sketch } from '../../ts/utils/sketch';
-import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../../ts/utils/dom-helpers";
-import { BernsteinCurveFormulas } from '../../ts/demo-material/curves/bezier/bernstein-curve-formulas';
-import { DemoChange } from '../../ts/demo-material/curves/base/demo';
-import { BernsteinGraphPlotter } from '../../ts/demo-material/curves/bezier/graph-plotter';
-import { LineAtTPlotter } from '../../ts/demo-material/curves/base/line-at-t-plotter';
-import { ControlPointInfluenceBarVisualization } from '../../ts/demo-material/curves/base/ctrl-pt-influence-vis';
+import { BezierDemo } from "../ts/demo-material/curves/bezier/demo";
+import { Sketch } from '../ts/utils/sketch';
+import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
+import { BernsteinCurveFormulas } from '../ts/demo-material/curves/bezier/bernstein-curve-formulas';
+import { DemoChange } from '../ts/demo-material/curves/base/demo';
+import { BernsteinGraphPlotter } from '../ts/demo-material/curves/bezier/graph-plotter';
+import { LineAtTPlotter } from '../ts/demo-material/curves/base/line-at-t-plotter';
+import { ControlPointInfluenceBarVisualization } from '../ts/demo-material/curves/base/ctrl-pt-influence-vis';
 
 
 
@@ -16,7 +16,7 @@ const descriptionContainerId = 'demo-description-container';
 const descriptionContainer = document.getElementById(descriptionContainerId)!;
 
 addTextAsParagraphToElement(descriptionContainerId,
-    String.raw`In math terms, a Bézier curve of degree \(n\) can be expressed as \[ C(t) = \sum_{i=0}^{n}{b_{i,n}(t) \cdot P_{i}}. \]
+    String.raw`In math terms, a Bézier curve of degree \(n\) (the degree being the number of control points - 1) can be expressed as \[ C(t) = \sum_{i=0}^{n}{b_{i,n}(t) \cdot P_{i}}. \]
 Each \( b_{i,n}(t) \) is the <b>Bernstein polynomial</b> of \(P_i\), a particular control point of the Bézier curve. \( P_i \) is a 2D vector \( (x, y)\).
 <br>The Bernstein polynomial represents the 'influence' of the control point on the shape of the Bézier curve for the current value of \(t\).`
 );

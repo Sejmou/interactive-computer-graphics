@@ -28,7 +28,9 @@ interface ControlPointColor {
 }
 
 /**
- * Base class for each curve demo. Handles the array of control points (also makes sure each control point gets a unique color that is distinguishable from that of its immediate neighbors).
+ * Base class for each curve demo. It manages the core state and logic of each curve demo.
+ * 
+ * Handles the array of control points (also makes sure each control point gets a unique color that is distinguishable from that of its immediate neighbors).
  * 
  * Requires an instance of Curve that draws the curve presented in the demo. Instances of CurveDrawingVisualization and InfluenceVisualizerForActiveControlPoint also have to be provided and are drawn if needed (showCurveDrawingVisualization, showInfluenceVisForCurrentlyActiveCtrlPt).
  * 
