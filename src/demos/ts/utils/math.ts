@@ -1,4 +1,3 @@
-// -------------------------------------------- math --------------------------------------------
 //https://stackoverflow.com/a/37716142/13727176
 // step 1: precomputed binomials
 const binomials = [

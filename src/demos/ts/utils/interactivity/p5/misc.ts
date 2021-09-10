@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Drawable } from "./ui";
+import { Drawable } from "../ui";
 
 /**
  * For some reason this is not defined in @types/p5...

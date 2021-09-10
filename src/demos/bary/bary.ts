@@ -1,7 +1,7 @@
 import './bary.scss';
 import { BarycentricTriangle } from "../ts/demo-material/barycentric-triangle";
-import { Sketch } from '../ts/utils/sketch';
-import { addTextAsParagraphToElement } from '../ts/utils/dom-helpers';
+import { Sketch } from '../ts/utils/interactivity/p5/sketch';
+import { addTextAsParagraphToElement } from '../ts/utils/dom';
 
 const demoContainerId = 'demo';
 const descriptionContainerId = 'demo-description-container';

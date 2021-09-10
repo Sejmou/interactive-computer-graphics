@@ -1,9 +1,9 @@
 import './bezier.scss';
 import { BezierDemo } from "../ts/demo-material/curves/bezier/demo";
-import { Sketch } from '../ts/utils/sketch';
-import { MyObserver } from '../ts/utils/ui';
+import { Sketch } from '../ts/utils/interactivity/p5/sketch';
+import { MyObserver } from "../ts/utils/interactivity/my-observable";
 import { DemoChange } from '../ts/demo-material/curves/base/demo';
-import { addTextAsParagraphToElement } from "../ts/utils/dom-helpers";
+import { addTextAsParagraphToElement } from "../ts/utils/dom";
 
 
 

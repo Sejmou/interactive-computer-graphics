@@ -1,8 +1,10 @@
 import p5 from "p5";
-import { Clickable, Container, ContainerElement, Draggable, Drawable, Editable, Hoverable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "./ui";
-import { clamp } from "./math";
-import { p5TouchPoint, renderTextWithSubscript } from "./p5";
-import colors from "../../../global-styles/color_exports.scss";
+import { Clickable, Draggable, Drawable, Editable, Hoverable, PositionDisplayMode, Touchable } from "../ui";
+import { Container, ContainerElement } from "../container";
+import { MyObservable, MyObserver } from "../my-observable";
+import { clamp } from "../../math";
+import { p5TouchPoint, renderTextWithSubscript } from "./misc";
+import colors from "../../../../../global-styles/color_exports.scss";
 
 type AddOrRemove = 'add' | 'remove';
 
@@ -26,7 +28,7 @@ export class Vertex implements Drawable {
     /**
      * how the position should be displayed if showPosition is true
      */
-    public positionDisplayMode: PositionDisplayMode = 'relative to canvas';
+    public positionDisplayMode: PositionDisplayMode = 'pixel coordinates';
 
     private labelBackgroundColor = this.p5.color(255, 255, 255, 190);
 
@@ -41,7 +43,7 @@ export class Vertex implements Drawable {
         this.p5.fill(0);
         if (this.showLabel || this.showPosition) {
             const label = `${this.label && this.showLabel ? this.label + ' ' : ''}${this.showPosition ?
-                this.positionDisplayMode === 'absolute' ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`
+                this.positionDisplayMode === 'normalized coordinates' ? `(${this.position.x.toFixed(0)}, ${this.position.y.toFixed(0)})`
                     : `(${(this.positionRelativeToCanvas.x).toFixed(2)}, ${(this.positionRelativeToCanvas.y).toFixed(2)})` : ''}`;
             const labelWidth = this.p5.textWidth(label);
             const labelPosX = this.position.x + 10;

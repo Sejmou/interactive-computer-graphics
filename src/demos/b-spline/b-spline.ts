@@ -1,11 +1,12 @@
 import './b-spline.scss';
-import { Sketch } from "../ts/utils/sketch";
+import { Sketch } from "../ts/utils/interactivity/p5/sketch";
 import { BSplineDemo } from '../ts/demo-material/curves/b-spline/demo';
 import { BSplineGraphPlotter } from "../ts/demo-material/curves/b-spline/graph-plotter";
 import { CurveTypeControls } from "../ts/demo-material/curves/b-spline/curve-type-controls";
 import { KnotVectorControls } from "../ts/demo-material/curves/b-spline/knot-vector-controls";
 import { DemoChange } from '../ts/demo-material/curves/base/demo';
-import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
+import { addTextAsParagraphToElement } from "../ts/utils/dom";
+import { BooleanPropCheckbox } from "../ts/utils/interactivity/checkbox";
 import { LineAtTPlotter } from '../ts/demo-material/curves/base/line-at-t-plotter';
 import { ControlPointInfluenceBarVisualization } from '../ts/demo-material/curves/base/ctrl-pt-influence-vis';
 

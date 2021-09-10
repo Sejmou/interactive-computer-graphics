@@ -1,8 +1,9 @@
 import './bernstein.scss';
 import p5 from "p5";
 import { BezierDemo } from "../ts/demo-material/curves/bezier/demo";
-import { Sketch } from '../ts/utils/sketch';
-import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
+import { Sketch } from '../ts/utils/interactivity/p5/sketch';
+import { addTextAsParagraphToElement } from "../ts/utils/dom";
+import { BooleanPropCheckbox } from "../ts/utils/interactivity/checkbox";
 import { BernsteinCurveFormulas } from '../ts/demo-material/curves/bezier/bernstein-curve-formulas';
 import { DemoChange } from '../ts/demo-material/curves/base/demo';
 import { BernsteinGraphPlotter } from '../ts/demo-material/curves/bezier/graph-plotter';

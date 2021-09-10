@@ -1,6 +1,6 @@
 import p5 from 'p5';
-import { Drawable } from '../../../utils/ui';
-import { drawLineXYCoords } from "../../../utils/p5";
+import { Drawable } from '../../../utils/interactivity/ui';
+import { drawLineXYCoords } from "../../../utils/interactivity/p5/misc";
 import colors from "../../../../../global-styles/color_exports.scss";
 import { CtrlPtInfluenceFuncGraphPlotter } from './graph-plotter';
 import { CurveDemo } from './demo';

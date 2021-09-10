@@ -1,9 +1,11 @@
 import colors from "../../../../../global-styles/color_exports.scss";
 import p5 from "p5";
-import { Clickable, Container, Draggable, Drawable, MyObservable, MyObserver, PositionDisplayMode, Touchable } from "../../../utils/ui";
+import { Clickable, Draggable, Drawable, PositionDisplayMode, showsPositionCoordinates, Touchable } from "../../../utils/interactivity/ui";
+import { Container } from "../../../utils/interactivity/container";
+import { MyObservable, MyObserver } from "../../../utils/interactivity/my-observable";
 import { areColorsTooSimilar, lightenDarkenColor, luminanceFromP5Color, randomColorHexString } from "../../../utils/color";
-import { p5TouchPoint } from "../../../utils/p5";
-import { DragVertex } from "../../../utils/vertex";
+import { p5TouchPoint } from "../../../utils/interactivity/p5/misc";
+import { DragVertex } from "../../../utils/interactivity/p5/vertex";
 import { ControlsForParameterT } from "./controls-for-t";
 import { Curve } from "./curve";
 import { CurveDrawingVisualization } from "./curve-drawing-vis";
@@ -36,7 +38,7 @@ interface ControlPointColor {
  * 
  * Control point labels (P_0, ...., P_n) can be toggled on/off. The control point positions can also be displayed, if desired (in pixel coordinates or normalized coordinates).
  */
-export abstract class CurveDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<DemoChange> {
+export abstract class CurveDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<DemoChange>, showsPositionCoordinates {
     private _curve?: Curve;
 
     private get curve() {
@@ -196,7 +198,7 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         return this.showInfluenceVisForCurrentlyActiveCtrlPt && (this.hovering || this.dragging);
     }
 
-    private _positionDisplayMode: PositionDisplayMode = "absolute";
+    private _positionDisplayMode: PositionDisplayMode = "normalized coordinates";
     public get positionDisplayMode(): PositionDisplayMode {
         return this._positionDisplayMode;
     }
@@ -215,7 +217,7 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
         this.controlPointColors = this.initControlPointColors();
         this.showPointLabels = false;
         this.showPointPositions = false;
-        this.positionDisplayMode = 'relative to canvas';
+        this.positionDisplayMode = 'pixel coordinates';
 
         // this.influenceVisForActiveCtrlPt = new InfluenceVisualizerForActiveControlPoint(this.p5, this);
 

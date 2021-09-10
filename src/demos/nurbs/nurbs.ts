@@ -1,9 +1,10 @@
 import './nurbs.scss';
-import { Sketch } from "../ts/utils/sketch";
+import { Sketch } from "../ts/utils/interactivity/p5/sketch";
 import { CurveTypeControls } from "../ts/demo-material/curves/b-spline/curve-type-controls";
 import { KnotVectorControls } from "../ts/demo-material/curves/b-spline/knot-vector-controls";
 import { DemoChange } from '../ts/demo-material/curves/base/demo';
-import { addTextAsParagraphToElement, BooleanPropCheckbox } from "../ts/utils/dom-helpers";
+import { addTextAsParagraphToElement } from "../ts/utils/dom";
+import { BooleanPropCheckbox } from "../ts/utils/interactivity/checkbox";
 import { NURBSDemo } from "../ts/demo-material/curves/nurbs/demo";
 import { NURBSGraphPlotter } from "../ts/demo-material/curves/nurbs/graph-plotter";
 import { ControlsForControlPointWeights } from "../ts/demo-material/curves/nurbs/ctrl-pt-weight-controls";

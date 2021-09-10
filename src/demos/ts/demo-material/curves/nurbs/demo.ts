@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { DragVertex } from "../../../utils/vertex";
+import { DragVertex } from "../../../utils/interactivity/p5/vertex";
 import { BasisFunctionData, BSplineDemo } from "../b-spline/demo";
 import { NURBSVisualization } from "./curve-drawing-vis";
 import { ControlPointInfluenceFunctionData } from "../base/demo";

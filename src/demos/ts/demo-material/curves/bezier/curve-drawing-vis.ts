@@ -1,6 +1,6 @@
 import p5 from 'p5';
-import { MyObserver } from '../../../utils/ui';
-import { drawCircle, drawLineVector } from "../../../utils/p5";
+import { MyObserver } from "../../../utils/interactivity/my-observable";
+import { drawCircle, drawLineVector } from "../../../utils/interactivity/p5/misc";
 import { DemoChange } from '../base/demo';
 import { CurveDrawingVisualization } from "../base/curve-drawing-vis";
 import { BezierDemo } from './demo';
@@ -60,7 +60,7 @@ export class DeCasteljauVisualization extends CurveDrawingVisualization implemen
         const showPosition = this.demo.showPointPositions;
         const positionDisplayMode = this.demo.positionDisplayMode;
         if (showLabel || showPosition) {
-            const label = `${showLabel ? 'C(t) ' : ''}${showPosition ? `${positionDisplayMode === 'absolute' ? `(${posX}, ${posY})` : `(${(posX / this.p5.width).toFixed(2)}, ${(posY / this.p5.height).toFixed(2)})`}` : ''}`;
+            const label = `${showLabel ? 'C(t) ' : ''}${showPosition ? `${positionDisplayMode === 'normalized coordinates' ? `(${posX}, ${posY})` : `(${(posX / this.p5.width).toFixed(2)}, ${(posY / this.p5.height).toFixed(2)})`}` : ''}`;
             const labelPosX = posX + 10;
             const labelPosY = posY - 10;
             this.p5.push();

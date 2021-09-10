@@ -1,4 +1,4 @@
-import { MyObserver } from '../../../utils/ui';
+import { MyObserver } from "../../../utils/interactivity/my-observable";
 import { clamp } from "../../../utils/math";
 import { DemoChange } from '../base/demo';
 import { BSplineDemo } from './demo';

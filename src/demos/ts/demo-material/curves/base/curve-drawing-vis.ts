@@ -1,6 +1,6 @@
 import colors from "../../../../../global-styles/color_exports.scss";
 import p5 from "p5";
-import { Drawable } from "../../../utils/ui";
+import { Drawable } from "../../../utils/interactivity/ui";
 import { CurveDemo } from "./demo";
 
 

@@ -1,4 +1,5 @@
-import { Drawable, MyObserver } from '../../../utils/ui';
+import { Drawable } from '../../../utils/interactivity/ui';
+import { MyObserver } from "../../../utils/interactivity/my-observable";
 import { DemoChange } from '../base/demo';
 import { BezierDemo } from './demo';
 

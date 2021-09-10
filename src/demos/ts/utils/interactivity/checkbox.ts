@@ -1,16 +1,5 @@
-import { MyObservable, MyObserver } from "./ui";
+import { MyObservable, MyObserver } from "./my-observable";
 
-// ------------------------ DOM helpers ----------------------------
-
-export function addTextAsParagraphToElement(elementId: string, pContent: string) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        const p = document.createElement('p');
-        p.innerHTML = pContent;
-        element.appendChild(p);
-    }
-    else console.warn(`HTML element with id ${elementId} not found`);
-}
 
 export interface CheckboxConfig<T extends MyObservable<any>> {
     /**
@@ -31,7 +20,7 @@ export interface CheckboxConfig<T extends MyObservable<any>> {
     /**
      * defines what should happen if the user changed the checkbox state
      */
-     onUserChangedCheckboxChecked: (newCheckedState: boolean) => void;
+    onUserChangedCheckboxChecked: (newCheckedState: boolean) => void;
 
     /**
      * Called whenever objectToSubscribeTo notifies the checkbox of a change
@@ -44,7 +33,7 @@ export interface CheckboxConfig<T extends MyObservable<any>> {
 
     /**
      * The ID of the container where the checkBox should be created
-     * 
+     *
      * If not provided, checkbox is appended to body
      */
     parentContainerId?: string;
@@ -52,11 +41,12 @@ export interface CheckboxConfig<T extends MyObservable<any>> {
 /**
  * Creates a checkbox on the page. The user can define what should happen when the checkbox is toggled.
  * Also, the checkbox subscribes to an MyObservable. whenever it emits a change, the checkbox updates itself using a user-defined getter and checks whether it should be hidden (also using user-defined function)
- * 
- * 
+ *
+ *
  * Note: This is quite a mindf*ck, I unfortunately realized how unnecessarily complicated this whole code is at the (temporary) end of this project (when I was about to hand in my Bachelor's thesis)
  * Maybe someday I will find the time to look at this again, but I doubt it....
  */
+
 export class BooleanPropCheckbox<T extends MyObservable<U>, U> implements MyObserver<U> {
     private objectToSubscribeTo: T;
     private label: HTMLLabelElement;
@@ -77,13 +67,13 @@ export class BooleanPropCheckbox<T extends MyObservable<U>, U> implements MyObse
 
         this.checkBox = document.createElement('input');
         this.checkBox.type = 'checkbox';
-        this.checkBox.className = 'filled-in';// apply different Materialize style
+        this.checkBox.className = 'filled-in'; // apply different Materialize style
         this.checkBox.checked = getCurrValOfPropToModify();
         const labelTextSpanEl = document.createElement('span');
         labelTextSpanEl.innerText = labelText;
 
         this.label = document.createElement('label');
-        this.label.style.display = 'block';// label elements are inline by default, we don't want that
+        this.label.style.display = 'block'; // label elements are inline by default, we don't want that
         this.label.appendChild(this.checkBox);
         this.label.appendChild(labelTextSpanEl);
 
@@ -118,7 +108,9 @@ export class BooleanPropCheckbox<T extends MyObservable<U>, U> implements MyObse
     }
 
     private updateCheckboxVisibility(visible: boolean) {
-        if (visible) this.label.style.removeProperty('visibility');
-        else this.label.style.visibility = 'hidden';
+        if (visible)
+            this.label.style.removeProperty('visibility');
+        else
+            this.label.style.visibility = 'hidden';
     }
 }
