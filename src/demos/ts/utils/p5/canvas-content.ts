@@ -1,12 +1,12 @@
 /**
- * An element which can be rendered onto a p5 canvas (or needs to be updated anytime the canvas's draw() is called)
+ * An element which can be rendered onto a canvas created by p5 (or needs to be updated anytime the canvas's draw() is called)
  */
 export interface Drawable {
     draw(): void
 }
 
 /**
- * an element that can be part of a p5 canvas and can be clicked on (handling mouse events)
+ * an element that is part of a canvas created by p5 and can be clicked on (handling mouse events)
  */
 export interface Clickable {
     handleMousePressed(): void,
@@ -14,7 +14,7 @@ export interface Clickable {
 }
 
 /**
- * an element that can be part of a p5 canvas and is able to/has to handle touch events
+ * an element that is part of a canvas created by p5 and handles touch events
  */
 export interface Touchable {
     handleTouchStarted(): void,
@@ -22,7 +22,7 @@ export interface Touchable {
 }
 
 /**
- * an element that can be part of the p5 canvas and can be dragged with a mouse cursor or via touchscreen
+ * an element that is part of the canvas created by p5 and can be dragged with a mouse cursor or via touchscreen
  */
 export interface Draggable {
     readonly hovering: boolean,
@@ -30,7 +30,7 @@ export interface Draggable {
 }
 
 /**
- * An element that can be part of the p5 canvas and reacts to mouse hover events in some way
+ * An element that is part of the canvas created by p5 and reacts to mouse hover events in some way
  */
 export interface Hoverable {
     readonly hovering: boolean
@@ -48,7 +48,7 @@ export interface Editable {
 }
 
 /**
- * An element that can be part of the p5 canvas and adapts itself to the current size of the canvas on every canvas resize
+ * An element that is part of the canvas created by p5 and adapts in some way on every canvas resize
  */
 export interface Responsive {
     canvasResized(): void

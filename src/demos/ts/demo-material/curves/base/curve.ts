@@ -1,10 +1,10 @@
 import p5 from "p5";
-import { Drawable } from "../../../utils/interactivity/ui";
+import { Drawable } from "../../../utils/p5/canvas-content";
 import { MyObserver } from "../../../utils/interactivity/my-observable";
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
 import { CurveDemo, DemoChange } from "./demo";
 import { BSplineDemo } from "../b-spline/demo";
-import { drawCircle, drawLineVector } from "../../../utils/interactivity/p5/misc";
+import { drawCircle, drawLineVector } from "../../../utils/p5/misc";
 
 
 

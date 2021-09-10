@@ -1,5 +1,5 @@
 import './b-spline.scss';
-import { Sketch } from "../ts/utils/interactivity/p5/sketch";
+import { Sketch } from "../ts/utils/p5/sketch";
 import { BSplineDemo } from '../ts/demo-material/curves/b-spline/demo';
 import { BSplineGraphPlotter } from "../ts/demo-material/curves/b-spline/graph-plotter";
 import { CurveTypeControls } from "../ts/demo-material/curves/b-spline/curve-type-controls";

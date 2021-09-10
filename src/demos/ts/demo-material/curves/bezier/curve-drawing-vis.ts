@@ -1,6 +1,6 @@
 import p5 from 'p5';
 import { MyObserver } from "../../../utils/interactivity/my-observable";
-import { drawCircle, drawLineVector } from "../../../utils/interactivity/p5/misc";
+import { drawCircle, drawLineVector } from "../../../utils/p5/misc";
 import { DemoChange } from '../base/demo';
 import { CurveDrawingVisualization } from "../base/curve-drawing-vis";
 import { BezierDemo } from './demo';

@@ -1,4 +1,4 @@
-import { drawLineXYCoords } from "../../../utils/interactivity/p5/misc";
+import { drawLineXYCoords } from "../../../utils/p5/misc";
 import { CtrlPtInfluenceFuncGraphPlotter } from "../base/graph-plotter";
 
 

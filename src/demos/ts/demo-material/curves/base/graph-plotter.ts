@@ -1,9 +1,9 @@
 import p5 from 'p5';
-import { Drawable, Responsive } from '../../../utils/interactivity/ui';
+import { Drawable, Responsive } from '../../../utils/p5/canvas-content';
 import { MyObserver } from "../../../utils/interactivity/my-observable";
 import { createArrayOfEquidistantAscendingNumbersInRange, findMaxNumber } from "../../../utils/misc";
-import { drawLineXYCoords, renderTextWithSubscript } from "../../../utils/interactivity/p5/misc";
-import { DragVertex } from '../../../utils/interactivity/p5/vertex';
+import { drawLineXYCoords, renderTextWithSubscript } from "../../../utils/p5/misc";
+import { DragVertex } from '../../../utils/p5/vertex';
 import { CurveDemo, DemoChange } from './demo';
 
 

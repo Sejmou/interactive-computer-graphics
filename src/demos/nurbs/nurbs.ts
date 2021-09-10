@@ -1,5 +1,5 @@
 import './nurbs.scss';
-import { Sketch } from "../ts/utils/interactivity/p5/sketch";
+import { Sketch } from "../ts/utils/p5/sketch";
 import { CurveTypeControls } from "../ts/demo-material/curves/b-spline/curve-type-controls";
 import { KnotVectorControls } from "../ts/demo-material/curves/b-spline/knot-vector-controls";
 import { DemoChange } from '../ts/demo-material/curves/base/demo';

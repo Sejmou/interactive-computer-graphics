@@ -1,11 +1,11 @@
 import colors from "../../../../../global-styles/color_exports.scss";
 import p5 from "p5";
-import { Clickable, Draggable, Drawable, PositionDisplayMode, showsPositionCoordinates, Touchable } from "../../../utils/interactivity/ui";
+import { Clickable, Draggable, Drawable, PositionDisplayMode, showsPositionCoordinates, Touchable } from "../../../utils/p5/canvas-content";
 import { Container } from "../../../utils/interactivity/container";
 import { MyObservable, MyObserver } from "../../../utils/interactivity/my-observable";
 import { areColorsTooSimilar, lightenDarkenColor, luminanceFromP5Color, randomColorHexString } from "../../../utils/color";
-import { p5TouchPoint } from "../../../utils/interactivity/p5/misc";
-import { DragVertex } from "../../../utils/interactivity/p5/vertex";
+import { p5TouchPoint } from "../../../utils/p5/misc";
+import { DragVertex } from "../../../utils/p5/vertex";
 import { ControlsForParameterT } from "./controls-for-t";
 import { Curve } from "./curve";
 import { CurveDrawingVisualization } from "./curve-drawing-vis";

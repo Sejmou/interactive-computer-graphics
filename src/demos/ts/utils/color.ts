@@ -1,8 +1,6 @@
 import p5 from "p5";
 import { isNumeric } from "./math";
 
-// --------------------------- Color ----------------------------
-
 export function parseColorString(rgb: string): [number, number, number, number] {
     const [r, g, b, a] = rgb.replace(/[^\d,]/g, '').split(',').map(str => +str);
     return [r, g, b, a];

@@ -1,52 +1,13 @@
 import { MyObservable, MyObserver } from "./my-observable";
 
 
-export interface CheckboxConfig<T extends MyObservable<any>> {
-    /**
-     * the object whose changes should be listened to (for determining whether checkbox should be visible)
-     */
-    objectToSubscribeTo: T;
-
-    /**
-     * the text of the label for the checkbox
-     */
-    labelText: string;
-
-    /**
-     * gets the current value of the property that should be toggled by the checkbox
-     */
-    getCurrValOfPropToModify: () => boolean;
-
-    /**
-     * defines what should happen if the user changed the checkbox state
-     */
-    onUserChangedCheckboxChecked: (newCheckedState: boolean) => void;
-
-    /**
-     * Called whenever objectToSubscribeTo notifies the checkbox of a change
-     * Properties of the objectToSubscribeTo can then be checked to decide if the checkbox should still be shown
-     * Return true here whenever the checkbox should be visible and false otherwise
-     */
-    shouldCheckboxBeVisible: (objectToSubscribeTo: T) => boolean;
-
-    tooltipText?: string;
-
-    /**
-     * The ID of the container where the checkBox should be created
-     *
-     * If not provided, checkbox is appended to body
-     */
-    parentContainerId?: string;
-}
 /**
  * Creates a checkbox on the page. The user can define what should happen when the checkbox is toggled.
  * Also, the checkbox subscribes to an MyObservable. whenever it emits a change, the checkbox updates itself using a user-defined getter and checks whether it should be hidden (also using user-defined function)
  *
  *
- * Note: This is quite a mindf*ck, I unfortunately realized how unnecessarily complicated this whole code is at the (temporary) end of this project (when I was about to hand in my Bachelor's thesis)
- * Maybe someday I will find the time to look at this again, but I doubt it....
+ * Note: This is probably unnecessarily complicated but I couldn't come up with a simpler solution at the time I wrote this code
  */
-
 export class BooleanPropCheckbox<T extends MyObservable<U>, U> implements MyObserver<U> {
     private objectToSubscribeTo: T;
     private label: HTMLLabelElement;
@@ -113,4 +74,43 @@ export class BooleanPropCheckbox<T extends MyObservable<U>, U> implements MyObse
         else
             this.label.style.visibility = 'hidden';
     }
+
+}
+
+export interface CheckboxConfig<T extends MyObservable<any>> {
+    /**
+     * the object whose changes should be listened to (for determining whether checkbox should be visible)
+     */
+    objectToSubscribeTo: T;
+
+    /**
+     * the text of the label for the checkbox
+     */
+    labelText: string;
+
+    /**
+     * gets the current value of the property that should be toggled by the checkbox
+     */
+    getCurrValOfPropToModify: () => boolean;
+
+    /**
+     * defines what should happen if the user changed the checkbox state
+     */
+    onUserChangedCheckboxChecked: (newCheckedState: boolean) => void;
+
+    /**
+     * Called whenever objectToSubscribeTo notifies the checkbox of a change
+     * Properties of the objectToSubscribeTo can then be checked to decide if the checkbox should still be shown
+     * Return true here whenever the checkbox should be visible and false otherwise
+     */
+    shouldCheckboxBeVisible: (objectToSubscribeTo: T) => boolean;
+
+    tooltipText?: string;
+
+    /**
+     * The ID of the container where the checkBox should be created
+     *
+     * If not provided, checkbox is appended to body
+     */
+    parentContainerId?: string;
 }

@@ -1,5 +1,3 @@
-// ----------------------- Misc -------------------------
-
 export function indexToLowercaseLetter(i: number): string {
     return String.fromCharCode(i + 97);
 }

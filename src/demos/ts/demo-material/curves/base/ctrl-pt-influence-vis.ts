@@ -1,9 +1,9 @@
 import p5 from "p5";
-import { Clickable, Draggable, Drawable, Touchable } from "../../../utils/interactivity/ui";
+import { Clickable, Draggable, Drawable, Touchable } from "../../../utils/p5/canvas-content";
 import { MyObserver } from "../../../utils/interactivity/my-observable";
 import { lightenDarkenP5Color } from "../../../utils/color";
-import { drawLineXYCoords, p5TouchPoint } from "../../../utils/interactivity/p5/misc";
-import { DragVertex } from "../../../utils/interactivity/p5/vertex";
+import { drawLineXYCoords, p5TouchPoint } from "../../../utils/p5/misc";
+import { DragVertex } from "../../../utils/p5/vertex";
 import { CurveDemo, DemoChange } from "./demo";
 
 
