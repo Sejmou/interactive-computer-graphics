@@ -2,7 +2,7 @@ import colors from "../../../../../global-styles/color_exports.scss";
 import p5 from "p5";
 import { Clickable, Draggable, Drawable, PositionDisplayMode, showsPositionCoordinates, Touchable } from "../../../utils/p5/canvas-content";
 import { Container } from "../../../utils/interactivity/container";
-import { MyObservable, MyObserver } from "../../../utils/interactivity/my-observable";
+import { Subject, Observer } from "../../../utils/interactivity/observer-pattern";
 import { areColorsTooSimilar, lightenDarkenColor, luminanceFromP5Color, randomColorHexString } from "../../../utils/color";
 import { p5TouchPoint } from "../../../utils/p5/misc";
 import { DragVertex } from "../../../utils/p5/vertex";
@@ -38,7 +38,7 @@ interface ControlPointColor {
  * 
  * Control point labels (P_0, ...., P_n) can be toggled on/off. The control point positions can also be displayed, if desired (in pixel coordinates or normalized coordinates).
  */
-export abstract class CurveDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, MyObservable<DemoChange>, showsPositionCoordinates {
+export abstract class CurveDemo implements Drawable, Touchable, Draggable, Clickable, Container<DragVertex>, Subject<DemoChange>, showsPositionCoordinates {
     private _curve?: Curve;
 
     private get curve() {
@@ -493,18 +493,18 @@ export abstract class CurveDemo implements Drawable, Touchable, Draggable, Click
     }
 
 
-    private observers: MyObserver<DemoChange>[] = [];
+    private observers: Observer<DemoChange>[] = [];
 
-    subscribe(observer: MyObserver<DemoChange>): void {
+    subscribe(observer: Observer<DemoChange>): void {
         this.observers.push(observer);
     }
 
-    unsubscribe(observer: MyObserver<DemoChange>): void {
+    unsubscribe(observer: Observer<DemoChange>): void {
         this.observers = this.observers.filter(o => o !== observer);
     }
 
     /**
-     * Notifies observers that a particular property of the curve changed
+     * Notifies Observers that a particular property of the curve changed
      * @param change The change that occured
      */
     notifyObservers(change: DemoChange): void {

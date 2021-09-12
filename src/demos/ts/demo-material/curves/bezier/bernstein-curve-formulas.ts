@@ -1,5 +1,5 @@
 import { Drawable } from '../../../utils/p5/canvas-content';
-import { MyObserver } from "../../../utils/interactivity/my-observable";
+import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { DemoChange } from '../base/demo';
 import { BezierDemo } from './demo';
 
@@ -9,7 +9,7 @@ import { BezierDemo } from './demo';
 /**
  * Renders the current Bézier curve formula (sum of Bernstein polynomials of each control point multiplied by control point positions) + the formula for each Bernstein polynomial and their current values
  */
-export class BernsteinCurveFormulas implements Drawable, MyObserver<DemoChange> {
+export class BernsteinCurveFormulas implements Drawable, Observer<DemoChange> {
     private textBoxContainer: HTMLDivElement;
     private containersForBernsteinPolynomialValues: HTMLDivElement[] = [];
     private bezierCurveEquation: HTMLSpanElement;

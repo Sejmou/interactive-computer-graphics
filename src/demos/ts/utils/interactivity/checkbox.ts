@@ -1,14 +1,14 @@
-import { MyObservable, MyObserver } from "./my-observable";
+import { Subject, Observer } from "./observer-pattern";
 
 
 /**
  * Creates a checkbox on the page. The user can define what should happen when the checkbox is toggled.
- * Also, the checkbox subscribes to an MyObservable. whenever it emits a change, the checkbox updates itself using a user-defined getter and checks whether it should be hidden (also using user-defined function)
+ * Also, the checkbox subscribes to a Subject. whenever it emits a change, the checkbox updates itself using a user-defined getter and checks whether it should be hidden (also using user-defined function)
  *
  *
  * Note: This is probably unnecessarily complicated but I couldn't come up with a simpler solution at the time I wrote this code
  */
-export class BooleanPropCheckbox<T extends MyObservable<U>, U> implements MyObserver<U> {
+export class BooleanPropCheckbox<T extends Subject<U>, U> implements Observer<U> {
     private objectToSubscribeTo: T;
     private label: HTMLLabelElement;
     private checkBox: HTMLInputElement;
@@ -77,7 +77,7 @@ export class BooleanPropCheckbox<T extends MyObservable<U>, U> implements MyObse
 
 }
 
-export interface CheckboxConfig<T extends MyObservable<any>> {
+export interface CheckboxConfig<T extends Subject<any>> {
     /**
      * the object whose changes should be listened to (for determining whether checkbox should be visible)
      */

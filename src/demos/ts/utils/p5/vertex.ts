@@ -1,7 +1,7 @@
 import p5 from "p5";
 import { Clickable, Draggable, Drawable, Editable, Hoverable, PositionDisplayMode, Touchable } from "./canvas-content";
 import { Container, ContainerElement } from "../interactivity/container";
-import { MyObservable, MyObserver } from "../interactivity/my-observable";
+import { Subject, Observer } from "../interactivity/observer-pattern";
 import { clamp } from "../math";
 import { p5TouchPoint, renderTextWithSubscript } from "./misc";
 import colors from "../../../../global-styles/color_exports.scss";
@@ -74,7 +74,7 @@ export class Vertex implements Drawable {
     }
 }
 
-export class DragVertex extends Vertex implements Draggable, Clickable, Touchable, Editable, ContainerElement<DragVertex>, MyObserver<AddOrRemove> {
+export class DragVertex extends Vertex implements Draggable, Clickable, Touchable, Editable, ContainerElement<DragVertex>, Observer<AddOrRemove> {
     public get hovering(): boolean {
         return this.mouseHoveringOver();
     }
@@ -260,7 +260,7 @@ export class DragVertex extends Vertex implements Draggable, Clickable, Touchabl
 }
 
 
-class ActionButton implements Drawable, Clickable, Touchable, Hoverable, MyObservable<AddOrRemove> {
+class ActionButton implements Drawable, Clickable, Touchable, Hoverable, Subject<AddOrRemove> {
     public get hovering() {
         return this.mouseHoveringOver();
     }
@@ -271,7 +271,7 @@ class ActionButton implements Drawable, Clickable, Touchable, Hoverable, MyObser
         return vertexToMouse <= this.baseRadius;
     };
 
-    private observers: MyObserver<AddOrRemove>[] = [];
+    private observers: Observer<AddOrRemove>[] = [];
 
     private lastInteraction: 'touch' | 'cursor' | undefined;
 
@@ -326,11 +326,11 @@ class ActionButton implements Drawable, Clickable, Touchable, Hoverable, MyObser
     handleMouseReleased(): void { }
     handleTouchReleased(): void { }
 
-    subscribe(observer: MyObserver<AddOrRemove>): void {
+    subscribe(observer: Observer<AddOrRemove>): void {
         this.observers.push(observer);
     }
 
-    unsubscribe(observer: MyObserver<AddOrRemove>): void {
+    unsubscribe(observer: Observer<AddOrRemove>): void {
         this.observers = this.observers.filter(o => o !== observer);
     }
 

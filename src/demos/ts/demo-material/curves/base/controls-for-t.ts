@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { MyObserver } from "../../../utils/interactivity/my-observable";
+import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { DemoChange, CurveDemo } from "./demo";
 
 
@@ -7,7 +7,7 @@ import { DemoChange, CurveDemo } from "./demo";
 /**
  * Gives the user the ability to modify the value of the curve parameter t with a slider and also animate things with play/rewind buttons (controlling animation + animation speed)
  */
-export class ControlsForParameterT implements MyObserver<DemoChange> {
+export class ControlsForParameterT implements Observer<DemoChange> {
     private baseAnimationSpeedPerFrame = 0.005;
 
     /**

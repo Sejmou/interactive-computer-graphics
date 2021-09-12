@@ -1,4 +1,4 @@
-import { MyObserver } from "../../../utils/interactivity/my-observable";
+import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { clamp } from "../../../utils/math";
 import { DemoChange } from '../base/demo';
 import { BSplineDemo } from './demo';
@@ -8,7 +8,7 @@ import { BSplineDemo } from './demo';
 /**
  * Allows the user to modify the entries of the knot vector of a BSplineDemo
  */
-export class KnotVectorControls implements MyObserver<DemoChange> {
+export class KnotVectorControls implements Observer<DemoChange> {
     private knotInputElements: HTMLInputElement[] = [];
     private controlsContainer: HTMLDivElement;
     private tableContainer: HTMLDivElement;

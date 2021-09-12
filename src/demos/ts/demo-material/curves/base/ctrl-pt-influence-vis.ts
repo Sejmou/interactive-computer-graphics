@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { Clickable, Draggable, Drawable, Touchable } from "../../../utils/p5/canvas-content";
-import { MyObserver } from "../../../utils/interactivity/my-observable";
+import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { lightenDarkenP5Color } from "../../../utils/color";
 import { drawLineXYCoords, p5TouchPoint } from "../../../utils/p5/misc";
 import { DragVertex } from "../../../utils/p5/vertex";
@@ -18,7 +18,7 @@ export interface ControlPointInfluenceData {
  * 
  * If a bar is empty, the control point doesn't affect the shape of the curve for the current t, if it is full the position of the point on the curve is equal to the control point position.
  */
-export class ControlPointInfluenceBarVisualization implements MyObserver<DemoChange>, Drawable, Draggable, Touchable, Clickable {
+export class ControlPointInfluenceBarVisualization implements Observer<DemoChange>, Drawable, Draggable, Touchable, Clickable {
     private barBorderColor: p5.Color;
     private barHeight = 60;
     private barWidth = 30;

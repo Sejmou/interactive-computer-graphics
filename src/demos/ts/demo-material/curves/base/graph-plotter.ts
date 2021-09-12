@@ -1,6 +1,6 @@
 import p5 from 'p5';
 import { Drawable, Responsive } from '../../../utils/p5/canvas-content';
-import { MyObserver } from "../../../utils/interactivity/my-observable";
+import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { createArrayOfEquidistantAscendingNumbersInRange, findMaxNumber } from "../../../utils/misc";
 import { drawLineXYCoords, renderTextWithSubscript } from "../../../utils/p5/misc";
 import { DragVertex } from '../../../utils/p5/vertex';
@@ -19,7 +19,7 @@ export interface CurveData {
  * 
  * "Control point influence functions" may be Bézier polynomials (Bézier), B-Spline basis functions or weighted B-Spline basis functions (with added control point weights, used for NURBS)
  */
-export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, MyObserver<DemoChange>, Responsive {
+export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, Observer<DemoChange>, Responsive {
     protected noOfStepsXAxis = 700;
     protected xValues: number[] = [];
 

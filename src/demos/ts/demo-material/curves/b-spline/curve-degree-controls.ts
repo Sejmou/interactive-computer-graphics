@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { MyObserver } from "../../../utils/interactivity/my-observable";
+import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { DemoChange } from '../base/demo';
 import { BSplineDemo } from './demo';
 
@@ -8,7 +8,7 @@ import { BSplineDemo } from './demo';
 /**
  * Allows the user to change the degree of the BsplineDemo
  */
-export class DegreeControls implements MyObserver<DemoChange> {
+export class DegreeControls implements Observer<DemoChange> {
     private container: p5.Element;
     private degreeText: p5.Element;
     private decreaseDegreeButton: p5.Element;

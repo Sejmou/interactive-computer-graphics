@@ -1,4 +1,4 @@
-import { MyObserver } from "../../../utils/interactivity/my-observable";
+import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { clamp } from "../../../utils/math";
 import { DemoChange } from "../base/demo";
 import { NURBSDemo } from "./demo";
@@ -8,7 +8,7 @@ import { NURBSDemo } from "./demo";
 /**
  * Allows the user to change the weight associated with each control point of a NURBSDemo -> demo modifies weighted basis functions accordingly 
  */
-export class ControlsForControlPointWeights implements MyObserver<DemoChange> {
+export class ControlsForControlPointWeights implements Observer<DemoChange> {
     private ctrlPtWeightInputElements: HTMLInputElement[] = [];
     private tableContainer: HTMLDivElement;
     private controlsContainer: HTMLDivElement;

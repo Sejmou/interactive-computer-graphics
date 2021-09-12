@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { MyObserver } from "../../../utils/interactivity/my-observable";
+import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { drawCircle, drawLineVector } from "../../../utils/p5/misc";
 import { DemoChange } from '../base/demo';
 import { CurveDrawingVisualization } from "../base/curve-drawing-vis";
@@ -9,7 +9,7 @@ import { BezierDemo } from './demo';
 /**
  * Visualizes De Casteljau's algorithm for evaluating/rendering Bézier curves
  */
-export class DeCasteljauVisualization extends CurveDrawingVisualization implements MyObserver<DemoChange> {
+export class DeCasteljauVisualization extends CurveDrawingVisualization implements Observer<DemoChange> {
     private visible: boolean = false;
 
     constructor(p5: p5, demo: BezierDemo, color?: p5.Color, colorOfPointOnCurve?: p5.Color) {

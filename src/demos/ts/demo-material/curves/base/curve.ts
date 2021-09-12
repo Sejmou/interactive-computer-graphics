@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { Drawable } from "../../../utils/p5/canvas-content";
-import { MyObserver } from "../../../utils/interactivity/my-observable";
+import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
 import { CurveDemo, DemoChange } from "./demo";
 import { BSplineDemo } from "../b-spline/demo";
@@ -11,7 +11,7 @@ import { drawCircle, drawLineVector } from "../../../utils/p5/misc";
 /**
  * Draws the curve of the respective CurveDemo, using it getPointOnCurve() function to find the points on the curve across the range of the curve parameter t.
  */
-export class Curve implements Drawable, MyObserver<DemoChange> {
+export class Curve implements Drawable, Observer<DemoChange> {
     /**
      * Signifies on how many steps of t the curve will be evaluated.
      * The less steps the less smooth the curve becomes.

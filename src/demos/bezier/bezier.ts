@@ -1,7 +1,7 @@
 import './bezier.scss';
 import { BezierDemo } from "../ts/demo-material/curves/bezier/demo";
 import { Sketch } from '../ts/utils/p5/sketch';
-import { MyObserver } from "../ts/utils/interactivity/my-observable";
+import { Observer } from "../ts/utils/interactivity/observer-pattern";
 import { DemoChange } from '../ts/demo-material/curves/base/demo';
 import { addTextAsParagraphToElement } from "../ts/utils/dom";
 
@@ -25,7 +25,7 @@ createDemo();
 
 
 
-class BezierDemoGuide implements MyObserver<DemoChange> {
+class BezierDemoGuide implements Observer<DemoChange> {
     private textBoxContainer: HTMLDivElement;
     private id: string = 'demo-guide';
 
