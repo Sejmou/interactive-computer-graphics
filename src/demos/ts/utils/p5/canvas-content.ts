@@ -1,3 +1,6 @@
+//The p5 library wraps DOM events on the canvas in its own event handler functions. A systematic way to handle those events was needed.
+//The interfaces and type guards in this file help an instance of my custom Sketch class forward events to objects that were added to it.
+
 /**
  * An element which can be rendered onto a canvas created by p5 (or needs to be updated anytime the canvas's draw() is called)
  */

@@ -1,4 +1,6 @@
-
+/**
+ * A container for elements of type T.
+ */
 export interface Container<T> {
     /**
      *
@@ -12,6 +14,9 @@ export interface Container<T> {
     remove(element: T): void;
 }
 
+/**
+ * An element (note: should be of type T) that can be added to a container for elements of type T
+ */
 export interface ContainerElement<T> {
     /**
      *
