@@ -3,6 +3,9 @@ import { Touchable, Drawable, Draggable, Clickable } from './sketch/sketch-conte
 import { indexToLowercaseLetter } from "../misc";
 import { DragVertex } from "./vertex";
 
+/**
+ * A polygon (initialized with a set of point positions). A filled polygon is drawn using the provided positions.
+ */
 export class Polygon implements Drawable {
     //TODO: swap vertexPositions with actual vertices (Vertex class)
     constructor(protected p5: p5, private vertexPositions: p5.Vector[], public color: p5.Color = p5.color(255), public stroke: boolean = false) { }
@@ -18,6 +21,11 @@ export class Polygon implements Drawable {
     }
 }
 
+
+
+/**
+ * Like Polygon, with the additional feature that the plygon vertices are draggable
+ */
 export class DragPolygon extends Polygon implements Draggable, Clickable, Touchable {
     public vertices: DragVertex[];
 

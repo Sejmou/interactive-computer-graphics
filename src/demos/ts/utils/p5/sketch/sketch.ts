@@ -4,6 +4,7 @@ import { Clickable, Draggable, Drawable, isClickable, isDraggable, isResponsive,
 /**
  * Utitility class, wrapping p5's createCanvas() in a dedicated Sketch class.
  * It allows users to add new Drawables (classes implementing the custom Drawable interface used in this project) dynamically. 
+ * It also mitigates the problem that p5 doesn't natively offer support for attaching multiple canvas event listeners (e.g. one per each created canvas object - also see https://discourse.processing.org/t/adding-event-handlers-to-sketch/21863)
  */
 export class Sketch {
     private p5?: p5;
