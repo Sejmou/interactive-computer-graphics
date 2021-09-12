@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { Sketch } from '../../../utils/p5/sketch';
+import { Sketch } from '../../../utils/p5/sketch/sketch';
 import { drawCircle, drawLineVector, drawSquare, renderTextWithSubscript } from "../../../utils/p5/misc";
 import { CurveDrawingVisualization } from "../base/curve-drawing-vis";
 import { BSplineDemo } from './demo';

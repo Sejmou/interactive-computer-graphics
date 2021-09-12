@@ -1,7 +1,7 @@
 import './bernstein.scss';
 import p5 from "p5";
 import { BezierDemo } from "../ts/demo-material/curves/bezier/demo";
-import { Sketch } from '../ts/utils/p5/sketch';
+import { Sketch } from '../ts/utils/p5/sketch/sketch';
 import { addTextAsParagraphToElement } from "../ts/utils/dom";
 import { BooleanPropCheckbox } from "../ts/utils/interactivity/checkbox";
 import { BernsteinCurveFormulas } from '../ts/demo-material/curves/bezier/bernstein-curve-formulas';

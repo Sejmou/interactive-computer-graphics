@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Clickable, Draggable, Drawable, Editable, Hoverable, PositionDisplayMode, Touchable } from "./canvas-content";
+import { Clickable, Draggable, Drawable, Editable, Hoverable, PositionDisplayMode, Touchable } from "./sketch/sketch-content";
 import { Container, ContainerElement } from "../interactivity/container";
 import { Subject, Observer } from "../interactivity/observer-pattern";
 import { clamp } from "../math";

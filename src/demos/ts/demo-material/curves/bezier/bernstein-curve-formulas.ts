@@ -1,4 +1,4 @@
-import { Drawable } from '../../../utils/p5/canvas-content';
+import { Drawable } from '../../../utils/p5/sketch/sketch-content';
 import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { DemoChange } from '../base/demo';
 import { BezierDemo } from './demo';

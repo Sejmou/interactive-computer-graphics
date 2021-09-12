@@ -1,6 +1,6 @@
 import colors from "../../../../../global-styles/color_exports.scss";
 import p5 from "p5";
-import { Clickable, Draggable, Drawable, PositionDisplayMode, showsPositionCoordinates, Touchable } from "../../../utils/p5/canvas-content";
+import { Clickable, Draggable, Drawable, PositionDisplayMode, showsPositionCoordinates, Touchable } from "../../../utils/p5/sketch/sketch-content";
 import { Container } from "../../../utils/interactivity/container";
 import { Subject, Observer } from "../../../utils/interactivity/observer-pattern";
 import { areColorsTooSimilar, lightenDarkenColor, luminanceFromP5Color, randomColorHexString } from "../../../utils/color";

@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Drawable } from "./canvas-content";
+import { Drawable } from "./sketch/sketch-content";
 
 /**
  * For some reason this is not defined in @types/p5...

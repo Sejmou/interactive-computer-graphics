@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { Clickable, Drawable, Draggable, Touchable } from '../utils/p5/canvas-content';
+import { Clickable, Drawable, Draggable, Touchable } from '../utils/p5/sketch/sketch-content';
 import { DragPolygon } from '../utils/p5/polygon';
 import { DragVertex } from '../utils/p5/vertex';
 import { parseColorString, lightenDarkenP5Color } from "../utils/color";

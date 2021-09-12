@@ -1,7 +1,7 @@
 import p5 from "p5";
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
 import { drawLineVector } from "../../../utils/p5/misc";
-import { Drawable } from "../../../utils/p5/canvas-content";
+import { Drawable } from "../../../utils/p5/sketch/sketch-content";
 import { DragVertex } from "../../../utils/p5/vertex";
 import { BSplineDemo } from "../b-spline/demo";
 import { NURBSDemo } from "../nurbs/demo";

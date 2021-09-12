@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Touchable, Drawable, Draggable, Clickable } from './canvas-content';
+import { Touchable, Drawable, Draggable, Clickable } from './sketch/sketch-content';
 import { indexToLowercaseLetter } from "../misc";
 import { DragVertex } from "./vertex";
 

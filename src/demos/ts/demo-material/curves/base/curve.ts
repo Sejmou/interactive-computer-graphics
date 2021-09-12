@@ -1,5 +1,5 @@
 import p5 from "p5";
-import { Drawable } from "../../../utils/p5/canvas-content";
+import { Drawable } from "../../../utils/p5/sketch/sketch-content";
 import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
 import { CurveDemo, DemoChange } from "./demo";

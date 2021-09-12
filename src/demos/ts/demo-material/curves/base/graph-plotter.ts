@@ -1,5 +1,5 @@
 import p5 from 'p5';
-import { Drawable, Responsive } from '../../../utils/p5/canvas-content';
+import { Drawable, Responsive } from '../../../utils/p5/sketch/sketch-content';
 import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { createArrayOfEquidistantAscendingNumbersInRange, findMaxNumber } from "../../../utils/misc";
 import { drawLineXYCoords, renderTextWithSubscript } from "../../../utils/p5/misc";
