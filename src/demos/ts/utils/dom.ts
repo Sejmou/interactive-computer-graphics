@@ -1,3 +1,8 @@
+/**
+ * Adds a <p> tag containing custom text to an HTML element targeted by its ID (as child)
+ * @param elementId ID of the HTML element
+ * @param pContent the text to add
+ */
 export function addTextAsParagraphToElement(elementId: string, pContent: string) {
     const element = document.getElementById(elementId);
     if (element) {
