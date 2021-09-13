@@ -1,7 +1,7 @@
 import p5 from "p5";
 import { drawLineXYCoords, drawPointVector } from "../../../utils/p5/misc";
 import { BSplineGraphPlotter } from "../b-spline/graph-plotter";
-import { CurveData } from "../base/graph-plotter";
+import { CurveData } from "../abstract-base/graph-plotter";
 import { NURBSDemo } from "./demo";
 
 

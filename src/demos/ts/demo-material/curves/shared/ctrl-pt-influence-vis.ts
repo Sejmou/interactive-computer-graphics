@@ -4,7 +4,7 @@ import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { lightenDarkenP5Color } from "../../../utils/color";
 import { drawLineXYCoords, p5TouchPoint } from "../../../utils/p5/misc";
 import { DragVertex } from "../../../utils/p5/vertex";
-import { CurveDemo, DemoChange } from "./demo";
+import { CurveDemo, DemoChange } from "../abstract-base/demo";
 
 
 

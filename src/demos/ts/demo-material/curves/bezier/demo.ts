@@ -1,8 +1,8 @@
 import p5 from 'p5';
 import { binomial } from '../../../utils/math';
-import { InfluenceVisualizerForActiveControlPoint } from '../base/active-ctrl-pt-influence-vis';
-import { Curve } from '../base/curve';
-import { ControlPointInfluenceFunctionData, CurveDemo } from '../base/demo';
+import { InfluenceVisualizerForActiveControlPoint } from '../shared/active-ctrl-pt-influence-vis';
+import { Curve } from '../shared/curve';
+import { ControlPointInfluenceFunctionData, CurveDemo } from '../abstract-base/demo';
 import { DeCasteljauVisualization } from './curve-drawing-vis';
 
 

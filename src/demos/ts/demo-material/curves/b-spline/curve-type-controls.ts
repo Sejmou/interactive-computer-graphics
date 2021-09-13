@@ -1,5 +1,5 @@
 import { Observer } from "../../../utils/interactivity/observer-pattern";
-import { DemoChange } from '../base/demo';
+import { DemoChange } from '../abstract-base/demo';
 import { BSplineDemo, CurveType } from './demo';
 
 

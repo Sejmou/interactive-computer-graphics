@@ -6,10 +6,10 @@ import { Subject, Observer } from "../../../utils/interactivity/observer-pattern
 import { areColorsTooSimilar, lightenDarkenColor, luminanceFromP5Color, randomColorHexString } from "../../../utils/color";
 import { p5TouchPoint } from "../../../utils/p5/misc";
 import { DragVertex } from "../../../utils/p5/vertex";
-import { ControlsForParameterT } from "./controls-for-t";
-import { Curve } from "./curve";
+import { ControlsForParameterT } from "../shared/controls-for-t";
+import { Curve } from "../shared/curve";
 import { CurveDrawingVisualization } from "./curve-drawing-vis";
-import { InfluenceVisualizerForActiveControlPoint } from "./active-ctrl-pt-influence-vis";
+import { InfluenceVisualizerForActiveControlPoint } from "../shared/active-ctrl-pt-influence-vis";
 
 export type DemoChange = 'controlPointsChanged' | 'rangeOfTChanged' | 'knotVectorChanged' | 'degreeChanged' | 'curveTypeChanged' | 'showCurveDrawingVisualizationChanged' | 'ctrlPtInfluenceFunctionsChanged';
 

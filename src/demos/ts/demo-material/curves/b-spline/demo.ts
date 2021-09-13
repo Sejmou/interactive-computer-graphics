@@ -1,11 +1,11 @@
 import p5, { Vector } from 'p5';
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
 import { clamp } from "../../../utils/math";
-import { ControlPointInfluenceFunctionData, CurveDemo } from '../base/demo';
+import { ControlPointInfluenceFunctionData, CurveDemo } from '../abstract-base/demo';
 import { BSplineVisualization } from './curve-drawing-vis';
 import { DegreeControls } from './curve-degree-controls';
-import { InfluenceVisualizerForActiveControlPoint } from '../base/active-ctrl-pt-influence-vis';
-import { Curve } from '../base/curve';
+import { InfluenceVisualizerForActiveControlPoint } from '../shared/active-ctrl-pt-influence-vis';
+import { Curve } from '../shared/curve';
 
 
 export interface BasisFunctionData {

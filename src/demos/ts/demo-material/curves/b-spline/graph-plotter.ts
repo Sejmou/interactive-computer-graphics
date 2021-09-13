@@ -1,7 +1,7 @@
 import p5 from 'p5';
 import { drawLineXYCoords, renderTextWithSubscript } from "../../../utils/p5/misc";
 import { BSplineDemo } from './demo';
-import { CtrlPtInfluenceFuncGraphPlotter } from '../base/graph-plotter';
+import { CtrlPtInfluenceFuncGraphPlotter } from '../abstract-base/graph-plotter';
 
 
 

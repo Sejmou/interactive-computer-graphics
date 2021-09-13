@@ -2,9 +2,9 @@ import p5 from "p5";
 import { DragVertex } from "../../../utils/p5/vertex";
 import { BasisFunctionData, BSplineDemo } from "../b-spline/demo";
 import { NURBSVisualization } from "./curve-drawing-vis";
-import { ControlPointInfluenceFunctionData } from "../base/demo";
-import { InfluenceVisualizerForActiveControlPoint } from "../base/active-ctrl-pt-influence-vis";
-import { Curve } from "../base/curve";
+import { ControlPointInfluenceFunctionData } from "../abstract-base/demo";
+import { InfluenceVisualizerForActiveControlPoint } from "../shared/active-ctrl-pt-influence-vis";
+import { Curve } from "../shared/curve";
 
 
 

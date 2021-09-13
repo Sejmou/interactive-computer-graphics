@@ -5,7 +5,7 @@ import { Drawable } from "../../../utils/p5/sketch/sketch-content";
 import { DragVertex } from "../../../utils/p5/vertex";
 import { BSplineDemo } from "../b-spline/demo";
 import { NURBSDemo } from "../nurbs/demo";
-import { CurveDemo } from "./demo";
+import { CurveDemo } from "../abstract-base/demo";
 
 
 

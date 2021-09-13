@@ -2,7 +2,7 @@ import p5 from "p5";
 import { Drawable } from "../../../utils/p5/sketch/sketch-content";
 import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { createArrayOfEquidistantAscendingNumbersInRange } from "../../../utils/misc";
-import { CurveDemo, DemoChange } from "./demo";
+import { CurveDemo, DemoChange } from "../abstract-base/demo";
 import { BSplineDemo } from "../b-spline/demo";
 import { drawCircle, drawLineVector } from "../../../utils/p5/misc";
 

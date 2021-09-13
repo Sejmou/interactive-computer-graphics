@@ -1,6 +1,6 @@
 import { Observer } from "../../../utils/interactivity/observer-pattern";
 import { clamp } from "../../../utils/math";
-import { DemoChange } from "../base/demo";
+import { DemoChange } from "../abstract-base/demo";
 import { NURBSDemo } from "./demo";
 
 

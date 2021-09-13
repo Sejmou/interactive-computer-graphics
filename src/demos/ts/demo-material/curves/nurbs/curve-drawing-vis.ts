@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { drawCircle, drawSquare, renderTextWithSubscript } from "../../../utils/p5/misc";
-import { CurveDrawingVisualization } from "../base/curve-drawing-vis";
+import { CurveDrawingVisualization } from "../abstract-base/curve-drawing-vis";
 import { NURBSDemo } from "./demo";
 
 

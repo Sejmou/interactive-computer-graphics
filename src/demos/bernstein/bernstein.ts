@@ -5,10 +5,10 @@ import { Sketch } from '../ts/utils/p5/sketch/sketch';
 import { addTextAsParagraphToElement } from "../ts/utils/dom";
 import { BooleanPropCheckbox } from "../ts/utils/interactivity/checkbox";
 import { BernsteinCurveFormulas } from '../ts/demo-material/curves/bezier/bernstein-curve-formulas';
-import { DemoChange } from '../ts/demo-material/curves/base/demo';
+import { DemoChange } from '../ts/demo-material/curves/abstract-base/demo';
 import { BernsteinGraphPlotter } from '../ts/demo-material/curves/bezier/graph-plotter';
-import { LineAtTPlotter } from '../ts/demo-material/curves/base/line-at-t-plotter';
-import { ControlPointInfluenceBarVisualization } from '../ts/demo-material/curves/base/ctrl-pt-influence-vis';
+import { LineAtTPlotter } from "../ts/demo-material/curves/shared/line-at-t-plotter";
+import { ControlPointInfluenceBarVisualization } from '../ts/demo-material/curves/shared/ctrl-pt-influence-vis';
 
 
 

@@ -1,6 +1,6 @@
 import p5 from "p5";
 import { Observer } from "../../../utils/interactivity/observer-pattern";
-import { DemoChange, CurveDemo } from "./demo";
+import { DemoChange, CurveDemo } from "../abstract-base/demo";
 
 
 

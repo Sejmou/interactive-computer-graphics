@@ -18,6 +18,8 @@ export interface CurveData {
  * For each control point, this class plots its "influence function" (a term I came up with myself, not used in literature afaik) that defines how much it contributes to the shape of the curve for the current value of t
  * 
  * "Control point influence functions" may be Bézier polynomials (Bézier), B-Spline basis functions or weighted B-Spline basis functions (with added control point weights, used for NURBS)
+ * 
+ * Note: This class is always used in combination with LinAtTGraphPlotter (for usage examples look at demo page TypeScript code)
  */
 export abstract class CtrlPtInfluenceFuncGraphPlotter implements Drawable, Observer<DemoChange>, Responsive {
     protected noOfStepsXAxis = 700;

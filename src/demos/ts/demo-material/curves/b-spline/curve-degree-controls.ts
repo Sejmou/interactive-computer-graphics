@@ -1,6 +1,6 @@
 import p5 from 'p5';
 import { Observer } from "../../../utils/interactivity/observer-pattern";
-import { DemoChange } from '../base/demo';
+import { DemoChange } from '../abstract-base/demo';
 import { BSplineDemo } from './demo';
 
 
