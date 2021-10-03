@@ -4,6 +4,7 @@ import { Sketch } from '../ts/utils/p5/sketch/sketch';
 import { Observer } from "../ts/utils/interactivity/observer-pattern";
 import { DemoChange } from '../ts/demo-material/curves/abstract-base/demo';
 import { addTextAsParagraphToElement } from "../ts/utils/dom";
+import p5 from 'p5';
 
 
 
@@ -13,7 +14,8 @@ addTextAsParagraphToElement(descriptionContainerId, 'Get an intuition for Bézie
 
 
 async function createDemo() {
-    const sketch = new Sketch(demoContainerId);
+    const calcSketchWidth = (p5: p5) => Math.min(p5.windowWidth * 0.6, 800);
+    const sketch = new Sketch(demoContainerId, calcSketchWidth, p5 => Math.min(calcSketchWidth(p5) * 0.65, p5.windowHeight * 0.5) );
     await sketch.create();
     const demo = sketch.add((p5, containerId) => new BezierDemo(p5, containerId));
     new BezierDemoGuide(demo, demoContainerId);
@@ -29,16 +31,12 @@ class BezierDemoGuide implements Observer<DemoChange> {
     private textBoxContainer: HTMLDivElement;
     private id: string = 'demo-guide';
 
-    private set visible(visible: boolean) {
-        this.textBoxContainer.style.display = visible ? 'block' : 'none';
-    }
-
     constructor(private demo: BezierDemo, demoContainerId: string) {
         this.textBoxContainer = document.createElement('div');
         this.textBoxContainer.id = this.id;
-        this.visible = false;
 
         document.getElementById(demoContainerId)?.insertAdjacentElement('afterend', this.textBoxContainer);
+        this.textBoxContainer.innerHTML = this.createParagraphsHTMLFromMessage(this.getMessage(this.demo.controlPoints.length));
 
         //we want to get notified if the number of control points changes
         this.demo.subscribe(this);
@@ -47,7 +45,6 @@ class BezierDemoGuide implements Observer<DemoChange> {
     update(change: DemoChange) {
         if (change === 'controlPointsChanged') {
             const numOfControlPoints = this.demo.controlPoints.length;
-            this.visible = numOfControlPoints > 0;
             this.textBoxContainer.innerHTML = this.createParagraphsHTMLFromMessage(this.getMessage(numOfControlPoints));
             //let MathJax convert any LaTeX syntax in the textbox to beautiful formulas (can't pass this.textBox as it is p5.Element and p5 doesn't offer function to get 'raw' DOM node)
             MathJax.typeset([`#${this.id}`]);
@@ -64,7 +61,7 @@ class BezierDemoGuide implements Observer<DemoChange> {
         //using String.raw``templateStringContent` allows use of backslashes without having to escape them (so that MathJax can parse LaTeX syntax)
         switch (numOfControlPoints) {
             case 0:
-                return "";
+                return "Add a control point to the canvas. You will then be guided through the process of drawing Bézier curves, step-by-step :)";
             case 1:
                 return String.raw`A single point on its own is quite boring, right?
                 Add another one by clicking/tapping the '+'-icon of the point!`;

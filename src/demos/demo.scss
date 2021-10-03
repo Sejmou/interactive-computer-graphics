@@ -17,19 +17,6 @@
     margin-left: 1em;
 }
 
-#demo-guide {
-    border: 1px solid grey;
-    border-radius: 2px;
-    padding: 1em;
-
-    & > :first-child {
-        margin-top: 0;
-    }
-    & > :last-child {
-        margin-bottom: 0;
-    }
-}
-
 #t-controls-container {
     * {
         margin-bottom: 5px;

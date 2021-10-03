@@ -25,7 +25,7 @@ export class ControlsForParameterT implements Observer<DemoChange> {
     private slowerButton: p5.Element;
 
     public set visible(visible: boolean) {
-        this.controlsForTContainer.style('visibility', visible ? 'visible' : 'hidden');
+        this.controlsForTContainer.style('display', visible ? 'flex' : 'none');
     };
 
     private set animationRunning(newVal: boolean) {

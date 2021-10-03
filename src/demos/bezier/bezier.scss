@@ -1,5 +1,36 @@
 @import '../demo.scss';
 
+#demo-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1em 0;
+}
+
 #demo-guide {
-    max-width: 450px;
+    border: 1px solid grey;
+    border-radius: 2px;
+    padding: 1em;
+    width: 100%;
+
+    & > :first-child {
+        margin-top: 0;
+    }
+    & > :last-child {
+        margin-bottom: 0;
+    }
+}
+
+@media (max-width: 1000px) {
+    #demo-wrapper {
+        display: flex;
+        max-width: 800px;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #demo-guide {
+        order: -1;
+    }
 }
