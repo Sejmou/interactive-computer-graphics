@@ -12,6 +12,20 @@ body {
     font-family: "Roboto", sans-serif;
 }
 
+.container {
+    width: 85%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+img {
+    max-width: 100%;
+}
+
+section {
+    padding: 1em 0;
+}
+
 .flex-column {
     display: flex;
     flex-direction: column;
