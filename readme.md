@@ -1,5 +1,5 @@
 # Interactive Computer Graphics Web App
-In this repository you can find the code for the website that I created for my Bachelor's thesis at TU Wien. The website features interactive demos that introduce people interested in Computer Graphics to selected topics, mainly focusing on parametric curves.
+In this repository you can find the code for the [website](https://sejmou.github.io/interactive-computer-graphics/) that I created for my [Bachelor's thesis at TU Wien](https://www.cg.tuwien.ac.at/research/publications/2021/Kolter_2021/). The website features interactive demos that introduce people interested in Computer Graphics to selected topics, mainly focusing on parametric curves.
 
 ## Topics covered in demos
 * Introduction to Bézier Curves
@@ -16,9 +16,3 @@ In this repository you can find the code for the website that I created for my B
 * [Materialize](https://materializecss.com/) (website styles)
 
 I didn't use React/Angular/Vue or any frontend-framework. I regret this decision as the project was probably much more work because of this. But at least I learned a lot about the DOM API and other native browser APIs :)
-
-## Live Website
-https://sejmou.github.io/interactive-computer-graphics/
-
-## Bachelor's thesis
-https://www.cg.tuwien.ac.at/research/publications/2021/Kolter_2021/
