@@ -1,11 +1,24 @@
 # Interactive Computer Graphics Web App
-In this repository you can find the code that the web app I created for my Bachelor's thesis at Vienna University of Technology is based on. I created interactive demos for Bézier curves and their generalizations, B-Splines and NURBS curves. I tried to also show the relationship between the "visual representation" of algorithms such as De Casteljau's algorithm and the actual computing involved.
+In this repository you can find the code for the website that I created for my Bachelor's thesis at TU Wien. The website features interactive demos that introduce people interested in Computer Graphics to selected topics, mainly focusing on parametric curves.
+
 ## Topics covered in demos
-* Barycentric coordinates
-* Bézier curves
-* Relationship between Bézier Curves and Bernstein Polynomials
+* Introduction to Bézier Curves
+* Bézier Curves and Bernstein Polynomials
 * B-Spline Curves
-* NURBS
+* NURBS Curves
+* Barycentric coordinates
+
+## Technologies/Tools used
+* [p5.js](https://p5js.org/) (core demo features)
+* [Webpack](https://webpack.js.org/) (bundling assets, TypeScript/SCSS preprocessing)
+* [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages#publishing-sources-for-github-pages-sites) (deployment)
+* [MathJax](https://www.mathjax.org/) (rendering math formulas on demo pages)
+* [Materialize](https://materializecss.com/) (website styles)
+
+I didn't use React/Angular/Vue or any frontend-framework. I regret this decision as the project was probably much more work because of this. But at least I learned a lot about the DOM API and other native browser APIs :)
 
 ## Live Website
 https://sejmou.github.io/interactive-computer-graphics/
+
+## Bachelor's thesis
+https://www.cg.tuwien.ac.at/research/publications/2021/Kolter_2021/
